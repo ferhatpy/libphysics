@@ -74,5 +74,5 @@ class template(branch):
     def __doc__():
         return("Document of template class.")
         
-otemp = template()
-otemp.__init__()
+otemp = template() # Create an otemp object from template class.
+#otemp.__init__()
