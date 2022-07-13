@@ -3,7 +3,7 @@
 """
 electromagnetic.py
 Created on Fri Mar 11 12:53:36 2022
-
+Deneme
 """
 from sympy import*
 from libreflection import *
