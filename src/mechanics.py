@@ -15,8 +15,8 @@ from sympy.vector import CoordSys3D
 from libreflection import *
 import libphyscon as pc
 
-#exec(open("/media/veracrypt1/python/projects/libphysics/src/libreflection.py").read())
-exec(open("../src/libreflection.py").read())
+exec(open("/media/veracrypt1/python/projects/libphysics/src/libreflection.py").read())
+#exec(open("../src/libreflection.py").read())
 
 class mechanics(branch):
     """
@@ -32,40 +32,50 @@ class mechanics(branch):
         a: 
         F: 
         """
-        global a,r,t,v,w
-        global F,Fx,Fy,Fz
         global k,m,M
-        global r,v,a,p,L
-        global _r,_v,_a,_F,_p,_L
-        global x,y,z
+        global a,r,t,x,v,w,y,z
+        global _a,_r,_x,_v
+        global F,Fx,Fy,Fz,p,W
+        global _F,_L,_p,_Tr,_W
+        global dr
+        global xi,xf,yi,yf,zi,zf
         global theta, phi
         global C
 
-        C           = CoordSys3D('C') # Cartesian coordinate system.
-        t           = symbols('t', real=True)
-        [k,m,M,w]   = symbols('k m M w', real=True, positive=True)
-        [x,y,z]     = [Function('x')(t), Function('y')(t), Function('z')(t)]
-        [theta,phi] = [Function('theta')(t), Function('phi')(t)]
+        C         = CoordSys3D('C') # Cartesian coordinate system.
+        t         = symbols('t', real=True)
+        k,m,M,w = symbols('k m M w', real=True, positive=True)
+        xi,xf,yi,yf,zi,zf = symbols('x_i x_f y_i y_f z_i z_f', real=True)
+        r         = Function('r')(t)
+        x,y,z     = [Function('x')(t), Function('y')(t), Function('z')(t)]
+        theta,phi = [Function('theta')(t), Function('phi')(t)]
        
         if self.class_type in ["scalar"]:
-           [r,v,_a,F,p] = symbols('r v a F p', real=True) 
-        
+            _F,_W  = symbols('F W', real=True)
+            _x  = Function('x')(t) 
+            _v  = Function('v')(t)          # Velocity.
+            _a  = Function('a')(t)          # Acceleration.
+            _p  = Function('p')(t)
+            
         if self.class_type in ["vectorial"]:
-            [r,] = symbols('r,', real=True) 
-            [rx,ry,rz] = symbols('r_x r_y r_z', real=True)
-            [vx,vy,vz] = symbols('v_x v_y v_z', real=True)
-            [ax,ay,az] = symbols('a_x a_y a_z', real=True)
-            [Fx,Fy,Fz] = symbols('F_x F_y F_z', real=True)
-            [px,py,pz] = symbols('p_x p_y p_z', real=True)
-            [Lx,Ly,Lz] = symbols('L_x L_y L_z', real=True)
-            _r = rx*C.i+ry*C.j+rz*C.k   # Function('r')(t)    # Position vector function.
-            _v = vx*C.i+vy*C.j+vz*C.k   # Velocity vector function.
-            _a = ax*C.i+ay*C.j+az*C.k   # Acceleration vector function.
-            _F = Fx*C.i+Fy*C.j+Fz*C.k   # Force vector function.
-            _p = px*C.i+py*C.j+pz*C.k   # Linear momentum vector function.
-            _L = Lx*C.i+Ly*C.j+Lz*C.k   # Angular momentum vector function.
-        
-        
+            _W, = symbols('W,', real=True)
+#            rx   = Function('r_x', real=True)(t) # Possible time dependent definition.
+            rx,ry,rz = symbols('r_x r_y r_z', real=True) # Components of position.
+            vx,vy,vz = symbols('v_x v_y v_z', real=True) # Components of velocity.
+            ax,ay,az = symbols('a_x a_y a_z', real=True) # Components of acceleration.
+            Fx,Fy,Fz = symbols('F_x F_y F_z', real=True) # Components of force.
+            Trx,Try,Trz = symbols('tau_x tau_y tau_z', real=True) # Components of torque.
+            px,py,pz = symbols('p_x p_y p_z', real=True) # Components of linear momentum.
+            Lx,Ly,Lz = symbols('L_x L_y L_z', real=True) # Components of angular momentum.
+            dr = 1*C.i + 1*C.j + 1*C.k
+            _r = rx*C.i+ry*C.j+rz*C.k       # Position vector.
+            _v = vx*C.i+vy*C.j+vz*C.k       # Velocity vector.
+            _a = ax*C.i+ay*C.j+az*C.k       # Acceleration vector.
+            _F = Fx*C.i+Fy*C.j+Fz*C.k       # Force vector.
+            _Tr = Trx*C.i+Try*C.j+Trz*C.k   # Torque vector.
+            _p = px*C.i+py*C.j+pz*C.k       # Linear momentum vector.
+            _L = Lx*C.i+Ly*C.j+Lz*C.k       # Angular momentum vector.
+
     def __init__(self):
         super().__init__()
         self.define_symbols()
@@ -94,10 +104,13 @@ class mechanics(branch):
         self.subformulary = subformulary()
         
         if self.class_type in ["scalar"]:
-            self.a           = Eq(_a, diff(x, t, 2, evaluate=False))
-            self.momentum    = Eq(p, m*v)
-            self.NewtonsLaw2 = Eq(F, m*self.a.rhs)
-            self.HookesLaw   = Eq(F, -k*x)
+            self.x = x
+            self.v = Eq(_v, diff(self.x, t,    evaluate=True))
+            self.a = Eq(_a, diff(self.x, t, 2, evaluate=True))
+            self.p = Eq(_p, m*self.v.rhs)
+            self.F = self.NewtonsLaw2 = Eq(_F, m*self.a.rhs)
+            self.HookesLaw = Eq(_F, -k*self.x)
+            self.W = Eq(_W, Integral(self.F, (x,xi,xf)))
             
         if self.class_type in ["vectorial"]:
             """
@@ -107,15 +120,18 @@ class mechanics(branch):
             omech.r.rhs.subs({x:_r*cos(theta)}) -> r(t)*cos(theta(t)) + y(t) + z(t)
             diff(omech.r.rhs.subs({x:_r*cos(theta)}),t) -> -r(t)*sin(theta(t))*Derivative(theta(t), t) + cos(theta(t))*Derivative(r(t), t) + Derivative(y(t), t) + Derivative(z(t), t)
             """
-            [self.x, self.y, self.z] = [x, y, z]
+            self.x, self.y, self.z = [x, y, z]
             self.r = Eq(_r, self.x*C.i + self.y*C.j + self.z*C.k)
             self.v = Eq(_v, diff(self.r.rhs, t, evaluate=False))
             self.a = Eq(_a, diff(self.v.rhs, t, evaluate=False))
             self.p = Eq(_p, m*self.v.rhs)
             self.L = Eq(_L, self.r.rhs.cross(self.p.rhs))
-            
+            self.F = Eq(_F, m*self.a.rhs)
             self.NewtonsLaw2 = Eq(_F, m*self.a.rhs)
+            self.Tr1 = Eq(_Tr, self.r.rhs.cross(diff(self.p.rhs, t, evaluate=False)))
+            self.Tr2 = Eq(_Tr, self.r.rhs.cross(self.F.rhs))
             self.HookesLaw   = Eq(_F, -k*self.x)
+            self.W   = Eq(_W, Integral(self.F.rhs.dot(dr), (z,zi,zf), (y,yi,yf), (x,xi,xf)))
         
         if self.class_type == "EulerLagrange":
             self.NewtonsLaw2 = Eq(F, m*a)
@@ -127,4 +143,4 @@ class mechanics(branch):
         return("Document of mechanics class.")
         
 omech = mechanics() # Create an omech object from mechanics class.
-#omech.__init__()
+omech.__init__()

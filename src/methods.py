@@ -42,14 +42,14 @@ class methods(branch):
         global x,y,z,r,t,w
         global C
         
-        [alpha,beta,gamma,phi,theta] = symbols('alpha beta gamma phi theta', real=True)
-        [a,b,c,d]   = symbols('a b c d', real=True)
-        [k,m,t,w]   = symbols('k m t w', real=True, positive=True)
-        [vA,vB,vC,vD] = symbols('A B C D', vector=True)
-        [Ax,Bx,Cx,Dx] = symbols('A_x B_x C_x D_x', real=True)
-        [Ay,By,Cy,Dy] = symbols('A_y B_y C_y D_y', real=True)
-        [Az,Bz,Cz,Dz] = symbols('A_z B_z C_z D_z', real=True)
-        [x,y,z,r,t,w] = symbols('x y z r t w', real=True)
+        alpha,beta,gamma,phi,theta = symbols('alpha beta gamma phi theta', real=True)
+        a,b,c,d   = symbols('a b c d', real=True)
+        k,m,t,w   = symbols('k m t w', real=True, positive=True)
+        vA,vB,vC,vD = symbols('A B C D', vector=True)
+        Ax,Bx,Cx,Dx = symbols('A_x B_x C_x D_x', real=True)
+        Ay,By,Cy,Dy = symbols('A_y B_y C_y D_y', real=True)
+        Az,Bz,Cz,Dz = symbols('A_z B_z C_z D_z', real=True)
+        x,y,z,r,t,w = symbols('x y z r t w', real=True)
         C = CoordSys3D('C')
     
     def __init__(self):
@@ -95,4 +95,3 @@ class methods(branch):
         return("Document of methods class.")
         
 ometh = methods()
-ometh.__init__()

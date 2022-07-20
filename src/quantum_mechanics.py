@@ -36,14 +36,14 @@ class quantum_mechanics(branch):
         global U
         global _U
         
-        [alpha,beta,gamma,phi,theta] = symbols('alpha beta gamma phi theta', real=True)
-        [a,b,c,d,r]   = symbols('a b c d r', real=True)
-        [k,m,t,w] = symbols('k m t w', real=True, positive=True)
-        [F,M,T] = symbols('F M T', real=True)
-        [vA,vB,vC,vD] = symbols('A B C D', vector=True)
-        [Ax,Bx,Cx,Dx] = symbols('A_x B_x C_x D_x', real=True)
-        [Ay,By,Cy,Dy] = symbols('A_y B_y C_y D_y', real=True)
-        [Az,Bz,Cz,Dz] = symbols('A_z B_z C_z D_z', real=True)
+        alpha,beta,gamma,phi,theta = symbols('alpha beta gamma phi theta', real=True)
+        a,b,c,d,r   = symbols('a b c d r', real=True)
+        k,m,t,w = symbols('k m t w', real=True, positive=True)
+        F,M,T = symbols('F M T', real=True)
+        vA,vB,vC,vD = symbols('A B C D', vector=True)
+        Ax,Bx,Cx,Dx = symbols('A_x B_x C_x D_x', real=True)
+        Ay,By,Cy,Dy = symbols('A_y B_y C_y D_y', real=True)
+        Az,Bz,Cz,Dz = symbols('A_z B_z C_z D_z', real=True)
         
         x = Function('x')(t)
         U  = Function('U')(T)  # Function is accesible out of the module.
@@ -74,4 +74,3 @@ class quantum_mechanics(branch):
         return("Document of <template> class.")
         
 oqmec = quantum_mechanics()
-oqmec.__init__()
