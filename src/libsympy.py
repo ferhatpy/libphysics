@@ -321,7 +321,7 @@ def plot_sympfunc(pfuncs, prange, plabels=[1,2,3], xlabel="$x$", ylabel="$y$",
     
     for i, ifunc in enumerate(pfuncs):
         # Lambdify function and obtain f. lambdify(x, pfunc)(ix)->f(x)
-        f = lambdify(x, ifunc, 'mpmath') # 'mpmath'
+        f = lambdify(x, ifunc, 'numpy') # 'mpmath'
         ys=[f(ix) for ix in xs]
 #        ys=[lambdify(x,ifunc,'numpy')(ix) for ix in xs]
         ax.plot(xs, ys, color='black', linestyle=linestyles[i % 4], linewidth=2, label=plabels[i].__str__())
@@ -333,9 +333,9 @@ def plot_sympfunc(pfuncs, prange, plabels=[1,2,3], xlabel="$x$", ylabel="$y$",
     ax.grid(pgrid)
     # Plot axis of the origin.
     if paxis:
-        plt.axvline(0,color='k')
-        plt.axhline(0,color='k')
-    
+        plt.axvline(0, color='k')
+        plt.axhline(0, color='k')
+    plt.rcParams["text.usetex"]
     fig.tight_layout()
     
 def plot_save(pfilepath="output", ppad_inches=0.05, pformats=("png","pdf","svg")):

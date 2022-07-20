@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-template.py
+template.py todo copy from mechanics!!!
 Created on Fri Mar 11 12:53:36 2022
 
 Find and replace template with desired class name.
@@ -66,6 +66,7 @@ class template(branch):
         self.subformulary = subformulary()
         
         if self.class_type == "default":
+            # Construct a cascaded formulary structure.
             self.NewtonsLaw2 = Eq(F, m*a)
             self.HookesLaw   = Eq(F, -k*x)
             

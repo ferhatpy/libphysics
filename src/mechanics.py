@@ -36,7 +36,7 @@ class mechanics(branch):
         global a,r,t,x,v,w,y,z
         global _a,_r,_x,_v
         global F,Fx,Fy,Fz,p,W
-        global _F,_L,_p,_Tr,_W
+        global _F,_L,_p,_T,_Tr,_W
         global dr
         global xi,xf,yi,yf,zi,zf
         global theta, phi
@@ -52,10 +52,11 @@ class mechanics(branch):
        
         if self.class_type in ["scalar"]:
             _F,_W  = symbols('F W', real=True)
-            _x  = Function('x')(t) 
+            _x  = Function('x')(t)          # Position.
             _v  = Function('v')(t)          # Velocity.
             _a  = Function('a')(t)          # Acceleration.
-            _p  = Function('p')(t)
+            _p  = Function('p')(t)          # Linear momentum.
+            _T  = Function('T')(t)          # Kinetic energy.
             
         if self.class_type in ["vectorial"]:
             _W, = symbols('W,', real=True)
@@ -67,11 +68,12 @@ class mechanics(branch):
             Trx,Try,Trz = symbols('tau_x tau_y tau_z', real=True) # Components of torque.
             px,py,pz = symbols('p_x p_y p_z', real=True) # Components of linear momentum.
             Lx,Ly,Lz = symbols('L_x L_y L_z', real=True) # Components of angular momentum.
-            dr = 1*C.i + 1*C.j + 1*C.k
+            dr = 1*C.i + 1*C.j + 1*C.k      # Differential position element.
             _r = rx*C.i+ry*C.j+rz*C.k       # Position vector.
             _v = vx*C.i+vy*C.j+vz*C.k       # Velocity vector.
             _a = ax*C.i+ay*C.j+az*C.k       # Acceleration vector.
             _F = Fx*C.i+Fy*C.j+Fz*C.k       # Force vector.
+            _T  = Function('T')(t)          # Kinetic energy.
             _Tr = Trx*C.i+Try*C.j+Trz*C.k   # Torque vector.
             _p = px*C.i+py*C.j+pz*C.k       # Linear momentum vector.
             _L = Lx*C.i+Ly*C.j+Lz*C.k       # Angular momentum vector.
@@ -110,7 +112,8 @@ class mechanics(branch):
             self.p = Eq(_p, m*self.v.rhs)
             self.F = self.NewtonsLaw2 = Eq(_F, m*self.a.rhs)
             self.HookesLaw = Eq(_F, -k*self.x)
-            self.W = Eq(_W, Integral(self.F, (x,xi,xf)))
+            self.W = self.work = Eq(_W, Integral(self.F.rhs, (x,xi,xf)))
+            self.T = self.kinetic_energy = Eq(_T, S(1)/2*m*self.v.rhs**2)
             
         if self.class_type in ["vectorial"]:
             """
@@ -126,12 +129,12 @@ class mechanics(branch):
             self.a = Eq(_a, diff(self.v.rhs, t, evaluate=False))
             self.p = Eq(_p, m*self.v.rhs)
             self.L = Eq(_L, self.r.rhs.cross(self.p.rhs))
-            self.F = Eq(_F, m*self.a.rhs)
-            self.NewtonsLaw2 = Eq(_F, m*self.a.rhs)
-            self.Tr1 = Eq(_Tr, self.r.rhs.cross(diff(self.p.rhs, t, evaluate=False)))
-            self.Tr2 = Eq(_Tr, self.r.rhs.cross(self.F.rhs))
+            self.F = self.NewtonsLaw2 = Eq(_F, m*self.a.rhs)
+            self.Tr1 = Eq(_Tr, self.r.rhs.cross(diff(self.p.rhs, t, evaluate=False))) # Torque = r x dp/dt
+            self.Tr2 = Eq(_Tr, self.r.rhs.cross(self.F.rhs)) # Torque = r x F
             self.HookesLaw   = Eq(_F, -k*self.x)
-            self.W   = Eq(_W, Integral(self.F.rhs.dot(dr), (z,zi,zf), (y,yi,yf), (x,xi,xf)))
+            self.W   = self.work = Eq(_W, Integral(self.F.rhs.dot(dr), (z,zi,zf), (y,yi,yf), (x,xi,xf)))
+            self.T = self.kinetic_energy = Eq(_T, S(1)/2*m*self.v.rhs.dot(self.v.rhs))
         
         if self.class_type == "EulerLagrange":
             self.NewtonsLaw2 = Eq(F, m*a)

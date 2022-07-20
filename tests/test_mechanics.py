@@ -36,9 +36,9 @@ class sets:
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]
     
     flow = [{100:"get_formulary", 150:"get_subformulary",
-             200:"simple_harmonic_oscillator", 
+             200:"simple_harmonic_oscillator_scalar", 201:"simple_harmonic_oscillator_vectorial", 
              2321:"coordinate_systems"}[i] 
-            for i in [200]]
+            for i in [201]]
 
 ### Formulary
 print("Test of the {0}.".format(sets.flow))
@@ -60,7 +60,7 @@ if "get_subformulary" in sets.flow:
     omech.__init__()
     omech.get_subformulary()
 
-if "simple_harmonic_oscillator" in sets.flow:
+if "simple_harmonic_oscillator_scalar" in sets.flow:
     """       
     Example: Solve a from F = ma
     """
@@ -87,7 +87,6 @@ if "simple_harmonic_oscillator" in sets.flow:
     display("Newton's 2nd Law", omech.NewtonsLaw2, 
             "Hooke's Law", omech.HookesLaw)
     commands = ["Eq", "NewtonsLaw2", "HookesLaw"]
-    omech.process(commands)
 #    commands = ["subs", "omech.result", [(a, diff(x, t, 2, evaluate=False))]]
     res = omech.process(commands)
     simp = simplify(res.lhs/m)
@@ -113,10 +112,11 @@ if "simple_harmonic_oscillator" in sets.flow:
     plot(x, (t,0,4*pi,200), xlabel="$t$", ylabel="$x(t)$")
     plot(v, (t,0,4*pi,200), xlabel="$t$", ylabel="$v(t)$")
     plot(a, (t,0,4*pi,200), xlabel="$t$", ylabel="$a(t)$")
-    plot_sympfunc([x.subs({t:var('x')}),], (0, float(4*pi), 200), xlabel="$t$", ylabel="$x(t)$")
+    plot_sympfunc([x.subs({t:var('x')}),], (0, float(4*pi), 200), 
+                   xlabel="$t$", ylabel="$x(t)$")
     
-    
-    # Vectorial Way. kaldik
+if "simple_harmonic_oscillator_vectorial" in sets.flow:   
+    # Vectorial Way.
     omech.class_type = "vectorial"
     omech.__init__()
     omech.solver.verbose = True
@@ -128,7 +128,7 @@ if "simple_harmonic_oscillator" in sets.flow:
     omech.result = Eq(simp, 0)
     commands = ["subs", "omech.result", [(k/m, w**2)]]
     omech.process(commands)
-    commands = ["dsolve", "omech.result", x]
+    commands = ["dsolve", "omech.result", omech.x]
     print("Codes:\n", *omech.solver.get_codes())
     
     omech.x = omech.process(commands).rhs
@@ -142,12 +142,13 @@ if "simple_harmonic_oscillator" in sets.flow:
 #    commands = ["xreplace", "omech.x", numvals]
 #    omech.process(commands)
     x = omech.x.evalf(subs=numvals).doit()
-    v = v.evalf(subs=numvals).rhs
-    a = a.evalf(subs=numvals).rhs
+    v = v.evalf(subs=numvals).rhs.components[C.i]
+    a = a.evalf(subs=numvals).rhs.components[C.i]
     plot(x, (t,0,4*pi,200), xlabel="$t$", ylabel="$x(t)$")
     plot(v, (t,0,4*pi,200), xlabel="$t$", ylabel="$v(t)$")
     plot(a, (t,0,4*pi,200), xlabel="$t$", ylabel="$a(t)$")
-    plot_sympfunc([x.subs({t:var('x')}),], (0, float(4*pi), 200), xlabel="$t$", ylabel="$x(t)$")
+    plot_sympfunc([x.subs({t:var('x')}),], (0, float(4*pi), 200), 
+                   xlabel="$t$", ylabel="$x(t)$")
     
 if "coordinate_systems" in sets.flow:
     print("Coordinate Systems")
