@@ -21,7 +21,7 @@ class electromagnetics(branch):
     
     def define_symbols(self):
         """
-        Global symbols, functions.
+        Common global symbols, functions.
         a: 
         F: 
         """

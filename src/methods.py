@@ -9,7 +9,7 @@ Find and replace template with desired class name.
 SymPy 1.10.1 documentation » Reference Documentation » Matrices » Vector
 
 """
-from sympy import*
+from sympy import *
 from sympy.diffgeom import *
 from sympy.diffgeom.rn import *
 from sympy.diffgeom.rn import R3_r, R3_s
@@ -30,27 +30,32 @@ class methods(branch):
     
     def define_symbols(self):
         """
-        Global symbols, functions.
+        Common global symbols, functions.
         a: 
         F: 
         """
         global alpha,beta,gamma,phi,theta
         global a,b,c,d
+        global f,g
         global k,m,t,w
         global vA,vB,vC,vD
         global Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Dx,Dy,Dz
-        global x,y,z,r,t,w
+        global x,y,z,r,s,t,tau,w
         global C
+        global G
         
         alpha,beta,gamma,phi,theta = symbols('alpha beta gamma phi theta', real=True)
         a,b,c,d   = symbols('a b c d', real=True)
-        k,m,t,w   = symbols('k m t w', real=True, positive=True)
+        f,g       = symbols('f g', real=True)
+        k,m,t,tau,w   = symbols('k m t tau w', real=True, positive=True)
         vA,vB,vC,vD = symbols('A B C D', vector=True)
         Ax,Bx,Cx,Dx = symbols('A_x B_x C_x D_x', real=True)
         Ay,By,Cy,Dy = symbols('A_y B_y C_y D_y', real=True)
         Az,Bz,Cz,Dz = symbols('A_z B_z C_z D_z', real=True)
-        x,y,z,r,t,w = symbols('x y z r t w', real=True)
+        x,y,z,r,s,t,w = symbols('x y z r s t w', real=True)
         C = CoordSys3D('C')
+    
+        G        = Lambda(((t,tau)), Function('G')(t,tau))
     
     def __init__(self):
         super().__init__()
@@ -83,11 +88,17 @@ class methods(branch):
         self.subformulary = subformulary()
         
         if self.class_type == "default":
+            # Vector Algebra
             self.DotProduct     = Eq(c, self.vA.dot(self.vB))
             self.DotProductTheta= Eq(c, self.vA.magnitude()*self.vB.magnitude()*cos(theta))
             self.CrossProduct   = Eq(self.vC, self.vA.cross(self.vB))
             self.CrossProductTheta = Eq(c, self.vA.magnitude()*self.vB.magnitude()*sin(theta))
             self.TripleProduct  = Eq(c, self.vA.dot(self.vB.cross(self.vC)))
+
+            # Integral Transforms
+            # Laplace Transform
+            self.L = Lambda( (f,s,t), Integral(f*exp(-s*t), (t, S.Zero, S.Infinity)) )
+            # ometh.L(exp(-a*t),s,t).doit().args[0][0]
 
         
     @staticmethod

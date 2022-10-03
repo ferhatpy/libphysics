@@ -22,7 +22,7 @@ class quantum_mechanics(branch):
     def define_symbols(self):
                 
         """
-        Global symbols, functions.
+        Common global symbols, functions.
         a: 
         F: 
         """

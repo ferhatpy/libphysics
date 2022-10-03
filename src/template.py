@@ -18,12 +18,13 @@ class template(branch):
 
     """
     _name = "template"
-    class_type = "default"
+    class_type = {1:"scalar", 2:"vectorial"}[1]
+        
     
 
     def define_symbols(self):
         """
-        Global symbols
+        Common global symbols, functions.
         a: 
         F: 
         """
@@ -37,6 +38,7 @@ class template(branch):
         global U
         global _U
         
+        t = symbols('t', real=True)
         alpha,beta,gamma,phi,theta = symbols('alpha beta gamma phi theta', real=True)
         a,b,c,d,r = symbols('a b c d r', real=True)
         k,m,t,w = symbols('k m t w', real=True, positive=True)

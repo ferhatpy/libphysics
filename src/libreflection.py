@@ -5,10 +5,12 @@ libreflection.py
 Created on Fri Mar 11 12:53:02 2022
 todo: place into book explain step by step
 
-omec.__init__()
-omec.solver.verbose = True
+https://github.com/ferhatpy/libphysics
+
+omech.__init__()
+omech.solver.verbose = True
 commands = ["solve", "NewtonsLaw2", a]
-print(omec.process(commands))
+print(omech.process(commands))
 """
 import sys
 lstPaths = ["../../libpython/src"]
@@ -16,16 +18,18 @@ for ipath in lstPaths:
     if ipath not in sys.path:
         sys.path.append(ipath)
 #from collections import namedtuple
-from sympy import print_python
-import libsympy as ls
+from sympy import *
+import libsympy
 
-
+#---- branch
 class branch:
     """
     Example:
     ========
-    omec = mechanics()
-    omec.NewtonsLaw2
+    omech = mechanics()
+    omech.x              # Symbolic x position as a function of time.
+    omech.x_t            # Numeric x position as a function of time.
+    omech.NewtonsLaw2
     
     getattr(globals()['mechanics'](), 'NewtonsLaw2')
     getattr(globals()['mechanics'](), 'NewtonsLaw2')('sample arg')
@@ -35,13 +39,12 @@ class branch:
     def __init__(self):
         self.classname = type(self).__name__
 #        self.classname = self.__class__.__name__ # same as above
-        self.solver = solver()
+        self.solver = solver() # Assign a solver to my branch.
         
     def process(self, commands):
-        # omec.process(commands)
+        # omech.process(commands)
         self.result = self.solver.process(commands, self.classname) 
         return(self.result)
-    
     
     def get_formulary(self, style="name-eq", verbose=True):
         """
@@ -52,9 +55,12 @@ class branch:
         [getattr(ocar,ikey) for (ikey, ival) in vars(ocar).items()] -> ['A', 2022]
         
         attribute_values = [getattr(ocar,ikey) for (ikey, ival) in vars(ocar).items()]
-        display(*omec.get_formulary())
+        display(*omech.get_formulary())
         
-        todo: export to a latex file.
+        todo: 
+            1) export to a latex file.
+            2) 
+        
         
         Parameters
         ==========
@@ -72,7 +78,7 @@ class branch:
         if style == "eq":
             res = [getattr(self,ikey) for (ikey, ival) in vars(self).items()]
             if verbose:
-                ls.pprints(*res,
+                libsympy.pprints(*res,
                            output_style=self.solver.output_style,
                            newline=self.solver.newline)
         if style == "name-eq":
@@ -82,15 +88,28 @@ class branch:
             res = [(ikey,ival) for (ikey,ival) in vars(self).items()]
             if verbose:
                 for ikey,ival in res:
-                    ls.pprints(ikey, ival,
+                    libsympy.pprints(ikey, ival,
                                output_style=self.solver.output_style,
                                newline=self.solver.newline)
+        if style == "mathematica":
+            res = []
+            for (ikey, ival) in vars(self).items():
+                try:
+                    icode = mathematica_code(ival)
+                    if verbose:
+                        libsympy.pprints(ikey, icode,
+                                   output_style=self.solver.output_style,
+                                   newline=self.solver.newline)
+                except:
+                    pass 
+                res.append((ikey, icode))
+        
         return(res)
         
     def get_subformulary(self, style="name-eq", verbose=True):
         """
         Display all instance variables of subformulary class of a <branch> object as a formulary list.
-        vars(omec.subformulary).items()
+        vars(omech.subformulary).items()
         
         Examples
         ========
@@ -100,7 +119,7 @@ class branch:
         if style == "eq":
             res = [getattr(self.subformulary,ikey) for (ikey, ival) in vars(self.subformulary).items()]
             if verbose:
-                ls.pprints(*res,
+                libsympy.pprints(*res,
                            output_style=self.solver.output_style,
                            newline=self.solver.newline)
         if style == "name-eq":
@@ -110,7 +129,7 @@ class branch:
             res = [(ikey,ival) for (ikey,ival) in vars(self.subformulary).items()]
             if verbose:
                 for ikey,ival in res:
-                    ls.pprints(ikey, ival,
+                    libsympy.pprints(ikey, ival,
                                output_style=self.solver.output_style,
                                newline=self.solver.newline)
         return(res)
@@ -123,6 +142,7 @@ class branch:
         pass
 
 
+#---- solver
 class solver:
     def __init__(self):
         self.codes = []
@@ -138,6 +158,10 @@ class solver:
         Structure
         ---------
         verb - subject - object
+        
+        getattr(globals()['omech'], 'NewtonsLaw2') ==> F = m*d^2/dt^2
+        
+        
         Equate Newton's 2nd Law to Hooke
         commands = ["Eq", "NewtonsLaw2", "HookesLaw"]
         
@@ -153,22 +177,27 @@ class solver:
         [a,F] = symbols('a F', real=True)
         [k,m,t,w] = symbols('k m t w', real=True, positive=True)
         x = Function('x')(t)
-        omec.__init__()
-        omec.solver.verbose = True
+        omech.__init__()
+        omech.solver.verbose = True
         commands = ["solve", "NewtonsLaw2", a]
-        print(omec.process(commands))
+        print(omech.process(commands))
         
         """
 #        commands = "sentence1. sentence2. sentence3."
 #        commands = commands.split('.')
 #        commands.__delitem__(-1)
-        [verb, subject, obj] = [commands[0], commands[1], commands[2]]
+        if len(commands)==3:
+            # verb - subject - object
+            [verb, subject, obj] = [commands[0], commands[1], commands[2]]
+        elif len(commands)==4:
+            # verb - subject - object - args
+            [verb, subject, obj, args] = [commands[0], commands[1], commands[2], commands[3]]
         
         # kaldik dallanma yap verbose_type = python_code, text_explanation     
         if self.verbose:
             output = [#"{0}({1}, {2})".format(cmd.__name__, expr, params),
                       ' '.join(map(str, commands))]
-            ls.pprints(*output,
+            libsympy.pprints(*output,
                        output_style=self.output_style,
                        newline=self.newline)
         
@@ -178,6 +207,7 @@ class solver:
             ======
             dsolve(eq, f(x), hint) -> Solve ordinary differential equation eq for function f(x), using method hint.
             commands = ["dsolve", "om.result", x]
+            dsolve(Derivative(f(x), x, x) + 9*f(x), f(x))
             
             solve
             =====
@@ -186,6 +216,9 @@ class solver:
             
             solve(F=ma, a) ~> command[0](command[1], command[2])
             solve(Eq(F, a*m),a)
+            
+            cmd(expr, params, args)
+            dsolve_system(eqs, ics={f(0): 1, g(0): 0})
             
             """
             # Check om.result (object.method) pattern in a command.
@@ -198,14 +231,14 @@ class solver:
                 
             cmd  = globals()[verb] # dsolve
             params = obj
-            res = cmd(expr, params)
             
-            # kaldik strcode yerine print_python denenmelidir.
-            strcode = "{0}({1}, {2})".format(cmd.__name__, expr, params)
-            self.codes.append(strcode+'\n')
-            
-            if self.verbose:
-                print(strcode)
+            if len(commands)==3:
+                res = cmd(expr, params)
+                # kaldik strcode yerine print_python denenmelidir.
+                strcode = "{0}({1}, {2})".format(cmd.__name__, expr, params)
+            elif len(commands)==4:
+                res = cmd(expr, params, args)
+                strcode = "{0}({1}, {2}, {3})".format(cmd.__name__, expr, params, args)
             
         elif verb in ["Eq",]:
             """
@@ -223,16 +256,26 @@ class solver:
             res = cmd(expr, 0)
             
             strcode = "{0}({1}, {2})".format(cmd.__name__, expr, 0)
-            self.codes.append(strcode+'\n')
             
-            if self.verbose:
-                ls.pprints(subject,
-                           getattr(globals()[classname](), subject),
-                           obj,
-                           getattr(globals()[classname](), obj),
-                           output_style=self.output_style)
-                print(strcode)
-        
+        elif verb in ["laplace_transform",]:
+            """
+            laplace_transform
+            ==
+            lap_trans = Eq(laplace_transform(omech.driven_oscillator2.lhs, t, p),
+                           laplace_transform(omech.driven_oscillator2.rhs, t, p, noconds=True))
+            
+            commands = ["laplace_transform", "driven_oscillator2", (t,p)]
+            omech.process(commands)
+            """
+            cmd = globals()[verb] # laplace_transform
+            lhs = getattr(globals()[classname](), subject).lhs
+            rhs = getattr(globals()[classname](), subject).rhs
+            param1, param2 =  (obj[0], obj[1])
+            res = Eq(cmd(lhs, param1, param2), cmd(rhs, param1, param2, noconds=True))
+            
+            strcode  = "Laplace transform of the {0} equation.\n".format(subject)
+            strcode += "Eq({0}({1}, {3}, {4}), {0}({2}, {3}, {4}, noconds=True))".format(cmd.__name__, lhs, rhs, param1, param2)
+            
         elif verb in ["Subs",]:
             """
             Subs
@@ -246,11 +289,7 @@ class solver:
             res = cmd(expr, x, x0)
             
             strcode = "{0}({1}, {2}, {3})".format(cmd.__name__, expr, x, x0)
-            self.codes.append(strcode+'\n')
             
-            if self.verbose:
-                print(strcode)
-        
         elif verb in ["subs","xreplace"]:
             """
             subs
@@ -259,15 +298,15 @@ class solver:
             expr.subs([(x, 2), (y, 4), (z, 0)])
             expr.subs([(x, a)])
             commands = ["subs", "om.result", [(a, diff(x, t, 2, evaluate=False))]]
-            osm.process(commands)
+            ostat.process(commands)
             
             xreplace
             ========
             Replace occurrences of objects within the expression.
             
             xreplaces = {g:1, engF:mu*B*(2*i-3), j:1, n:2}
-            commands = ["xreplace", "osm.Zsp", xreplaces]
-            osm.process(commands)
+            commands = ["xreplace", "ostat.Zsp", xreplaces]
+            ostat.process(commands)
             
             """
             (classname, method) = subject.split('.') # 'obj.result' -> ['obj', 'result']
@@ -277,10 +316,9 @@ class solver:
             res = cmd(params)
             
             strcode = "{0}({1}, {2})".format(expr, cmd.__name__, params)
-            self.codes.append(strcode+'\n')
             
-            if self.verbose:
-                print(strcode)
         
-        ls.pprints(res, output_style=self.output_style)
+        self.codes.append(strcode+'\n')            
+        if self.verbose:print(strcode)
+        libsympy.pprints(res, output_style=self.output_style)
         return(res)

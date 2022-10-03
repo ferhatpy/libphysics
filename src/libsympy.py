@@ -25,6 +25,7 @@ import mpmath as mp
 import numpy as np
 from pylab import *
 from sympy import *
+from sympy.abc import x,y,z,t
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.plotting import *
 from sympy.solvers.ode import *
@@ -45,10 +46,12 @@ printing.init_printing()
 # A = Symbol('A', real=True)
 lst_symbols_reals = ['x','y','z','r','t','T','q',
                      'a','b','c',
-                     'alpha','beta','gamma','theta','phi']
+                     'alpha','beta','gamma','theta','phi',
+                     'C1','C2','C3']
 [x,y,z,r,t,T,q,
  a,b,c,
- alpha,beta,gamma,theta,phi] = [Symbol(isr, real=True) for isr in lst_symbols_reals]  # SymPy symbol definitions.
+ alpha,beta,gamma,theta,phi,
+ C1,C2,C3] = [Symbol(isr, real=True) for isr in lst_symbols_reals]  # SymPy symbol definitions.
 
 # Functions
 lst_functions = ['f','g','h']
@@ -106,10 +109,12 @@ def condense(system, symbols, elim):
 
 def substitute(pexpressions, psubstitutions):
     """
+    substitute([x,y,z], {x: 1, y: 2, z: 3})
+    
     pexpressions = [x, y, z]
     psubstitutions = {x: 1, y: 2, z: 3} OR
     psubstitutions = [(x, 1), (y, 2), (z, 3)]
-    substitute([x,y,z], {x: 1, y: 2, z: 3})
+    substitute(pexpressions, psubstitutions)
     """
     res = []
     for ieq in pexpressions:
@@ -119,6 +124,26 @@ def substitute(pexpressions, psubstitutions):
 
 
 ### Functions
+def get_iterated_functions(f, fixed_vals={C1:0, C2:0}, prm=alpha, 
+                           param_vals=np.arange(1,2,0.2)):
+        """
+        fixed_vals = {A:1, w0:1}
+        fixed_func = function.subs(fixed_vals)
+        ifunc = lambda i:fixed_func.subs(beta,i) # Lambda function
+        funcs = list(map(ifunc, np.arange(0.1,1.2,0.1))) # All functions.
+        
+        Returns a list of functions.
+        
+        Usage:
+        fixed_vals = {A:1, w0:1}
+        param_vals = np.arange(0.1,1.2,0.1)
+        display(get_iterated_functions(omech.scaled_amplitude, fixed_vals, beta, np.arange(0.1,1.2,0.1)))
+        """
+        fixed_func = f.subs(fixed_vals)          # Substitute fixed numerical values to symbols.
+        ifunc = lambda i:fixed_func.subs(prm, i) # Construct a lambda function with an independent parameter prm.
+        funcs = list(map(ifunc, param_vals))
+        return(funcs)
+        
 def get_piecewise():
     """
     todo 
@@ -233,8 +258,8 @@ def solve_odes(equations, func=y, output_style="display"):
         (label,eq) = (key,value)
         sol = dsolve(eq, func, check=True)
         pprints(label,  eq,
-                "sol=", sol,
-                "simplified sol=", simplify(sol),
+                "Solution=", sol,
+                "Simplified solution=", simplify(sol),
                 "Checking=", checkodesol(eq,sol),
                 output_style = output_style)
 
@@ -295,8 +320,7 @@ def plot_list(plist2Ds, plabels=[1,2,3],
     fig.tight_layout()
 
 
-
-def plot_sympfunc(pfuncs, prange, plabels=[1,2,3], xlabel="$x$", ylabel="$y$", 
+def plot_sympfunc(pfuncs, prange=(-1,1,100), plabels=[1,2,3], xlabel="$x$", ylabel="$y$", 
                   pxscale="linear", pyscale="linear", pgrid=False, paxis=False):
     """
     Plots sympy functions within a specified region.
@@ -409,6 +433,28 @@ def pprints(func, *funcs, **kwargs):
             if newline==True and (i % 2)==True: print(r"\\")
             # if newline==True : print(r"\\")
 
+def print_matrix_elements(mat, **kwargs):
+    """
+    M = Matrix([[1,2],[3,4]])
+    todo apply latex template.
+    """
+    output_style = kwargs.get("output_style", "latex")
+    
+    M = Matrix([[1,2],[3,4]])
+    for i in range(mat.rows):
+        for j in range(mat.cols):
+            if output_style == "display":
+                display(f"m{i+1}{j+1} = ", mat[i,j])
+            elif output_style == "pprint":
+                pprint(f"m{i+1}{j+1} = {mat[i,j]}")
+            elif output_style == "print":
+                print(f"m{i+1}{j+1} = {mat[i,j]}")
+            elif output_style == "latex":
+                print("\\begin{multline}")
+                print_latex(f"m{i+1}{j+1} = ")
+                print_latex(mat[i,j])
+                print("\\end{multline}")
+    
 
 ### Statistics
 def meanT(pfunc, pvar=t, pint=[t,t+T]):
