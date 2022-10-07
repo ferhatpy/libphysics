@@ -18,7 +18,6 @@ from sympy.physics.quantum.qapply import *
 from libreflection import *
 import libphyscon as pc
 
-# exec(open("/media/veracrypt1/python/projects/libphysics/src/libreflection.py").read())
 exec(open("../src/libreflection.py").read())
 
 class mechanics(branch):
@@ -133,7 +132,7 @@ class mechanics(branch):
         self.subformulary = subformulary()
         
         if self.class_type in ["scalar"]:
-            self.G = G # Green's function.
+            self.G = self.GreensF = G # Green's function.
             self.x = self.position = x
             self.v = self.velocity = Eq(_v, diff(self.x, t, evaluate=True))
             self.a = self.acceleration = Eq(_a, diff(self.x, t, 2, evaluate=True))
@@ -148,7 +147,7 @@ class mechanics(branch):
             self.damped_harmonic_oscillator2 = Eq(diff(self.x, t, 2, evaluate=True)+2*beta*diff(self.x, t, evaluate=True)+w0**2*self.x, 0)
             self.driven_oscillator1 = Eq(m*diff(self.x, t, 2, evaluate=True)+gamma*diff(self.x, t, evaluate=True)+k*self.x, F0*cos(w*t))
             self.driven_oscillator2 = Eq(diff(self.x, t, 2, evaluate=True)+2*beta*diff(self.x, t, evaluate=True)+w0**2*self.x, A*cos(w*t))
-            self.driven_oscillator2_Op =  diff(self.G, t, 2) + 2*beta*diff(self.G, t) + w0**2*self.G
+            self.driven_oscillator2_GreensF = Eq(diff(self.G, t, 2) + 2*beta*diff(self.G, t) + w0**2*self.G, 0)
             self.amplitude = None
             self.phase = None
             self.scaled_amplitude = None
@@ -186,3 +185,4 @@ class mechanics(branch):
         return("Document of mechanics class.")
         
 omech = mechanics() # Create an omech object from mechanics class.
+omech.__init__()

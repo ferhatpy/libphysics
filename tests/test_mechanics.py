@@ -13,7 +13,6 @@ for ipath in lstPaths:
         sys.path.append(ipath)
 from libsympy import *
 from mechanics import *
-
 # print(sys.version)
 # print(sys.path)
 
@@ -38,7 +37,7 @@ class sets:
     flow = [{100:"get_formulary", 150:"get_subformulary",
              200:"simple_harmonic_oscillator_scalar", 201:"simple_harmonic_oscillator_vectorial", 
              2321:"coordinate_systems"}[i] 
-            for i in [201]]
+            for i in [2321]]
 
 ### Formulary
 print("Test of the {0}.".format(sets.flow))
