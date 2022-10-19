@@ -7,10 +7,16 @@ test_mechanics.py
 import copy
 import sys
 import os
-lstPaths = ["../src", "../../libpython/src"]
+#lstPaths = ["../src"]
+#for ipath in lstPaths:
+#    if ipath not in sys.path:
+#        sys.path.append(ipath)
+        
+lstPaths = ["../src"]
 for ipath in lstPaths:
-    if ipath not in sys.path:
-        sys.path.append(ipath)
+    if os.path.join(os.path.dirname(__file__), ipath) not in sys.path:
+        sys.path.append(os.path.join(os.path.dirname(__file__), ipath))
+        
 from libsympy import *
 from mechanics import *
 # print(sys.version)
@@ -25,25 +31,33 @@ class sets:
     Settings = namedtuple("Settings", "type dropinf delta")
     sets = Settings(type="symbolic", dropinf=True, delta=0.1)
     """
+    global dictflow, test_all
+    
     def __init__(self):
         pass
     
+    # File settings
     input_dir  = "input/mechanics"
     output_dir = "output/mechanics"
     
     # Plotting settings
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]
     
-    flow = [{100:"get_formulary", 150:"get_subformulary",
-             200:"simple_harmonic_oscillator_scalar", 201:"simple_harmonic_oscillator_vectorial", 
-             2321:"coordinate_systems"}[i] 
-            for i in [2321]]
+    # Execution settings.
+    test_all = {0:False, 1:True}[0]
+    dictflow = {100:"get_formulary", 150:"get_subformulary",
+                200:"simple_harmonic_oscillator_scalar", 201:"simple_harmonic_oscillator_vectorial", 
+                2321:"coordinate_systems"}
+    flow = [dictflow[i] for i in [2321]]
+    if test_all: flow = [dictflow[i] for i in dictflow.keys()]
 
-### Formulary
 print("Test of the {0}.".format(sets.flow))
+
+### get_formulary
 if "get_formulary" in sets.flow:
     omech.class_type = "scalar"
     omech.__init__()
+    omech.output_style = "latex"
     omech.get_formulary()
     omech.get_formulary(style="eq")
     
@@ -66,7 +80,7 @@ if "simple_harmonic_oscillator_scalar" in sets.flow:
 #    omech = mechanics() # DO NOT create any instance.
     omech.class_type = "scalar"
     omech.__init__()
-    omech.solver.verbose = True
+    omech.verbose = True
     commands = ["solve", "NewtonsLaw2", omech.a.rhs]
     omech.process(commands)
 
@@ -82,7 +96,7 @@ if "simple_harmonic_oscillator_scalar" in sets.flow:
     # Scalar Way.
     omech.class_type = "scalar"
     omech.__init__()
-    omech.solver.verbose = True
+    omech.verbose = True
     display("Newton's 2nd Law", omech.NewtonsLaw2, 
             "Hooke's Law", omech.HookesLaw)
     commands = ["Eq", "NewtonsLaw2", "HookesLaw"]
@@ -93,7 +107,7 @@ if "simple_harmonic_oscillator_scalar" in sets.flow:
     commands = ["subs", "omech.result", [(k/m, w**2)]]
     omech.process(commands)
     commands = ["dsolve", "omech.result", x]
-    print("Codes:\n", *omech.solver.get_codes())
+    print("Codes:\n", *omech.get_codes())
     
     omech.x = omech.process(commands).rhs
     v = omech.v.evalf(subs={x:omech.x}).doit()
@@ -114,11 +128,12 @@ if "simple_harmonic_oscillator_scalar" in sets.flow:
     plot_sympfunc([x.subs({t:var('x')}),], (0, float(4*pi), 200), 
                    xlabel="$t$", ylabel="$x(t)$")
     
-if "simple_harmonic_oscillator_vectorial" in sets.flow:   
+if "simple_harmonic_oscillator_vectorial" in sets.flow:
+#    todo error occurs at "Eq" due to undefined 0 vector. ???
     # Vectorial Way.
     omech.class_type = "vectorial"
     omech.__init__()
-    omech.solver.verbose = True
+    omech.verbose = True
     commands = ["Eq", "NewtonsLaw2", "HookesLaw"]
     omech.process(commands)
 #    commands = ["subs", "omech.result", [(a, diff(x, t, 2, evaluate=False))]]
@@ -128,7 +143,7 @@ if "simple_harmonic_oscillator_vectorial" in sets.flow:
     commands = ["subs", "omech.result", [(k/m, w**2)]]
     omech.process(commands)
     commands = ["dsolve", "omech.result", omech.x]
-    print("Codes:\n", *omech.solver.get_codes())
+    print("Codes:\n", *omech.get_codes())
     
     omech.x = omech.process(commands).rhs
     v = omech.v.evalf(subs={x:omech.x}).doit()
@@ -155,7 +170,7 @@ if "coordinate_systems" in sets.flow:
     print("Polar Coordinates")
     omech.class_type = "vectorial"
     omech.__init__()
-    omech.solver.verbose = False
+    omech.verbose = False
     
     xreplaces = {x:r*cos(theta)*C.i,
                   y:r*sin(theta)*C.j,

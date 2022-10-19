@@ -9,7 +9,7 @@ Example: ostat
 ============= 
 template.class_type = "micro_canonical_discrete_distinguihable"
 template.__init__()
-template.solver.verbose = False
+template.verbose = False
 [mu,B] = symbols('mu B', real=True)
 xreplaces = {g:1, engF:mu*B*(2*i-3), j:1, n:2}
 
@@ -26,7 +26,7 @@ ostat2 = copy.deepcopy(ostat)
 import copy
 import sys
 import os
-lstPaths = ["../src", "../../libpython/src"]
+lstPaths = ["../src"]
 for ipath in lstPaths:
     if ipath not in sys.path:
         sys.path.append(ipath)
@@ -87,7 +87,7 @@ if "topic1" in sets.flow:
     
     ostat.class_type = "micro_canonical_discrete_distinguihable"
     ostat.__init__()
-    ostat.solver.verbose = False
+    ostat.verbose = False
     [mu,B] = symbols('mu B', real=True)
     xreplaces = {g:1, engF:mu*B*(2*i-3), j:1, n:2}
     display("Single particle partition function:", ostat.Zsp)
@@ -109,7 +109,7 @@ if "topic1" in sets.flow:
     display(U)
     
     ### Get generated SymPy codes.
-    print("Codes:\n", *ostat.solver.get_codes())
+    print("Codes:\n", *ostat.get_codes())
 
 
 elif "TripleVectorProduct" in sets.flow:
@@ -129,7 +129,7 @@ elif "TripleVectorProduct" in sets.flow:
     print(lhs.equals(rhs))
     """
     ometh.__init__()
-    ometh.solver.verbose = True
+    ometh.verbose = True
     
     # 1. way
     vA,vB,vC = (ometh.vA, ometh.vB, ometh.vC)

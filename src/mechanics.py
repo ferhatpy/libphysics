@@ -24,9 +24,7 @@ class mechanics(branch):
     """
 
     """
-    _name = "mechanics"
     class_type = {1:"scalar", 2:"vectorial"}[1]
-        
     
     def define_symbols(self):
         """
@@ -169,20 +167,26 @@ class mechanics(branch):
             self.F = self.NewtonsLaw2 = Eq(_F, m*self.a.rhs)
             self.Tr1 = self.Torque1 = Eq(_Tr, self.r.rhs.cross(diff(self.p.rhs, t, evaluate=False))) # Torque = r x dp/dt
             self.Tr2 = self.Torque1 = Eq(_Tr, self.r.rhs.cross(self.F.rhs)) # Torque = r x F
-            self.HookesLaw   = Eq(_F, -k*self.x)
+            self.HookesLaw   = Eq(_F, -k*self.x*C.i)
             self.W = self.work = Eq(_W, Integral(self.F.rhs.dot(dr), (z,zi,zf), (y,yi,yf), (x,xi,xf)))
             self.T = self.kinetic_energy  = Eq(_T, S(1)/2*m*self.v.rhs.dot(self.v.rhs))
             self.U = self.potential_energy= Eq(_U, Integral(k*self.r.rhs.dot(dr), (z,zi,zf), (y,yi,yf), (x,xi,xf)))
             self.H = self.energy = Eq(_H, self.T.rhs + self.U.rhs)
         
         if self.class_type == "EulerLagrange":
-            self.NewtonsLaw2 = Eq(F, m*a)
-            self.HookesLaw   = Eq(F, -k*x)
-
+            """
+            todo
+            """
+            self.x, self.y, self.z = [x, y, z]
+            self.r = self.position = Eq(_r, self.x*C.i + self.y*C.j + self.z*C.k)
+            self.v = self.velocity = Eq(_v, diff(self.r.rhs, t, evaluate=False))
+            self.a = self.acceleration = Eq(_a, diff(self.v.rhs, t, evaluate=False))
+            self.F = self.NewtonsLaw2 = Eq(_F, m*self.a.rhs)
+            self.HookesLaw   = Eq(_F, -k*self.x)
         
     @staticmethod
     def __doc__():
         return("Document of mechanics class.")
         
 omech = mechanics() # Create an omech object from mechanics class.
-omech.__init__()
+#omech.__init__()

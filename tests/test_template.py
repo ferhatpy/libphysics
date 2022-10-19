@@ -26,7 +26,7 @@ ostat2 = copy.deepcopy(ostat)
 import copy
 import sys
 import os
-lstPaths = ["../src", "../../libpython/src"]
+lstPaths = ["../src"]
 for ipath in lstPaths:
     if ipath not in sys.path:
         sys.path.append(ipath)

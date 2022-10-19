@@ -18,7 +18,7 @@ from sympy.vector import CoordSys3D
 from libreflection import *
 import libphyscon as pc
 
-exec(open("../src/libreflection.py").read())
+#exec(open("../src/libreflection.py").read())
 
 class methods(branch):
     """

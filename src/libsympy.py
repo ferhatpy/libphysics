@@ -8,12 +8,12 @@ Usage
 
 In jupyter-notebook:
 python2.#
-execfile('/media/hd/python/projects/libpython/src/libsympy.py')
+execfile('/media/hdd/python/projects/libpython/src/libsympy.py')
 
 In a python module, jupyter-notebook.
 # Import path for library functions.
 import sys
-lstPaths = ["/media/hd/python/projects/libpython/src"]
+lstPaths = ["/media/hdd/python/projects/libpython/src"]
 for ipath in lstPaths:
     if ipath not in sys.path:
         sys.path.append(ipath)
@@ -61,7 +61,10 @@ lst_functions = ['f','g','h']
 
 ### Algebra
 def eliminate(system, symbols):
-    """Eliminates given variables from a system of equations.
+    """
+    todo: Find reference from https://stackoverflow.com/
+    
+    Eliminates given variables from a system of equations.
     
     Args:
         system: List of SymPy equations.
@@ -89,7 +92,10 @@ def eliminate(system, symbols):
     return new_system
 
 def condense(system, symbols, elim):
-    """Solves a system for a set of variables while eliminating others.
+    """
+    todo: Find reference from https://stackoverflow.com/
+    
+    Solves a system for a set of variables while eliminating others.
     Depends on function eliminate.
     
     Args:
@@ -126,23 +132,23 @@ def substitute(pexpressions, psubstitutions):
 ### Functions
 def get_iterated_functions(f, fixed_vals={C1:0, C2:0}, prm=alpha, 
                            param_vals=np.arange(1,2,0.2)):
-        """
-        fixed_vals = {A:1, w0:1}
-        fixed_func = function.subs(fixed_vals)
-        ifunc = lambda i:fixed_func.subs(beta,i) # Lambda function
-        funcs = list(map(ifunc, np.arange(0.1,1.2,0.1))) # All functions.
-        
-        Returns a list of functions.
-        
-        Usage:
+    """
+    fixed_vals = {A:1, w0:1}
+    fixed_func = function.subs(fixed_vals)
+    ifunc = lambda i:fixed_func.subs(beta,i) # Lambda function
+    funcs = list(map(ifunc, np.arange(0.1,1.2,0.1))) # All functions.
+    
+    Returns a list of functions.
+    
+    Usage:
         fixed_vals = {A:1, w0:1}
         param_vals = np.arange(0.1,1.2,0.1)
         display(get_iterated_functions(omech.scaled_amplitude, fixed_vals, beta, np.arange(0.1,1.2,0.1)))
-        """
-        fixed_func = f.subs(fixed_vals)          # Substitute fixed numerical values to symbols.
-        ifunc = lambda i:fixed_func.subs(prm, i) # Construct a lambda function with an independent parameter prm.
-        funcs = list(map(ifunc, param_vals))
-        return(funcs)
+    """
+    fixed_func = f.subs(fixed_vals)          # Substitute fixed numerical values to symbols.
+    ifunc = lambda i:fixed_func.subs(prm, i) # Construct a lambda function with an independent parameter prm.
+    funcs = list(map(ifunc, param_vals))
+    return(funcs)
         
 def get_piecewise():
     """
