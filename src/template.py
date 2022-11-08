@@ -11,7 +11,7 @@ from sympy import*
 from libreflection import *
 import libphyscon as pc
 
-#exec(open("../src/libreflection.py").read())
+exec(open("../src/libreflection.py").read())
 
 class template(branch):
     """
@@ -48,9 +48,11 @@ class template(branch):
         Ay,By,Cy,Dy = symbols('A_y B_y C_y D_y', real=True)
         Az,Bz,Cz,Dz = symbols('A_z B_z C_z D_z', real=True)
         
-        x = Function('x')(t)
+        x  = Function('x')(t)
         U  = Function('U')(T)  # Function is accesible out of the module.
         _U = Function('U')(T)  # Function is not accesible out of the module.
+        G  = Function('G')(t,tau)                    # Not callable function.
+        G  = Lambda(((t,tau)), Function('G')(t,tau)) # Callable function
     
     def __init__(self):
         super().__init__()

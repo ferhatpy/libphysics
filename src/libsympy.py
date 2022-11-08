@@ -38,7 +38,7 @@ from sympy.interactive import printing
 printing.init_printing()
 
 
-### Global definitions
+#----Global definitions
 # Integer symbols
 [i,j,k,n,s] = symbols('i j k n s', integer=True, real=True)
 
@@ -59,7 +59,7 @@ lst_functions = ['f','g','h']
 # V=symbols('V', cls=Function)
 
 
-### Algebra
+#----Algebra
 def eliminate(system, symbols):
     """
     todo: Find reference from https://stackoverflow.com/
@@ -129,7 +129,26 @@ def substitute(pexpressions, psubstitutions):
     return res
 
 
-### Functions
+#----Differential Equations
+def solve_odes(equations, func=y, output_style="display"):
+    """
+    x,t,k,a = symbols("x, t, k, a")
+    [y,p,q,r] = [Function('y')(x), Function('p'), Function('q'), Function('r')(t)]
+
+    diff_equations = {"diffeq":Eq(y.diff(x,2)+3*y.diff(x)+2*y,1/(1+exp(x)))}
+    libsympy.solve_odes(diff_equations)
+    """
+    for key,value in equations.items():
+        (label,eq) = (key,value)
+        sol = dsolve(eq, func, check=True)
+        pprints(label,  eq,
+                "Solution=", sol,
+                "Simplified solution=", simplify(sol),
+                "Checking=", checkodesol(eq,sol),
+                output_style = output_style)
+        
+
+#----Functions
 def get_iterated_functions(f, fixed_vals={C1:0, C2:0}, prm=alpha, 
                            param_vals=np.arange(1,2,0.2)):
     """
@@ -192,7 +211,8 @@ def rect(x):
     res = Lambda((x), Heaviside(x + 1/2) - Heaviside(x - 1/2))
     return(res)
 
-### Linear Algebra
+
+#----Linear Algebra
 def eq_convert_to_matrix(eqs, x):
     # 
     [A,b] = linear_eq_to_matrix(eqs, x)
@@ -251,26 +271,7 @@ def solve_2x2_matrix(lhsM, coeffsM, rhsM):
     return(res)    
 
 
-### Differential Equations
-def solve_odes(equations, func=y, output_style="display"):
-    """
-    x,t,k,a = symbols("x, t, k, a")
-    [y,p,q,r] = [Function('y')(x), Function('p'), Function('q'), Function('r')(t)]
-
-    diff_equations = {"diffeq":Eq(y.diff(x,2)+3*y.diff(x)+2*y,1/(1+exp(x)))}
-    libsympy.solve_odes(diff_equations)
-    """
-    for key,value in equations.items():
-        (label,eq) = (key,value)
-        sol = dsolve(eq, func, check=True)
-        pprints(label,  eq,
-                "Solution=", sol,
-                "Simplified solution=", simplify(sol),
-                "Checking=", checkodesol(eq,sol),
-                output_style = output_style)
-
-
-### Plotting
+#----Plotting
 def plot_list(plist2Ds, plabels=[1,2,3], 
               xlabel="$x$", ylabel="$y$",
               pxscale="linear", pyscale="linear", 
@@ -383,7 +384,7 @@ def plot_save(pfilepath="output", ppad_inches=0.05, pformats=("png","pdf","svg")
         plt.savefig(pfilepath+".svg",format="svg")
 
 
-### Printing
+#----Printing
 def pprints(func, *funcs, **kwargs):
     """
     Reference: https://butterflyofdream.wordpress.com/
@@ -462,7 +463,7 @@ def print_matrix_elements(mat, **kwargs):
                 print("\\end{multline}")
     
 
-### Statistics
+#----Statistics
 def meanT(pfunc, pvar=t, pint=[t,t+T]):
     res = 1/T*integrate(pfunc, (pvar, pint[0], pint[1]))
     return res            

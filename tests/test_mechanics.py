@@ -36,7 +36,6 @@ class sets:
     def __init__(self):
         pass
     
-    # File settings
     input_dir  = "input/mechanics"
     output_dir = "output/mechanics"
     
@@ -48,9 +47,10 @@ class sets:
     dictflow = {100:"get_formulary", 150:"get_subformulary",
                 200:"simple_harmonic_oscillator_scalar", 201:"simple_harmonic_oscillator_vectorial", 
                 2321:"coordinate_systems"}
-    flow = [dictflow[i] for i in [2321]]
+    flow = [dictflow[i] for i in [201]]
     if test_all: flow = [dictflow[i] for i in dictflow.keys()]
 
+### Formulary
 print("Test of the {0}.".format(sets.flow))
 
 ### get_formulary
@@ -80,7 +80,7 @@ if "simple_harmonic_oscillator_scalar" in sets.flow:
 #    omech = mechanics() # DO NOT create any instance.
     omech.class_type = "scalar"
     omech.__init__()
-    omech.verbose = True
+    omech.solver.verbose = True
     commands = ["solve", "NewtonsLaw2", omech.a.rhs]
     omech.process(commands)
 
@@ -96,7 +96,7 @@ if "simple_harmonic_oscillator_scalar" in sets.flow:
     # Scalar Way.
     omech.class_type = "scalar"
     omech.__init__()
-    omech.verbose = True
+    omech.solver.verbose = True
     display("Newton's 2nd Law", omech.NewtonsLaw2, 
             "Hooke's Law", omech.HookesLaw)
     commands = ["Eq", "NewtonsLaw2", "HookesLaw"]
@@ -107,7 +107,7 @@ if "simple_harmonic_oscillator_scalar" in sets.flow:
     commands = ["subs", "omech.result", [(k/m, w**2)]]
     omech.process(commands)
     commands = ["dsolve", "omech.result", x]
-    print("Codes:\n", *omech.get_codes())
+    print("Codes:\n", *omech.solver.get_codes())
     
     omech.x = omech.process(commands).rhs
     v = omech.v.evalf(subs={x:omech.x}).doit()
@@ -133,7 +133,7 @@ if "simple_harmonic_oscillator_vectorial" in sets.flow:
     # Vectorial Way.
     omech.class_type = "vectorial"
     omech.__init__()
-    omech.verbose = True
+    omech.solver.verbose = True
     commands = ["Eq", "NewtonsLaw2", "HookesLaw"]
     omech.process(commands)
 #    commands = ["subs", "omech.result", [(a, diff(x, t, 2, evaluate=False))]]
@@ -143,7 +143,7 @@ if "simple_harmonic_oscillator_vectorial" in sets.flow:
     commands = ["subs", "omech.result", [(k/m, w**2)]]
     omech.process(commands)
     commands = ["dsolve", "omech.result", omech.x]
-    print("Codes:\n", *omech.get_codes())
+    print("Codes:\n", *omech.solver.get_codes())
     
     omech.x = omech.process(commands).rhs
     v = omech.v.evalf(subs={x:omech.x}).doit()
@@ -170,7 +170,7 @@ if "coordinate_systems" in sets.flow:
     print("Polar Coordinates")
     omech.class_type = "vectorial"
     omech.__init__()
-    omech.verbose = False
+    omech.solver.verbose = False
     
     xreplaces = {x:r*cos(theta)*C.i,
                   y:r*sin(theta)*C.j,

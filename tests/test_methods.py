@@ -9,7 +9,7 @@ Example: ostat
 ============= 
 template.class_type = "micro_canonical_discrete_distinguihable"
 template.__init__()
-template.verbose = False
+template.solver.verbose = False
 [mu,B] = symbols('mu B', real=True)
 xreplaces = {g:1, engF:mu*B*(2*i-3), j:1, n:2}
 
@@ -26,10 +26,15 @@ ostat2 = copy.deepcopy(ostat)
 import copy
 import sys
 import os
+#lstPaths = ["../src"]
+#for ipath in lstPaths:
+#    if ipath not in sys.path:
+#        sys.path.append(ipath)
+        
 lstPaths = ["../src"]
 for ipath in lstPaths:
-    if ipath not in sys.path:
-        sys.path.append(ipath)
+    if os.path.join(os.path.dirname(__file__), ipath) not in sys.path:
+        sys.path.append(os.path.join(os.path.dirname(__file__), ipath))
 from sympy import*
 from sympy.vector import CoordSys3D
 from libsympy import *
@@ -52,22 +57,29 @@ class sets:
     Settings = namedtuple("Settings", "type dropinf delta")
     sets = Settings(type="symbolic", dropinf=True, delta=0.1)
     """
+    global dictflow, test_all
+    
     def __init__(self):
         pass
     
-    input_dir  = "input/optics"
-    output_dir = "output/optics"
+    # File settings
+    input_dir  = "input/mechanics"
+    output_dir = "output/mechanics"
     
     # Plotting settings
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]
     
-    flow = [{100:"get_formulary", 150:"get_subformulary",
-             200:"TripleVectorProduct", 300:"topic2",
-             400:"topic3"}[i] 
-            for i in [200]]
+    # Execution settings.
+    test_all = {0:False, 1:True}[0]
+    dictflow = {100:"get_formulary", 150:"get_subformulary",
+             	900:"TripleVectorProduct", 300:"topic2",
+             	400:"topic3"}
+    flow = [dictflow[i] for i in [900]]
+    if test_all: flow = [dictflow[i] for i in dictflow.keys()]
 
-### Formulary
-print("Test of the {0}.".format(sets.flow[0]))
+print("Test of the {0}.".format(sets.flow))
+
+### get_formulary
 if "get_formulary" in sets.flow:
 #    omech = mechanics() # DO NOT create any instance.
     ometh.class_type = ""
@@ -87,7 +99,7 @@ if "topic1" in sets.flow:
     
     ostat.class_type = "micro_canonical_discrete_distinguihable"
     ostat.__init__()
-    ostat.verbose = False
+    ostat.solver.verbose = False
     [mu,B] = symbols('mu B', real=True)
     xreplaces = {g:1, engF:mu*B*(2*i-3), j:1, n:2}
     display("Single particle partition function:", ostat.Zsp)
@@ -109,7 +121,7 @@ if "topic1" in sets.flow:
     display(U)
     
     ### Get generated SymPy codes.
-    print("Codes:\n", *ostat.get_codes())
+    print("Codes:\n", *ostat.solver.get_codes())
 
 
 elif "TripleVectorProduct" in sets.flow:
@@ -129,7 +141,7 @@ elif "TripleVectorProduct" in sets.flow:
     print(lhs.equals(rhs))
     """
     ometh.__init__()
-    ometh.verbose = True
+    ometh.solver.verbose = True
     
     # 1. way
     vA,vB,vC = (ometh.vA, ometh.vB, ometh.vC)
@@ -148,17 +160,16 @@ elif "TripleVectorProduct" in sets.flow:
     xreplaces = {Ax:vA.components[C.i], Ay:vA.components[C.j], Az:vA.components[C.k],
                  Bx:vB.components[C.i], By:vB.components[C.j], Bz:vB.components[C.k],
                  Cx:vC.components[C.i], Cy:vC.components[C.j], Cz:vC.components[C.k]}
-    commands = ["xreplace", "ometh.DotProduct", xreplaces]
+    commands = ["xreplace", "ometh.dot_product", xreplaces]
     ometh.process(commands)
     
     # 3. Way
-    ometh.DotProduct.evalf(subs=xreplaces)
+    ometh.dot_product.evalf(subs=xreplaces)
     # 4. Way
     display(f"A= {vA}", f"B= {vB}",
             "Dot Product",
-            ometh.DotProduct,
-            ometh.DotProduct.xreplace(xreplaces),
+            ometh.dot_product,
+            ometh.dot_product.xreplace(xreplaces),
             "Vector Product",
-            ometh.CrossProduct.xreplace(xreplaces)
-            )
-    
+            ometh.cross_product.xreplace(xreplaces)
+            ) 

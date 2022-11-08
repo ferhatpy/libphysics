@@ -24,7 +24,9 @@ class mechanics(branch):
     """
 
     """
+    _name = "mechanics"
     class_type = {1:"scalar", 2:"vectorial"}[1]
+        
     
     def define_symbols(self):
         """
@@ -57,11 +59,12 @@ class mechanics(branch):
         A,k,m,M,F0,w,w0,w1,w2 = symbols('A k m M F_0 w w_0 w_1 w_2', real=True, positive=True)
         xi,xf,yi,yf,zi,zf = symbols('x_i x_f y_i y_f z_i z_f', real=True)
         x0,y0,z0,v0 = symbols('x_0 y_0 z_0 v_0', real=True)
-        G         = Function('G')(t)
+        G         = Lambda(((t,tau)), Function('G')(t,tau)) # Callable function
         r         = Function('r')(t)
         x,y,z     = [Function('x')(t), Function('y')(t), Function('z')(t)]
         theta,phi = [Function('theta')(t), Function('phi')(t)]
        
+        
         if self.class_type in ["scalar"]:
             _F,_W  = symbols('F W', real=True)
             _x = Function('x')(t)          # Position.
@@ -127,6 +130,7 @@ class mechanics(branch):
                 
                 # List of Moment of Inertia
                 self.Icm_sphere = S(2)/5*M*r**2
+                
         self.subformulary = subformulary()
         
         if self.class_type in ["scalar"]:
@@ -135,7 +139,7 @@ class mechanics(branch):
             self.v = self.velocity = Eq(_v, diff(self.x, t, evaluate=True))
             self.a = self.acceleration = Eq(_a, diff(self.x, t, 2, evaluate=True))
             self.p = self.momentum = Eq(_p, m*self.v.rhs)
-            self.F = self.NewtonsLaw2 = Eq(_F, m*self.a.rhs)
+            self.F = self.force = self.NewtonsLaw2 = Eq(_F, m*self.a.rhs)
             self.HookesLaw = Eq(_F, -k*self.x)
             self.W = self.work = Eq(_W, Integral(self.F.rhs, (x,xi,xf)))
             self.T = self.kinetic_energy = Eq(_T, S(1)/2*m*self.v.rhs**2)
@@ -145,7 +149,7 @@ class mechanics(branch):
             self.damped_harmonic_oscillator2 = Eq(diff(self.x, t, 2, evaluate=True)+2*beta*diff(self.x, t, evaluate=True)+w0**2*self.x, 0)
             self.driven_oscillator1 = Eq(m*diff(self.x, t, 2, evaluate=True)+gamma*diff(self.x, t, evaluate=True)+k*self.x, F0*cos(w*t))
             self.driven_oscillator2 = Eq(diff(self.x, t, 2, evaluate=True)+2*beta*diff(self.x, t, evaluate=True)+w0**2*self.x, A*cos(w*t))
-            self.driven_oscillator2_GreensF = Eq(diff(self.G, t, 2) + 2*beta*diff(self.G, t) + w0**2*self.G, 0)
+            self.driven_oscillator2_GreensF = Eq(diff(self.G(t,tau), t, 2) + 2*beta*diff(self.G(t,tau), t) + w0**2*self.G(t,tau), 0)
             self.amplitude = None
             self.phase = None
             self.scaled_amplitude = None
@@ -164,10 +168,10 @@ class mechanics(branch):
             self.a = self.acceleration = Eq(_a, diff(self.v.rhs, t, evaluate=False))
             self.p = self.momentum = Eq(_p, m*self.v.rhs)
             self.L = self.angular_momentum = Eq(_L, self.r.rhs.cross(self.p.rhs))
-            self.F = self.NewtonsLaw2 = Eq(_F, m*self.a.rhs)
+            self.F = self.force = self.NewtonsLaw2 = Eq(_F, m*self.a.rhs)
             self.Tr1 = self.Torque1 = Eq(_Tr, self.r.rhs.cross(diff(self.p.rhs, t, evaluate=False))) # Torque = r x dp/dt
             self.Tr2 = self.Torque1 = Eq(_Tr, self.r.rhs.cross(self.F.rhs)) # Torque = r x F
-            self.HookesLaw   = Eq(_F, -k*self.x*C.i)
+            self.HookesLaw   = Eq(_F, -k*self.x)
             self.W = self.work = Eq(_W, Integral(self.F.rhs.dot(dr), (z,zi,zf), (y,yi,yf), (x,xi,xf)))
             self.T = self.kinetic_energy  = Eq(_T, S(1)/2*m*self.v.rhs.dot(self.v.rhs))
             self.U = self.potential_energy= Eq(_U, Integral(k*self.r.rhs.dot(dr), (z,zi,zf), (y,yi,yf), (x,xi,xf)))
@@ -189,4 +193,4 @@ class mechanics(branch):
         return("Document of mechanics class.")
         
 omech = mechanics() # Create an omech object from mechanics class.
-#omech.__init__()
+# omech.__init__()

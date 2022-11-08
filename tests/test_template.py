@@ -26,10 +26,16 @@ ostat2 = copy.deepcopy(ostat)
 import copy
 import sys
 import os
+#lstPaths = ["../src"]
+#for ipath in lstPaths:
+#    if ipath not in sys.path:
+#        sys.path.append(ipath)
+        
 lstPaths = ["../src"]
 for ipath in lstPaths:
-    if ipath not in sys.path:
-        sys.path.append(ipath)
+    if os.path.join(os.path.dirname(__file__), ipath) not in sys.path:
+        sys.path.append(os.path.join(os.path.dirname(__file__), ipath))
+        
 from libsympy import *
 from mechanics import *
 from statistical_physics import *
@@ -47,22 +53,29 @@ class sets:
     Settings = namedtuple("Settings", "type dropinf delta")
     sets = Settings(type="symbolic", dropinf=True, delta=0.1)
     """
+    global dictflow, test_all
+    
     def __init__(self):
         pass
-    
+
+    # File settings
     input_dir  = "input/optics"
     output_dir = "output/optics"
     
     # Plotting settings
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]
     
-    flow = [{100:"get_formulary", 150:"get_subformulary",
-             200:"topic1", 300:"topic2",
-             400:"topic3"}[i] 
-            for i in [200]]
+    # Execution settings.
+    test_all = {0:False, 1:True}[0]
+    dictflow = {100:"get_formulary", 150:"get_subformulary",
+                200:"topic1", 300:"topic2",
+                400:"topic3"}
+    flow = [dictflow[i] for i in [200]]
+    if test_all: flow = [dictflow[i] for i in dictflow.keys()]
 
-### Formulary
-print("Test of the {0}.".format(sets.flow[0]))
+print("Test of the {0}.".format(sets.flow))
+
+### get_formulary
 if "get_formulary" in sets.flow:
 #    omech = mechanics() # DO NOT create any instance.
     omec.class_type = ""
