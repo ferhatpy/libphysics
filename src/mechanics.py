@@ -35,11 +35,11 @@ class mechanics(branch):
         F: 
         """
         global C
-        global C1,C2,C3
+        global C1,C2,C3 # Integration constants.
         global t,tau,p,s
         global alpha,beta,gamma
         global A,k,m,M,F0
-        global G
+        global _G, _Gw
         global a,r,x,v,w,w0,w1,w2,y,z
         global _a,_r,_x,_v
         global F,Fx,Fy,Fz,W
@@ -48,22 +48,21 @@ class mechanics(branch):
         global xi,xf,yi,yf,zi,zf
         global x0,y0,z0,v0
         global theta, phi
-        
+
 
         C         = CoordSys3D('C') # Cartesian coordinate system.
         C1,C2,C3  = symbols('C1 C2 C3')
-        t,p,s     = symbols('t p s', real=True)
+        p,s       = symbols('p s', real=True)
         t         = Symbol('t', real=True, positive=True)
         tau       = Symbol('tau', real=True, positive=True)
         alpha,beta,gamma = symbols('alpha beta gamma', real=True, positive=True)
         A,k,m,M,F0,w,w0,w1,w2 = symbols('A k m M F_0 w w_0 w_1 w_2', real=True, positive=True)
         xi,xf,yi,yf,zi,zf = symbols('x_i x_f y_i y_f z_i z_f', real=True)
         x0,y0,z0,v0 = symbols('x_0 y_0 z_0 v_0', real=True)
-        G         = Lambda(((t,tau)), Function('G')(t,tau)) # Callable function
         r         = Function('r')(t)
         x,y,z     = [Function('x')(t), Function('y')(t), Function('z')(t)]
         theta,phi = [Function('theta')(t), Function('phi')(t)]
-       
+
         
         if self.class_type in ["scalar"]:
             _F,_W  = symbols('F W', real=True)
@@ -71,9 +70,6 @@ class mechanics(branch):
             _v = Function('v')(t)          # Velocity.
             _a = Function('a')(t)          # Acceleration.
             _p = Function('p')(t)          # Linear momentum.
-            _H = Function('H')(t)          # Total energy.
-            _T = Function('T')(t)          # Kinetic energy.
-            _U = Function('U')(t)          # Potential energy.
             
         if self.class_type in ["vectorial"]:
             _W, = symbols('W,', real=True)
@@ -90,12 +86,22 @@ class mechanics(branch):
             _v = vx*C.i+vy*C.j+vz*C.k       # Velocity vector.
             _a = ax*C.i+ay*C.j+az*C.k       # Acceleration vector.
             _F = Fx*C.i+Fy*C.j+Fz*C.k       # Force vector.
-            _H = Function('H')(t)           # Total energy.
-            _T = Function('T')(t)           # Kinetic energy.
-            _U = Function('U')(t)           # Potential energy.
             _Tr= Trx*C.i+Try*C.j+Trz*C.k    # Torque vector.
             _p = px*C.i+py*C.j+pz*C.k       # Linear momentum vector.
             _L = Lx*C.i+Ly*C.j+Lz*C.k       # Angular momentum vector.
+        
+	# Common definitions.
+        if self.class_type in ["scalar", "vectorial"]:
+            _H = Function('H')(t)           # Total energy.
+            _T = Function('T')(t)           # Kinetic energy.
+            _U = Function('U')(t)           # Potential energy.
+            
+            # G         = Lambda((t,tau), Function('G')(t,tau)) # Callable Green's function.
+            # Gw        = Lambda((w), Function('Gtilde')(w))    # Callable Green's tilde function.
+            _G  = Function('G')(t,tau)    # Incallable Green's function.
+            _Gw = Function('Gtilde')(w)   # Incallable Green's tilde function.
+            
+        
 
     def __init__(self):
         super().__init__()
@@ -134,7 +140,19 @@ class mechanics(branch):
         self.subformulary = subformulary()
         
         if self.class_type in ["scalar"]:
-            self.G = self.GreensF = G # Green's function.
+            #----Green's Function Methods
+            self.G  = self.Greens_function  = _G     # Green's function.
+            self.Gw = self.Greensw_function = _Gw    # Green's tilde function.
+            self.IFT_Gw = Eq(self.G, 1/sqrt(2*pi)*Integral(self.Gw*exp(I*w*(t-tau)), (w)))
+            # IFT_Gw = 1/sqrt(2*pi)*Integral(Gw*exp(I*w*(t-tau)), (w))
+            self.IFT_Dirac_delta = Eq(DiracDelta(t-tau), 1/(2*pi)*Integral(exp(I*w*(t-tau)), (w)))
+            self.inverse_Fourier_transform_Gw = self.IFT_Gw
+            self.inverse_Fourier_transform_Dirac_delta = self.IFT_Dirac_delta
+            self.G_driven_oscillator_weak_damping = 1/(m*sqrt(w0**2-gamma**2))*exp(-gamma*(t-tau))*sin(sqrt(w0**2-gamma**2)*(t-tau))
+            self.G_driven_oscillator_strong_damping = 1/(m*sqrt(gamma**2-w0**2))*exp(-gamma*(t-tau))*sinh(sqrt(gamma**2-w0**2)*(t-tau))
+            self.G_driven_oscillator_critical_damping = (t-tau)/m*exp(-gamma*(t-tau))
+            
+            #----Mechanics Methods
             self.x = self.position = x
             self.v = self.velocity = Eq(_v, diff(self.x, t, evaluate=True))
             self.a = self.acceleration = Eq(_a, diff(self.x, t, 2, evaluate=True))
@@ -149,7 +167,8 @@ class mechanics(branch):
             self.damped_harmonic_oscillator2 = Eq(diff(self.x, t, 2, evaluate=True)+2*beta*diff(self.x, t, evaluate=True)+w0**2*self.x, 0)
             self.driven_oscillator1 = Eq(m*diff(self.x, t, 2, evaluate=True)+gamma*diff(self.x, t, evaluate=True)+k*self.x, F0*cos(w*t))
             self.driven_oscillator2 = Eq(diff(self.x, t, 2, evaluate=True)+2*beta*diff(self.x, t, evaluate=True)+w0**2*self.x, A*cos(w*t))
-            self.driven_oscillator2_GreensF = Eq(diff(self.G(t,tau), t, 2) + 2*beta*diff(self.G(t,tau), t) + w0**2*self.G(t,tau), 0)
+            self.driven_oscillator3 = Eq(m*self.x.diff(t,2) + 2*gamma*m*self.x.diff(t,1) + m*w0**2*self.x, F0*cos(w*t))
+            # self.driven_oscillator_GreenF = Eq( m*(1/sqrt(2*pi))*diff(ometh.IFT_Gw,t,2), DiracDelta(t-tau)) #kaldik
             self.amplitude = None
             self.phase = None
             self.scaled_amplitude = None
@@ -193,4 +212,3 @@ class mechanics(branch):
         return("Document of mechanics class.")
         
 omech = mechanics() # Create an omech object from mechanics class.
-# omech.__init__()

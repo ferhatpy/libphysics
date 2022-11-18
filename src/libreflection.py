@@ -51,6 +51,7 @@ class branch:
         self.classname = type(self).__name__
 #        self.classname = self.__class__.__name__ # same as above
         self.solver = solver() # Assign a solver to my branch.
+        self.result = None
         
     def process(self, commands):
         # omech.process(commands)
@@ -208,6 +209,7 @@ class solver:
         print(omech.process(commands))
         
         """
+        # Sentence dissection.
 #        commands = "sentence1. sentence2. sentence3."
 #        commands = commands.split('.')
 #        commands.__delitem__(-1)
@@ -252,7 +254,7 @@ class solver:
                 expr = getattr(globals()[classname], method)
             else:
                 # getattr(globals()['mechanics'](), 'NewtonsLaw2')
-                expr = getattr(globals()[classname](), subject) # f
+                expr = getattr(globals()[classname](), subject)
                 
             cmd  = globals()[verb] # dsolve
             params = obj
@@ -263,8 +265,9 @@ class solver:
                 strcode = "{0}({1}, {2})".format(cmd.__name__, expr, params)
             elif len(commands)==4:
                 res = cmd(expr, params, args)
-                strcode = "{0}({1}, {2}, {3})".format(cmd.__name__, expr, params, args)
-            
+                strcode = "{0}({1}, {2}, ics={3})".format(cmd.__name__, expr, params, args)
+                print(strcode) # todo fix errors.
+        
         elif verb in ["Eq",]:
             """
             Eq
@@ -280,11 +283,6 @@ class solver:
             lhs = vars(self)[subject].rhs
             rhs = vars(self)[obj].rhs
             """
-            
-            # Check omech.result (object.method) pattern in a command.
-            if subject.find('.') != -1:
-                (classname, method) = subject.split('.') # 'obj.result' -> ['obj', 'result']
-            
             cmd = globals()[verb] # Eq
             lhs = getattr(globals()[classname](), subject).rhs
             rhs = getattr(globals()[classname](), obj).rhs
@@ -348,12 +346,11 @@ class solver:
             """
             # Check omech.result (object.method) pattern in a command.
             if subject.find('.') != -1:
-                # getattr(globals()["omech"], "result")
-                (classname, method) = subject.split('.') # 'obj.result' -> ['obj', 'result']
+                (classname, method) = subject.split('.')
                 expr = getattr(globals()[classname], method)
             else:
                 # getattr(globals()['mechanics'](), 'NewtonsLaw2')
-                expr = getattr(globals()[classname](), subject) # f
+                expr = getattr(globals()[classname](), subject)
             
             cmd  = getattr(expr, verb) # expr.subs
             params = obj
@@ -363,6 +360,6 @@ class solver:
             
         
         self.codes.append(strcode+'\n')            
-        if self.verbose: print(strcode)
+        if self.verbose:print(strcode)
         libsympy.pprints(res, output_style=self.output_style)
         return(res)

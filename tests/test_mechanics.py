@@ -1,26 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# ## test_mechanics.py
+
 """
 test_mechanics.py
 
+References:
+    Vladimir Pletser - Lagrangian and Hamiltonian Analytical Mechanics_ Forty Exercises Resolved and Explained-Springer Singapore (2018).pdf
 """
 import copy
 import sys
 import os
-#lstPaths = ["../src"]
-#for ipath in lstPaths:
-#    if ipath not in sys.path:
-#        sys.path.append(ipath)
-        
 lstPaths = ["../src"]
 for ipath in lstPaths:
-    if os.path.join(os.path.dirname(__file__), ipath) not in sys.path:
-        sys.path.append(os.path.join(os.path.dirname(__file__), ipath))
-        
+    if ipath not in sys.path:
+        sys.path.append(ipath)
+
 from libsympy import *
 from mechanics import *
-# print(sys.version)
-# print(sys.path)
+#print(sys.version)
+#print(sys.path)
+
+# ### Settings
 
 ### Settings
 class sets:
@@ -47,11 +48,12 @@ class sets:
     dictflow = {100:"get_formulary", 150:"get_subformulary",
                 200:"simple_harmonic_oscillator_scalar", 201:"simple_harmonic_oscillator_vectorial", 
                 2321:"coordinate_systems"}
-    flow = [dictflow[i] for i in [201]]
+    flow = [dictflow[i] for i in [2321]]
     if test_all: flow = [dictflow[i] for i in dictflow.keys()]
 
-### Formulary
 print("Test of the {0}.".format(sets.flow))
+
+# ### get_formulary
 
 ### get_formulary
 if "get_formulary" in sets.flow:
@@ -69,9 +71,13 @@ if "get_formulary" in sets.flow:
     omech.__init__()
     omech.get_formulary()    
 
+# ### get_subformulary
+
 if "get_subformulary" in sets.flow:
     omech.__init__()
     omech.get_subformulary()
+
+# ### simple_harmonic_oscillator_scalar
 
 if "simple_harmonic_oscillator_scalar" in sets.flow:
     """       
@@ -127,7 +133,9 @@ if "simple_harmonic_oscillator_scalar" in sets.flow:
     plot(a, (t,0,4*pi,200), xlabel="$t$", ylabel="$a(t)$")
     plot_sympfunc([x.subs({t:var('x')}),], (0, float(4*pi), 200), 
                    xlabel="$t$", ylabel="$x(t)$")
-    
+
+# ### simple_harmonic_oscillator_vectorial     
+
 if "simple_harmonic_oscillator_vectorial" in sets.flow:
 #    todo error occurs at "Eq" due to undefined 0 vector. ???
     # Vectorial Way.
@@ -163,7 +171,9 @@ if "simple_harmonic_oscillator_vectorial" in sets.flow:
     plot(a, (t,0,4*pi,200), xlabel="$t$", ylabel="$a(t)$")
     plot_sympfunc([x.subs({t:var('x')}),], (0, float(4*pi), 200), 
                    xlabel="$t$", ylabel="$x(t)$")
-    
+
+# ### coordinate_systems    
+
 if "coordinate_systems" in sets.flow:
     print("Coordinate Systems")
     

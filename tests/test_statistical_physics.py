@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# ## test_statistical_physics.py
 
 """
 test_statistical_physics.py
@@ -13,21 +14,17 @@ print(omec.process(commands))
 import copy
 import sys
 import os
-#lstPaths = ["../src"]
-#for ipath in lstPaths:
-#    if ipath not in sys.path:
-#        sys.path.append(ipath)
-        
 lstPaths = ["../src"]
 for ipath in lstPaths:
-    if os.path.join(os.path.dirname(__file__), ipath) not in sys.path:
-        sys.path.append(os.path.join(os.path.dirname(__file__), ipath))
-        
+    if ipath not in sys.path:
+        sys.path.append(ipath)
+
 from libsympy import *
 from statistical_physics import *
-
 # print(sys.version)
 # print(sys.path)
+
+# ### Settings
 
 ### Settings
 class sets:
@@ -57,10 +54,12 @@ class sets:
                 331:"1D_simple_harmonic_oscillator", 332:"",
                 430:"monoatomic_ideal_gas",
                 710:"ideal_gas_canonical"}
-    flow = [dictflow[i] for i in [332,430,710]]
+    flow = [dictflow[i] for i in [311]]
     if test_all: flow = [dictflow[i] for i in dictflow.keys()]
 
 print("Test of the {0}.".format(sets.flow))
+
+# ### get_formulary
 
 ### get_formulary
 if "get_formulary" in sets.flow:
@@ -77,6 +76,9 @@ if "get_formulary" in sets.flow:
     ostat.get_formulary()
 
 ### 3 Paramagnets and Oscillators
+
+# ### A Spin-1/2 Paramagnet Way1
+
 ### A Spin-1/2 Paramagnet Way1
 if "1D_1/2_paramagnet_way1" in sets.flow:
     print("A Spin-1/2 Paramagnet Way1")
@@ -122,7 +124,9 @@ if "1D_1/2_paramagnet_way1" in sets.flow:
     display(M)
     
     simplify(ostat.M.evalf(subs=xreplaces).doit())
-    
+
+# ### A Spin-1/2 Paramagnet Way2
+
 ### A Spin-1/2 Paramagnet Way2
 if "1D_1/2_paramagnet_way2" in sets.flow:
     print("A Spin-1/2 Paramagnet Way2")
@@ -140,10 +144,12 @@ if "1D_1/2_paramagnet_way2" in sets.flow:
     S   = simplify(  ostat.S.evalf(subs=xreplaces).doit())
     F   = simplify(  ostat.F.evalf(subs=xreplaces).doit())
     M   = simplify(  ostat.M.evalf(subs=xreplaces).doit())
-    
+
 #    list(map(display, [Zsp,U,Cv,S,F,M]))
     display(Zsp,U,Cv,S,F,M)
-    
+
+# ### An Array of 1-D Simple Harmonic Oscillators    
+
 ### An Array of 1-D Simple Harmonic Oscillators
 if "1D_simple_harmonic_oscillator" in sets.flow:    
     print("An Array of 1-D Simple Harmonic Oscillators")
@@ -170,9 +176,12 @@ if "1D_simple_harmonic_oscillator" in sets.flow:
     Cv = simplify(ostat.result.doit())
     display(Cv)
 
-### An Array of 3-D Simple Harmonic Oscillators todo
+# ## An Array of 3-D Simple Harmonic Oscillators todo
 
-### 4 Indistinguishable Particles and Monatomic Ideal Gases    
+### 4 Indistinguishable Particles and Monatomic Ideal Gases  
+
+# ### Monoatomic Ideal Gas
+  
 ### Monoatomic Ideal Gas
 if "monoatomic_ideal_gas" in sets.flow:    
     print("Monoatomic Ideal Gas")
@@ -198,8 +207,11 @@ if "monoatomic_ideal_gas" in sets.flow:
     ostat.process(commands)
     S = simplify(ostat.result.doit())
     display(S)
-    
+
 ### 7 Electrons in Metals 
+
+# ### The Ideal Gas in the Canonical Ensemble
+
 #---The Ideal Gas in the Canonical Ensemble
 if "ideal_gas_canonical" in sets.flow:
     print("The Ideal Gas in the Canonical Ensemble")

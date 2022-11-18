@@ -42,7 +42,7 @@ class methods(branch):
         global Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Dx,Dy,Dz
         global x,y,z,r,s,t,tau,w
         global C
-        global G
+        global G, Gw
         
         alpha,beta,gamma,phi,theta = symbols('alpha beta gamma phi theta', real=True)
         a,b,c,d   = symbols('a b c d', real=True)
@@ -54,7 +54,10 @@ class methods(branch):
         Az,Bz,Cz,Dz = symbols('A_z B_z C_z D_z', real=True)
         x,y,z,r,s,t,w = symbols('x y z r s t w', real=True)
         C         = CoordSys3D('C')
-        G         = Lambda(((t,tau)), Function('G')(t,tau)) # Callable function
+#        G         = Lambda((t,tau), Function('G')(t,tau)) # Callable Green's function.
+#        Gw        = Lambda((w), Function('Gtilde')(w))    # Callable Green's tilde function.
+        G         = Function('G')(t,tau)    # Incallable Green's function.
+        Gw        = Function('Gtilde')(w)   # Incallable Green's tilde function.
         
     
     def __init__(self):
@@ -82,15 +85,30 @@ class methods(branch):
         self.subformulary = subformulary()
         
         if self.class_type == "default":
-            # Green's Function Methods
-            self.G = self.GreensF = G # Green's function.
-                        
-            # Integral Transforms
-            # Laplace Transform
+            #----Green's Function Methods
+            self.G  = G     # Green's function.
+            self.Gw = Gw    # Green's tilde function.
+            self.IFT_Gw = 1/sqrt(2*pi)*Integral(Gw*exp(I*w*(t-tau)), (w))
+            # IFT_Gw = 1/sqrt(2*pi)*Integral(Gw*exp(I*w*(t-tau)), (w))
+            self.IFT_Dirac_delta = 1/(2*pi)*Integral(exp(I*w*(t-tau)), (w))
+
+            # Common text definitions.
+            self.Greens_function  = self.G
+            self.Greensw_function = self.Gw
+            self.inverse_Fourier_transform_Gw = self.IFT_Gw
+            self.inverse_Fourier_transform_Dirac_delta = self.IFT_Dirac_delta
+            
+            
+            #----Integral Transforms
+            #----> Fourier Transform
+            # todo
+            
+            #----> Laplace Transform
             self.L = self.Laplace_transform = Lambda( (f,s,t), Integral(f*exp(-s*t), (t, S.Zero, S.Infinity)) )
             # ometh.L(exp(-a*t),s,t).doit().args[0][0]
+
             
-            # Vector Algebra
+            #----Vector Algebra
             self.vA = Ax*C.i + Ay*C.j + Az*C.k
             self.vB = Bx*C.i + By*C.j + Bz*C.k
             self.vC = Cx*C.i + Cy*C.j + Cz*C.k
@@ -101,13 +119,6 @@ class methods(branch):
             self.cross_product_theta = Eq(c, self.vA.magnitude()*self.vB.magnitude()*sin(theta))
             self.triple_product  = Eq(c, self.vA.dot(self.vB.cross(self.vC)))
         
-    @staticmethod
-    def GreenF_application(f, xreplaces):
-        """
-        todo, kaldik erase or not.
-        """
-        return(f.xreplace(xreplaces))
-                
         
     @staticmethod
     def __doc__():

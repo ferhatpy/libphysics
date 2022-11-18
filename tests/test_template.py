@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# ## test_template.py
+
 """
 test_template.py
 
@@ -26,23 +28,22 @@ ostat2 = copy.deepcopy(ostat)
 import copy
 import sys
 import os
-#lstPaths = ["../src"]
-#for ipath in lstPaths:
-#    if ipath not in sys.path:
-#        sys.path.append(ipath)
-        
 lstPaths = ["../src"]
 for ipath in lstPaths:
-    if os.path.join(os.path.dirname(__file__), ipath) not in sys.path:
-        sys.path.append(os.path.join(os.path.dirname(__file__), ipath))
-        
+    if ipath not in sys.path:
+        sys.path.append(ipath)
+# The following is not compatible with jupyter-notebook.
+# for ipath in lstPaths:
+#    if os.path.join(os.path.dirname(__file__), ipath) not in sys.path:
+#        sys.path.append(os.path.join(os.path.dirname(__file__), ipath))
+
 from libsympy import *
 from mechanics import *
 from statistical_physics import *
-
-
 # print(sys.version)
 # print(sys.path)
+
+# ### Settings
 
 ### Settings
 class sets:
@@ -75,19 +76,25 @@ class sets:
 
 print("Test of the {0}.".format(sets.flow))
 
-### get_formulary
+# ### get_formulary
+
+#### get_formulary
 if "get_formulary" in sets.flow:
 #    omech = mechanics() # DO NOT create any instance.
     omec.class_type = ""
     omec.__init__()
     omec.get_formulary()
     omec.get_formulary(style="eq")
-    
+
+# ### get_subformulary
+
+#### get_subformulary    
 if "get_subformulary" in sets.flow:
     omec.class_type = ""
     omec.__init__()
     omec.get_subformulary()    
 
+# ### A Spin-1/2 Paramagnet
 
 ### A Spin-1/2 Paramagnet
 if "topic1" in sets.flow:
@@ -95,7 +102,7 @@ if "topic1" in sets.flow:
     
     ostat.class_type = "micro_canonical_discrete_distinguihable"
     ostat.__init__()
-    ostat.solver.verbose = False
+    ostat.solver.verbose = True
     
     [mu,B] = symbols('mu B', real=True)
     xreplaces = {g:1, engF:mu*B*(2*i-3), j:1, n:2}

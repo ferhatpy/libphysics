@@ -8,6 +8,14 @@ Find and replace template with desired class name.
 
 """
 from sympy import*
+from sympy.diffgeom import *
+from sympy.diffgeom.rn import *
+from sympy.diffgeom.rn import R3_r, R3_s
+from sympy.physics.vector import *
+from sympy.plotting import plot_parametric
+from sympy.vector import CoordSys3D
+
+
 from libreflection import *
 import libphyscon as pc
 
@@ -19,7 +27,6 @@ class template(branch):
     """
     _name = "template"
     class_type = {1:"scalar", 2:"vectorial"}[1]
-        
     
 
     def define_symbols(self):
@@ -28,9 +35,11 @@ class template(branch):
         a: 
         F: 
         """
+	global C
+	global C1,C2,C3 # Integration constants.
         global alpha,beta,gamma,phi,theta
         global a,b,c,d,r
-        global k,m,t,w
+        global k,m,t,tau,w
         global F,M,T
         global vA,vB,vC,vD
         global Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Dx,Dy,Dz
@@ -38,10 +47,9 @@ class template(branch):
         global U
         global _U
         
-        t = symbols('t', real=True)
         alpha,beta,gamma,phi,theta = symbols('alpha beta gamma phi theta', real=True)
         a,b,c,d,r = symbols('a b c d r', real=True)
-        k,m,t,w = symbols('k m t w', real=True, positive=True)
+        k,m,t,tau,w = symbols('k m t tau w', real=True, positive=True)
         F,M,T = symbols('F M T', real=True)
         vA,vB,vC,vD = symbols('A B C D', vector=True)
         Ax,Bx,Cx,Dx = symbols('A_x B_x C_x D_x', real=True)
@@ -54,6 +62,10 @@ class template(branch):
         G  = Function('G')(t,tau)                    # Not callable function.
         G  = Lambda(((t,tau)), Function('G')(t,tau)) # Callable function
     
+	# Common definitions.
+        if self.class_type in ["scalar", "vectorial"]:
+            _H = Function('H')(t)           # Total energy.
+
     def __init__(self):
         super().__init__()
         self.define_symbols()

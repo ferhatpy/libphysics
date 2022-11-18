@@ -17,3 +17,11 @@ conda activate libphysics
 ``` sh
 pip install -r requirements.txt
 ```
+
+### Windows
+
+Open anaconda prompt execute
+
+``` sh
+pip install sympy
+```
