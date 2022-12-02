@@ -35,8 +35,8 @@ class template(branch):
         a: 
         F: 
         """
-	global C
-	global C1,C2,C3 # Integration constants.
+        global C
+        global C1,C2,C3 # Integration constants.
         global alpha,beta,gamma,phi,theta
         global a,b,c,d,r
         global k,m,t,tau,w
@@ -47,6 +47,7 @@ class template(branch):
         global U
         global _U
         
+        # Global Symbols
         alpha,beta,gamma,phi,theta = symbols('alpha beta gamma phi theta', real=True)
         a,b,c,d,r = symbols('a b c d r', real=True)
         k,m,t,tau,w = symbols('k m t tau w', real=True, positive=True)
@@ -56,13 +57,15 @@ class template(branch):
         Ay,By,Cy,Dy = symbols('A_y B_y C_y D_y', real=True)
         Az,Bz,Cz,Dz = symbols('A_z B_z C_z D_z', real=True)
         
+        # Global Functions
         x  = Function('x')(t)
-        U  = Function('U')(T)  # Function is accesible out of the module.
-        _U = Function('U')(T)  # Function is not accesible out of the module.
-        G  = Function('G')(t,tau)                    # Not callable function.
-        G  = Lambda(((t,tau)), Function('G')(t,tau)) # Callable function
+        u  = dynamicsymbols('u') # gives time dependent function
+        U  = Function('U')(T)    # Function is accesible out of the module.
+        _U = Function('U')(T)    # Function is not accesible out of the module.
+        G  = Function('G')(t,tau)                    # A noncallable function.
+        G  = Lambda((t,tau), Function('G')(t,tau))   # A callable function.
     
-	# Common definitions.
+    	# Common definitions.
         if self.class_type in ["scalar", "vectorial"]:
             _H = Function('H')(t)           # Total energy.
 

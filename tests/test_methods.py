@@ -29,12 +29,13 @@ import os
 lstPaths = ["../src"]
 for ipath in lstPaths:
     if ipath not in sys.path:
-        sys.path.append(ipath)        
-
+        sys.path.append(ipath) 
 from sympy import*
 from sympy.vector import CoordSys3D
 from libsympy import *
 from methods import *
+# Execute jupyter-notebook related commands.
+#exec(open('libnotebook.py').read())
 
 # print(sys.version)
 # print(sys.path)
@@ -66,7 +67,7 @@ class sets:
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]
     
     # Execution settings.
-    test_all = {0:False, 1:True}[0]
+    test_all = {0:False, 1:True}[1]
     dictflow = {100:"get_formulary", 150:"get_subformulary",
              	900:"TripleVectorProduct", 300:"topic2",
              	400:"topic3"}
@@ -143,3 +144,5 @@ if "TripleVectorProduct" in sets.flow:
             "Vector Product",
             ometh.cross_product.xreplace(xreplaces)
             )
+
+

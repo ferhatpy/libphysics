@@ -9,12 +9,13 @@ from sympy import*
 from sympy.diffgeom import *
 from sympy.diffgeom.rn import *
 from sympy.diffgeom.rn import R3_r, R3_s
-from sympy.physics.vector import *
+
 from sympy.plotting import plot_parametric
 from sympy.vector import CoordSys3D
+from sympy.physics import mechanics
 from sympy.physics.quantum.operator import *
 from sympy.physics.quantum.qapply import *
-
+from sympy.physics.vector import *
 from libreflection import *
 import libphyscon as pc
 
@@ -25,9 +26,8 @@ class mechanics(branch):
 
     """
     _name = "mechanics"
-    class_type = {1:"scalar", 2:"vectorial"}[1]
+    class_type = {1:"scalar", 2:"vectorial", 3:"EulerLagrange"}[1]
         
-    
     def define_symbols(self):
         """
         Common global symbols, functions.
@@ -36,7 +36,8 @@ class mechanics(branch):
         """
         global C
         global C1,C2,C3 # Integration constants.
-        global t,tau,p,s
+        global i,j,n
+        global g,p,s,t,tau
         global alpha,beta,gamma
         global A,k,m,M,F0
         global _G, _Gw
@@ -48,17 +49,21 @@ class mechanics(branch):
         global xi,xf,yi,yf,zi,zf
         global x0,y0,z0,v0
         global theta, phi
+        global f,u,v
 
-
+        # Global Symbols
         C         = CoordSys3D('C') # Cartesian coordinate system.
         C1,C2,C3  = symbols('C1 C2 C3')
-        p,s       = symbols('p s', real=True)
+        i,j,n     = symbols('i j n', integer=True)
+        g,p,s     = symbols('g p s', real=True)
         t         = Symbol('t', real=True, positive=True)
         tau       = Symbol('tau', real=True, positive=True)
         alpha,beta,gamma = symbols('alpha beta gamma', real=True, positive=True)
         A,k,m,M,F0,w,w0,w1,w2 = symbols('A k m M F_0 w w_0 w_1 w_2', real=True, positive=True)
         xi,xf,yi,yf,zi,zf = symbols('x_i x_f y_i y_f z_i z_f', real=True)
         x0,y0,z0,v0 = symbols('x_0 y_0 z_0 v_0', real=True)
+        
+        # Global Functions
         r         = Function('r')(t)
         x,y,z     = [Function('x')(t), Function('y')(t), Function('z')(t)]
         theta,phi = [Function('theta')(t), Function('phi')(t)]
@@ -90,7 +95,7 @@ class mechanics(branch):
             _p = px*C.i+py*C.j+pz*C.k       # Linear momentum vector.
             _L = Lx*C.i+Ly*C.j+Lz*C.k       # Angular momentum vector.
         
-	# Common definitions.
+        # Common definitions.
         if self.class_type in ["scalar", "vectorial"]:
             _H = Function('H')(t)           # Total energy.
             _T = Function('T')(t)           # Kinetic energy.
@@ -100,11 +105,18 @@ class mechanics(branch):
             # Gw        = Lambda((w), Function('Gtilde')(w))    # Callable Green's tilde function.
             _G  = Function('G')(t,tau)    # Incallable Green's function.
             _Gw = Function('Gtilde')(w)   # Incallable Green's tilde function.
-            
+        
+        if self.class_type in ["EulerLagrange"]:
+#           u = IndexedBase('u')     # Generates an error.
+#           f = Function('f')(u[n],x)
+            [u,v] = [Function('u')(t), Function('v')(t)] 
+            f     = Function('f')(u,t)
         
 
+#    def __init__(self, class_type='scalar'):
     def __init__(self):
         super().__init__()
+#        self.class_type = class_type
         self.define_symbols()
         
         class subformulary:
@@ -138,7 +150,8 @@ class mechanics(branch):
                 self.Icm_sphere = S(2)/5*M*r**2
                 
         self.subformulary = subformulary()
-        
+
+####    scalar        
         if self.class_type in ["scalar"]:
             #----Green's Function Methods
             self.G  = self.Greens_function  = _G     # Green's function.
@@ -172,7 +185,8 @@ class mechanics(branch):
             self.amplitude = None
             self.phase = None
             self.scaled_amplitude = None
-            
+
+####    vectorial            
         if self.class_type in ["vectorial"]:
             """
             Example:
@@ -196,19 +210,57 @@ class mechanics(branch):
             self.U = self.potential_energy= Eq(_U, Integral(k*self.r.rhs.dot(dr), (z,zi,zf), (y,yi,yf), (x,xi,xf)))
             self.H = self.energy = Eq(_H, self.T.rhs + self.U.rhs)
         
+####    EulerLagrange
         if self.class_type == "EulerLagrange":
             """
             todo
             """
             self.x, self.y, self.z = [x, y, z]
-            self.r = self.position = Eq(_r, self.x*C.i + self.y*C.j + self.z*C.k)
-            self.v = self.velocity = Eq(_v, diff(self.r.rhs, t, evaluate=False))
-            self.a = self.acceleration = Eq(_a, diff(self.v.rhs, t, evaluate=False))
-            self.F = self.NewtonsLaw2 = Eq(_F, m*self.a.rhs)
-            self.HookesLaw   = Eq(_F, -k*self.x)
+            self.f, self.u = [f,u]
+            self.Eulers_equation = Eq( Sum((-1)**n*diff(diff(f,u, evaluate=False), (t,n), evaluate=False), (n,0,oo)), 0)
+            
+#            self.u = dynamicsymbols('u')   # gives time dependent function
+#            u = IndexedBase('u')           # Generates an error.
+#            f = Function('f')(u[n],x)
+#            self.Eulers_equation = Eq( Sum((-1)**n*diff(diff(f,u[n]), (x,n)), (n,0,oo)), 0)
+            
+    # Global Methods        
+    @staticmethod
+    def Eulers_equation_f(f,uns,ivar):
+        """
+              ∞                                  
+            _____                                
+            ╲                                    
+             ╲            n + 1                 
+     dF       ╲      n   d                      
+    ───── =   ╱  (-1) ⋅─────────(f(u(x), x)) = 0
+     du      ╱           n                      
+            ╱          dx  du_(n)(x)                
+            ‾‾‾‾‾
+        Eulers_equation_f(f,uns,ivar)
+        f: f(x, u(x), u_x(x), ...) is known as the density of the functional F.
+           u_x = du/dx
+        uns: Dependent functions and their derivatives, [u(x), u_x(x)].
+        ivar: Independent variable x or t.
+        
+        u = Function('u')(x)
+        f = Function('f')(u,x)
+        omech.Eulers_equation_f(f,[u],x)
+        omech.Eulers_equation_f(f,[u,u.diff(x)],x)
+        omech.Eulers_equation_f(f,[u,u.diff(x,2)],x)                                 
+        """
+        _sum = 0
+        steps = []
+        for n in range(0,len(uns)):
+            df_du = diff(f,uns[n], evaluate=False)
+            _sum = _sum + (-1)**n*diff(df_du, (ivar,n), evaluate=False)
+            steps.append(Eq(df_du, 0))
+            steps.append(Eq(_sum, 0))
+        return(Eq(_sum, 0), steps)
         
     @staticmethod
     def __doc__():
         return("Document of mechanics class.")
         
 omech = mechanics() # Create an omech object from mechanics class.
+#omech.__init__()

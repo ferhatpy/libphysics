@@ -34,12 +34,16 @@ class statistical_mechanics(branch):
         global h,kB,m,M,N,T
         global g,engF,_Zsp,_ZN,_Cv,_F,_M,_S,_U
         global B,V
+        
+        # Global Symbols
 #        i,j  = symbols('i j', cls=Idx)
         i,j = symbols('i j', integer=True)
         B,V = symbols('B V', real=True)
         eng,n,p_i,q_i,r = symbols('varepsilon n p_i q_i r', real=True)
         alpha,beta,gamma,phi,theta = symbols('alpha beta gamma phi theta', real=True)
         h,kB,m,M,N,T = symbols('h k_B m M N T', real=True, positive=True)
+        
+        # Global Functions
         
         if self.class_type in ["micro_canonical_discrete_distinguihable",
                                "micro_canonical_discrete_indistinguihable",
@@ -114,11 +118,11 @@ class statistical_mechanics(branch):
             pass
 
         # Common text definitions.
-        if hasattr(self, "Zsp"): self.partition_function_sp = self.Zsp
-        if hasattr(self, "ZN"):  self.partition_function_Np = self.ZN
         self.internal_energy = self.U
         self.entropy = self.S
         self.Helmholtz_free_energy = self.F
+        if hasattr(self, "Zsp"): self.partition_function_sp = self.Zsp
+        if hasattr(self, "ZN"):  self.partition_function_Np = self.ZN
         if hasattr(self, "M"):   self.magnetization = self.M
         
     @staticmethod

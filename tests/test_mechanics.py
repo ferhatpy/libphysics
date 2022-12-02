@@ -6,7 +6,7 @@
 test_mechanics.py
 
 References:
-    Vladimir Pletser - Lagrangian and Hamiltonian Analytical Mechanics_ Forty Exercises Resolved and Explained-Springer Singapore (2018).pdf
+    Vladimir Pletser - Lagrangian and Hamiltonian Analytical Mechanics Forty Exercises Resolved and Explained-Springer Singapore (2018).pdf
 """
 import copy
 import sys
@@ -15,11 +15,14 @@ lstPaths = ["../src"]
 for ipath in lstPaths:
     if ipath not in sys.path:
         sys.path.append(ipath)
-
 from libsympy import *
 from mechanics import *
+from sympy.physics import mechanics
+mechanics.mechanics_printing()
 #print(sys.version)
 #print(sys.path)
+# Execute jupyter-notebook related commands.
+#exec(open('libnotebook.py').read())
 
 # ### Settings
 
@@ -205,3 +208,5 @@ if "coordinate_systems" in sets.flow:
     [display(v.rhs.args[i]) for i in range(2)]
     print("Components of a")
     [display(a.rhs.args[i]) for i in range(2)]
+
+

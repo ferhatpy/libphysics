@@ -5,6 +5,8 @@
 """
 test_template.py
 
+sudo apt install pandoc # Converts a *.ipynb file to a *.pdf file via latex.
+
 Find and replace template with desired class name.
 
 Example: ostat
@@ -36,10 +38,11 @@ for ipath in lstPaths:
 # for ipath in lstPaths:
 #    if os.path.join(os.path.dirname(__file__), ipath) not in sys.path:
 #        sys.path.append(os.path.join(os.path.dirname(__file__), ipath))
-
 from libsympy import *
 from mechanics import *
 from statistical_physics import *
+# Execute jupyter-notebook related commands.
+#exec(open('libnotebook.py').read())
 # print(sys.version)
 # print(sys.path)
 
@@ -82,6 +85,7 @@ print("Test of the {0}.".format(sets.flow))
 if "get_formulary" in sets.flow:
 #    omech = mechanics() # DO NOT create any instance.
     omec.class_type = ""
+#   omech.__init__('EulerLagrange')
     omec.__init__()
     omec.get_formulary()
     omec.get_formulary(style="eq")
