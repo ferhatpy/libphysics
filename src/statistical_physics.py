@@ -20,7 +20,7 @@ class statistical_mechanics(branch):
                   2:"micro_canonical_discrete_indistinguihable",
                   3:"micro_canonical_continuous_indistinguihable",
                   4:"canonical",
-                  5:"grand_canonical"}[3]
+                  5:"grand_canonical"}[1]
     
     def define_symbols(self):
         """

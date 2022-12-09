@@ -4,6 +4,7 @@
 mechanics.py
 Created on Fri Mar 11 12:48:37 2022
 
+todo diff'ler Derivative'lerle değiştirilebilir.
 """
 from sympy import*
 from sympy.diffgeom import *
@@ -26,7 +27,7 @@ class mechanics(branch):
 
     """
     _name = "mechanics"
-    class_type = {1:"scalar", 2:"vectorial", 3:"EulerLagrange"}[1]
+    class_type = {1:"scalar", 2:"vectorial", 3:"EulerLagrange"}[3]
         
     def define_symbols(self):
         """
@@ -49,7 +50,7 @@ class mechanics(branch):
         global xi,xf,yi,yf,zi,zf
         global x0,y0,z0,v0
         global theta, phi
-        global f,u,v
+        global f,u,v,q
 
         # Global Symbols
         C         = CoordSys3D('C') # Cartesian coordinate system.
@@ -109,8 +110,9 @@ class mechanics(branch):
         if self.class_type in ["EulerLagrange"]:
 #           u = IndexedBase('u')     # Generates an error.
 #           f = Function('f')(u[n],x)
-            [u,v] = [Function('u')(t), Function('v')(t)] 
-            f     = Function('f')(u,t)
+            [q,u,v] = [Function('q')(t), Function('u')(t),
+                       Function('v')(t)] 
+            f       = Function('f')(u,t)
         
 
 #    def __init__(self, class_type='scalar'):
@@ -211,12 +213,12 @@ class mechanics(branch):
             self.H = self.energy = Eq(_H, self.T.rhs + self.U.rhs)
         
 ####    EulerLagrange
-        if self.class_type == "EulerLagrange":
+        if self.class_type in ["EulerLagrange"]:
             """
             todo
             """
             self.x, self.y, self.z = [x, y, z]
-            self.f, self.u = [f,u]
+            self.f, self.q, self.u, self.v = [f,q,u,v]
             self.Eulers_equation = Eq( Sum((-1)**n*diff(diff(f,u, evaluate=False), (t,n), evaluate=False), (n,0,oo)), 0)
             
 #            self.u = dynamicsymbols('u')   # gives time dependent function
@@ -226,8 +228,10 @@ class mechanics(branch):
             
     # Global Methods        
     @staticmethod
-    def Eulers_equation_f(f,uns,ivar):
+    def Eulers_equation_f(f, uns, ivar):
         """
+        Euler Equation for 1 Independent Variable, q dependent variable.
+        -----------------------------------------
               ∞                                  
             _____                                
             ╲                                    
@@ -237,6 +241,8 @@ class mechanics(branch):
      du      ╱           n                      
             ╱          dx  du_(n)(x)                
             ‾‾‾‾‾
+            n = 0
+            
         Eulers_equation_f(f,uns,ivar)
         f: f(x, u(x), u_x(x), ...) is known as the density of the functional F.
            u_x = du/dx
@@ -247,16 +253,23 @@ class mechanics(branch):
         f = Function('f')(u,x)
         omech.Eulers_equation_f(f,[u],x)
         omech.Eulers_equation_f(f,[u,u.diff(x)],x)
-        omech.Eulers_equation_f(f,[u,u.diff(x,2)],x)                                 
+        omech.Eulers_equation_f(f,[u,u.diff(x,2)],x)
+        
+        Notes:
+        ------
+        Euler Operator for q + p Dimensions is Not Impelemented
+        
         """
+        
         _sum = 0
         steps = []
         for n in range(0,len(uns)):
-            df_du = diff(f,uns[n], evaluate=False)
-            _sum = _sum + (-1)**n*diff(df_du, (ivar,n), evaluate=False)
+            df_du = diff(f, uns[n], evaluate=False)
+            _sum = _sum + (-1)**n*diff(df_du, (ivar, n), evaluate=False)
             steps.append(Eq(df_du, 0))
             steps.append(Eq(_sum, 0))
         return(Eq(_sum, 0), steps)
+
         
     @staticmethod
     def __doc__():

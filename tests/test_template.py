@@ -5,6 +5,8 @@
 """
 test_template.py
 
+References:
+
 sudo apt install pandoc # Converts a *.ipynb file to a *.pdf file via latex.
 
 Find and replace template with desired class name.
@@ -39,8 +41,7 @@ for ipath in lstPaths:
 #    if os.path.join(os.path.dirname(__file__), ipath) not in sys.path:
 #        sys.path.append(os.path.join(os.path.dirname(__file__), ipath))
 from libsympy import *
-from mechanics import *
-from statistical_physics import *
+from template import *
 # Execute jupyter-notebook related commands.
 #exec(open('libnotebook.py').read())
 # print(sys.version)
@@ -63,8 +64,8 @@ class sets:
         pass
 
     # File settings
-    input_dir  = "input/optics"
-    output_dir = "output/optics"
+    input_dir  = "input/template"
+    output_dir = "output/template"
     
     # Plotting settings
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]

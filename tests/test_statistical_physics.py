@@ -50,13 +50,13 @@ class sets:
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]
     
     # Execution settings.
-    test_all = {0:False, 1:True}[1]
+    test_all = {0:False, 1:True}[0]
     dictflow = {100:"get_formulary", 
                 310:"1D_1/2_paramagnet_way1", 311:"1D_1/2_paramagnet_way2", 
                 331:"1D_simple_harmonic_oscillator", 332:"",
                 430:"monoatomic_ideal_gas",
                 710:"ideal_gas_canonical"}
-    flow = [dictflow[i] for i in [310,311]]
+    flow = [dictflow[i] for i in [310]]
     if test_all: flow = [dictflow[i] for i in dictflow.keys()]
 
 print("Test of the {0}.".format(sets.flow))

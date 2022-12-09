@@ -6,7 +6,9 @@
 test_mechanics.py
 
 References:
-    Vladimir Pletser - Lagrangian and Hamiltonian Analytical Mechanics Forty Exercises Resolved and Explained-Springer Singapore (2018).pdf
+    Christopher W. Kulp, Vasilis Pagonis, Classical Mechanics A Computational Approach with Examples Using Mathematica and Python
+    Vladimir Pletser - Lagrangian and Hamiltonian Analytical Mechanics Forty Exercises Resolved and Explained-Springer Singapore (2018)
+    Gerald Jay Sussman, Jack Wisdom - Structure and Interpretation of Classical Mechanics, MIT Press (2014)
 """
 import copy
 import sys
@@ -40,6 +42,7 @@ class sets:
     def __init__(self):
         pass
     
+    # File settings
     input_dir  = "input/mechanics"
     output_dir = "output/mechanics"
     
@@ -208,5 +211,3 @@ if "coordinate_systems" in sets.flow:
     [display(v.rhs.args[i]) for i in range(2)]
     print("Components of a")
     [display(a.rhs.args[i]) for i in range(2)]
-
-
