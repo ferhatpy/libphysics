@@ -9,8 +9,6 @@ from sympy import*
 from libreflection import *
 import libphyscon as pc
 
-exec(open("../src/libreflection.py").read())
-
 class condensed(branch):
     """
 

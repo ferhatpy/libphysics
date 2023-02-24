@@ -7,7 +7,7 @@ test_statistical_physics.py
 
 omec.class_type = ""
 omec.__init__()
-omec.solver.verbose = True
+omec.verbose = True
 commands = ["solve", "NewtonsLaw2", a]
 print(omec.process(commands))
 """
@@ -56,7 +56,7 @@ class sets:
                 331:"1D_simple_harmonic_oscillator", 332:"",
                 430:"monoatomic_ideal_gas",
                 710:"ideal_gas_canonical"}
-    flow = [dictflow[i] for i in [310]]
+    flow = [dictflow[i] for i in [331]]
     if test_all: flow = [dictflow[i] for i in dictflow.keys()]
 
 print("Test of the {0}.".format(sets.flow))
@@ -87,7 +87,7 @@ if "1D_1/2_paramagnet_way1" in sets.flow:
     
     ostat.class_type = "micro_canonical_discrete_distinguihable"
     ostat.__init__()
-    ostat.solver.verbose = True
+    ostat.verbose = True
     [mu,B] = symbols('mu B', real=True)
     xreplaces = {g:1, engF:mu*B*(2*i-3), j:1, n:2}
     display("Single particle partition function:", ostat.Zsp)
@@ -135,7 +135,7 @@ if "1D_1/2_paramagnet_way2" in sets.flow:
     
     ostat.class_type = "micro_canonical_discrete_distinguihable"
     ostat.__init__()
-    ostat.solver.verbose = True
+    ostat.verbose = True
     [mu,B] = symbols('mu B', real=True)
     xreplaces = {g:1, engF:mu*B*(2*i-3), j:1, n:2}
     display("Single particle partition function:", ostat.Zsp)
@@ -153,12 +153,13 @@ if "1D_1/2_paramagnet_way2" in sets.flow:
 # ### An Array of 1-D Simple Harmonic Oscillators    
 
 ### An Array of 1-D Simple Harmonic Oscillators
-if "1D_simple_harmonic_oscillator" in sets.flow:    
+if "1D_simple_harmonic_oscillator" in sets.flow:
+    print("1D_simple_harmonic_oscillator")
     print("An Array of 1-D Simple Harmonic Oscillators")
     
     ostat.class_type = "micro_canonical_discrete_distinguihable"
     ostat.__init__()
-    ostat.solver.verbose = False
+    ostat.verbose = False
     [h,nu,theta] = symbols('h nu theta', real=True, positive=True)
     xreplaces = {g:1, engF:(i+S(1)/2)*h*nu, j:0, n:inf, (h*nu)/kB:theta}
     display("Single particle partition function:", ostat.Zsp)
@@ -190,7 +191,7 @@ if "monoatomic_ideal_gas" in sets.flow:
     
     ostat.class_type = "micro_canonical_continuous_indistinguihable"
     ostat.__init__()
-    ostat.solver.verbose = False
+    ostat.verbose = False
     [h,nu,theta] = symbols('h nu theta', real=True, positive=True)
     xreplaces = {i:eng, g:4*m*pi*V*(2*m*eng)**(S(1)/2)/(h**3), engF:eng}
     display("Single particle partition function:", ostat.Zsp)
@@ -220,7 +221,7 @@ if "ideal_gas_canonical" in sets.flow:
     
     ostat.class_type = "canonical"
     ostat.__init__()
-    ostat.solver.verbose = True
+    ostat.verbose = True
     
     ostat.ZN  = Eq( ostat.ZN.lhs, ostat.subformulary.Z_Ideal_Gas)
     display(ostat.F)

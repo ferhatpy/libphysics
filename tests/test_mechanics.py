@@ -6,9 +6,13 @@
 test_mechanics.py
 
 References:
+    Books:
+    Douglas Cline, Variational Principles In Classical Mechanics
     Christopher W. Kulp, Vasilis Pagonis, Classical Mechanics A Computational Approach with Examples Using Mathematica and Python
-    Vladimir Pletser - Lagrangian and Hamiltonian Analytical Mechanics Forty Exercises Resolved and Explained-Springer Singapore (2018)
     Gerald Jay Sussman, Jack Wisdom - Structure and Interpretation of Classical Mechanics, MIT Press (2014)
+    
+    Problem Books:
+    Vladimir Pletser - Lagrangian and Hamiltonian Analytical Mechanics Forty Exercises Resolved and Explained-Springer Singapore (2018)
 """
 import copy
 import sys
@@ -19,8 +23,8 @@ for ipath in lstPaths:
         sys.path.append(ipath)
 from libsympy import *
 from mechanics import *
-from sympy.physics import mechanics
-mechanics.mechanics_printing()
+from sympy.physics import mechanics as mech
+mech.mechanics_printing()
 #print(sys.version)
 #print(sys.path)
 # Execute jupyter-notebook related commands.
@@ -54,7 +58,7 @@ class sets:
     dictflow = {100:"get_formulary", 150:"get_subformulary",
                 200:"simple_harmonic_oscillator_scalar", 201:"simple_harmonic_oscillator_vectorial", 
                 2321:"coordinate_systems"}
-    flow = [dictflow[i] for i in [2321]]
+    flow = [dictflow[i] for i in [201]]
     if test_all: flow = [dictflow[i] for i in dictflow.keys()]
 
 print("Test of the {0}.".format(sets.flow))
@@ -77,6 +81,8 @@ if "get_formulary" in sets.flow:
     omech.__init__()
     omech.get_formulary()    
 
+    omech2 = mechanics()
+    
 # ### get_subformulary
 
 if "get_subformulary" in sets.flow:
@@ -90,12 +96,12 @@ if "simple_harmonic_oscillator_scalar" in sets.flow:
     Example: Solve a from F = ma
     """
 #    omech = mechanics() # DO NOT create any instance.
+    print("2.4.8.2 Harmonic Oscillator, p126.")
     omech.class_type = "scalar"
     omech.__init__()
-    omech.solver.verbose = True
+    omech.verbose = True
     commands = ["solve", "NewtonsLaw2", omech.a.rhs]
     omech.process(commands)
-
 
     """
     Example: Solve position of a spring mass system.
@@ -108,23 +114,28 @@ if "simple_harmonic_oscillator_scalar" in sets.flow:
     # Scalar Way.
     omech.class_type = "scalar"
     omech.__init__()
-    omech.solver.verbose = True
+    omech.verbose = True
     display("Newton's 2nd Law", omech.NewtonsLaw2, 
             "Hooke's Law", omech.HookesLaw)
+    
     commands = ["Eq", "NewtonsLaw2", "HookesLaw"]
+    omech.process(commands)
 #    commands = ["subs", "omech.result", [(a, diff(x, t, 2, evaluate=False))]]
     res = omech.process(commands)
-    simp = simplify(res.lhs/m)
-    omech.result = Eq(simp, 0)
+    omech.result = Eq(simplify(res.lhs/m), simplify(res.rhs/m)) 
     commands = ["subs", "omech.result", [(k/m, w**2)]]
     omech.process(commands)
-    commands = ["dsolve", "omech.result", x]
-    print("Codes:\n", *omech.solver.get_codes())
-    
+#    omech.result = Eq(omech.result.lhs.coeff(C.i), omech.result.rhs)
+    commands = ["dsolve", "omech.result", omech.x]
+    omech.process(commands)
+    print("Codes:\n", *omech.get_codes())
+       
     omech.x = omech.process(commands).rhs
     v = omech.v.evalf(subs={x:omech.x}).doit()
     a = omech.a.evalf(subs={x:omech.x}).doit()
-    display(omech.result,v,a)
+    T = omech.T.evalf(subs={x:omech.x}).doit()
+    U = omech.U.evalf(subs={x:omech.x}).doit()
+    display(omech.result,v,a,T,U)
     
     # Numerical calculations
     [C1,C2] = symbols('C1 C2')
@@ -139,25 +150,27 @@ if "simple_harmonic_oscillator_scalar" in sets.flow:
     plot(a, (t,0,4*pi,200), xlabel="$t$", ylabel="$a(t)$")
     plot_sympfunc([x.subs({t:var('x')}),], (0, float(4*pi), 200), 
                    xlabel="$t$", ylabel="$x(t)$")
+    
+
 
 # ### simple_harmonic_oscillator_vectorial     
 
 if "simple_harmonic_oscillator_vectorial" in sets.flow:
-#    todo error occurs at "Eq" due to undefined 0 vector. ???
     # Vectorial Way.
     omech.class_type = "vectorial"
     omech.__init__()
-    omech.solver.verbose = True
+    omech.verbose = True
+    
     commands = ["Eq", "NewtonsLaw2", "HookesLaw"]
-    omech.process(commands)
 #    commands = ["subs", "omech.result", [(a, diff(x, t, 2, evaluate=False))]]
     res = omech.process(commands)
-    simp = simplify(res.lhs/m)
-    omech.result = Eq(simp, 0)
+    omech.result = Eq(simplify(res.lhs/m), simplify(res.rhs/m)) 
     commands = ["subs", "omech.result", [(k/m, w**2)]]
     omech.process(commands)
+    omech.result = Eq(omech.result.lhs.coeff(C.i), omech.result.rhs)
     commands = ["dsolve", "omech.result", omech.x]
-    print("Codes:\n", *omech.solver.get_codes())
+    omech.process(commands)
+    print("Codes:\n", *omech.get_codes())
     
     omech.x = omech.process(commands).rhs
     v = omech.v.evalf(subs={x:omech.x}).doit()
@@ -186,7 +199,7 @@ if "coordinate_systems" in sets.flow:
     print("Polar Coordinates")
     omech.class_type = "vectorial"
     omech.__init__()
-    omech.solver.verbose = False
+    omech.verbose = False
     
     xreplaces = {x:r*cos(theta)*C.i,
                   y:r*sin(theta)*C.j,

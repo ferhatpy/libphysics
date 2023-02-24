@@ -9,7 +9,7 @@ Example: ostat
 ============= 
 template.class_type = "micro_canonical_discrete_distinguihable"
 template.__init__()
-template.solver.verbose = False
+template.verbose = False
 [mu,B] = symbols('mu B', real=True)
 xreplaces = {g:1, engF:mu*B*(2*i-3), j:1, n:2}
 
@@ -30,7 +30,8 @@ lstPaths = ["../src"]
 for ipath in lstPaths:
     if ipath not in sys.path:
         sys.path.append(ipath) 
-from sympy import*
+from sympy import *
+from sympy.abc import *
 from sympy.vector import CoordSys3D
 from libsympy import *
 from methods import *
@@ -40,8 +41,9 @@ from methods import *
 # print(sys.version)
 # print(sys.path)
 
-global R
-R = CoordSys3D('R')
+global C
+C = CoordSys3D('C')
+[x, y, z] = [C.x, C.y, C.z] # x^, y^, z^ vectors.
 
 # ### Settings
 
@@ -67,11 +69,12 @@ class sets:
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]
     
     # Execution settings.
-    test_all = {0:False, 1:True}[1]
-    dictflow = {100:"get_formulary", 150:"get_subformulary",
-             	900:"TripleVectorProduct", 300:"topic2",
-             	400:"topic3"}
-    flow = [dictflow[i] for i in [900]]
+    test_all = {0:False, 1:True}[0]
+    dictflow = dict(examples = {13:"e1.3", 14:"e1.4"},
+                    problems = {13:"p1.3"})
+    flow = [dictflow["examples"][i] for i in [13]]
+#    flow = [flow["problems"][i] for i in [0]]
+    
     if test_all: flow = [dictflow[i] for i in dictflow.keys()]
 
 print("Test of the {0}.".format(sets.flow))
@@ -95,7 +98,7 @@ if "get_subformulary" in sets.flow:
 
 # ### TripleVectorProduct
 
-if "TripleVectorProduct" in sets.flow:
+if "vector_products" in sets.flow:
     """
     # (A x B) x C =! A x (B x C)
     [Ax,Bx,Cx] = symbols('A_x B_x C_x', real=True)
@@ -112,7 +115,7 @@ if "TripleVectorProduct" in sets.flow:
     print(lhs.equals(rhs))
     """
     ometh.__init__()
-    ometh.solver.verbose = True
+    ometh.verbose = True
     
     # 1. way
     vA,vB,vC = (ometh.vA, ometh.vB, ometh.vC)
@@ -145,4 +148,15 @@ if "TripleVectorProduct" in sets.flow:
             ometh.cross_product.xreplace(xreplaces)
             )
 
-
+if "e1.3" in sets.flow:
+    ometh.__init__()
+    ometh.verbose = True
+    
+    r = Eq(S('r'), sqrt(x**2+y**2+z**2))
+    gradr1 = gradient(r.rhs, doit=False)
+    gradr2 = gradient(r.rhs)
+    
+    display(r,
+            var(r'\nabla{r}='), gradr1,
+            var(r'\nabla{r}='), gradr2,
+            )

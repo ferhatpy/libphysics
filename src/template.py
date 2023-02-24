@@ -8,6 +8,7 @@ Find and replace template with desired class name.
 
 """
 from sympy import*
+from sympy.abc import*
 from sympy.diffgeom import *
 from sympy.diffgeom.rn import *
 from sympy.diffgeom.rn import R3_r, R3_s
@@ -15,11 +16,10 @@ from sympy.physics.vector import *
 from sympy.plotting import plot_parametric
 from sympy.vector import CoordSys3D
 
-
 from libreflection import *
 import libphyscon as pc
 
-exec(open("../src/libreflection.py").read())
+#exec(open("../src/libreflection.py").read())
 
 class template(branch):
     """
@@ -43,11 +43,19 @@ class template(branch):
         global F,M,T
         global vA,vB,vC,vD
         global Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Dx,Dy,Dz
+        global fV, fE, psi
         global x
         global U
         global _U
         
-        # Global Symbols
+        # Global Indeces
+        i,j  = symbols('i j', cls=Idx)
+        u = IndexedBase('u')     # Generates an error.
+        
+        # Global Integer symbols
+        [i, j] = symbols('i j', positive=True, integer=True, nonzero=True)
+        
+        # Global Real symbols
         alpha,beta,gamma,phi,theta = symbols('alpha beta gamma phi theta', real=True)
         a,b,c,d,r = symbols('a b c d r', real=True)
         k,m,t,tau,w = symbols('k m t tau w', real=True, positive=True)
@@ -56,18 +64,23 @@ class template(branch):
         Ax,Bx,Cx,Dx = symbols('A_x B_x C_x D_x', real=True)
         Ay,By,Cy,Dy = symbols('A_y B_y C_y D_y', real=True)
         Az,Bz,Cz,Dz = symbols('A_z B_z C_z D_z', real=True)
+        tau         = Symbol('tau',  real=True, positive=True)
+        #w = Symbol("w", positive=True, integer=True, nonzero=True)
         
         # Global Functions
-        x  = Function('x')(t)
         u  = dynamicsymbols('u') # gives time dependent function
+        x  = Function('x')(t)
         U  = Function('U')(T)    # Function is accesible out of the module.
         _U = Function('U')(T)    # Function is not accesible out of the module.
         G  = Function('G')(t,tau)                    # A noncallable function.
         G  = Lambda((t,tau), Function('G')(t,tau))   # A callable function.
+        lst_functions = ['fV','fE','psi']
+        [fV, fE, psi] = [Function(ifun)(x) for ifun in lst_functions]
     
     	# Common definitions.
         if self.class_type in ["scalar", "vectorial"]:
             _H = Function('H')(t)           # Total energy.
+            
 
     def __init__(self):
         super().__init__()
@@ -82,13 +95,21 @@ class template(branch):
             def __init__(self):
                 # List of Moment of Inertia
                 self.Icm_sphere = S(2)/5*M*r**2
+                
         self.subformulary = subformulary()
         
-        if self.class_type == "default":
+        if self.class_type == "scalar":
             # Construct a cascaded formulary structure.
-            self.NewtonsLaw2 = Eq(F, m*a)
+            self.NewtonsLaw2_1 = Eq(var('F'), m*a) # Default one is var.
+            self.exp_x    = Eq(var(r'\langle{x}\rangle'),   Integral(conjugate(self.Psi)*x*self.Psi, (x,xmin,xmax)))
+            self.NewtonsLaw2_2 = Eq(symbols('F'), m*a)
+            self.NewtonsLaw2_3 = Eq(S('F'), m*a)
             self.HookesLaw   = Eq(F, -k*x)
-            
+            self.S           = Eq(F, -k*x)
+         
+        # Common text definitions.
+        self.entropy = self.S
+        if hasattr(self, "Zsp"): self.partition_function_sp = self.Zsp
     
     @staticmethod
     def __doc__():
