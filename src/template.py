@@ -6,6 +6,12 @@ Created on Fri Mar 11 12:53:36 2022
 
 Find and replace template with desired class name.
 
+Mathematica Equivalance
+=======================
+Newton2 := EqualTo[F][m a]
+TraditionalForm[Sort[Newton2]]
+Solve[Newton2, a]
+
 """
 from sympy import*
 from sympy.abc import*
@@ -81,9 +87,10 @@ class template(branch):
         if self.class_type in ["scalar", "vectorial"]:
             _H = Function('H')(t)           # Total energy.
             
-
+#    def __init__(self, class_type='scalar'):
     def __init__(self):
         super().__init__()
+#        self.class_type = class_type
         self.define_symbols()
         
         class subformulary:

@@ -70,9 +70,9 @@ class sets:
     
     # Execution settings.
     test_all = {0:False, 1:True}[0]
-    dictflow = dict(examples = {13:"e1.3", 14:"e1.4"},
+    dictflow = dict(examples = {13:"e1.3",14:"e1.4",15:"e1.5",16:"e1.6"},
                     problems = {13:"p1.3"})
-    flow = [dictflow["examples"][i] for i in [13]]
+    flow = [dictflow["examples"][i] for i in [16]]
 #    flow = [flow["problems"][i] for i in [0]]
     
     if test_all: flow = [dictflow[i] for i in dictflow.keys()]
@@ -152,11 +152,56 @@ if "e1.3" in sets.flow:
     ometh.__init__()
     ometh.verbose = True
     
-    r = Eq(S('r'), sqrt(x**2+y**2+z**2))
+    r = Eq(S('rbold'), sqrt(x**2+y**2+z**2))
     gradr1 = gradient(r.rhs, doit=False)
     gradr2 = gradient(r.rhs)
     
     display(r,
-            var(r'\nabla{r}='), gradr1,
-            var(r'\nabla{r}='), gradr2,
+            var(r'\nabla{\bf{r}}='), gradr1,
+            var(r'\nabla{\bf{r}}='), gradr2,
             )
+
+if "e1.4" in sets.flow:
+    ometh.__init__()
+    ometh.verbose = True
+    
+    r = Eq(S('r_x')*C.i+S('r_y')*C.j+S('r_z')*C.k,
+           x*C.i + y*C.j + z*C.k)
+    div1 = divergence(r.rhs, doit=False)
+    div2 = divergence(r.rhs)
+    
+    display(r,
+            var(r'\nabla\cdot{\bf{r}}='), div1,
+            var(r'\nabla\cdot{\bf{r}}='), div2,
+            )
+#--- e1.5    
+if "e1.5" in sets.flow:
+    ometh.__init__()
+    ometh.verbose = True
+    
+    r = Eq(S('r_x')*C.i+S('r_y')*C.j+S('r_z')*C.k,
+           -y*C.i + x*C.j)
+    curl1 = curl(r.rhs, doit=False)
+    curl2 = curl(r.rhs)
+    
+    display(r,
+            var(r'\nabla\times{\bf{r}}='), curl1,
+            var(r'\nabla\times{\bf{r}}='), curl2,
+            )
+#--- e1.6    
+if "e1.6" in sets.flow:
+    ometh.__init__()
+    ometh.verbose = True
+    
+    v = Eq(S('v_x')*C.i+S('v_y')*C.j+S('v_z')*C.k,
+           y**2*C.i + 2*x*(y+1)*C.j)
+    path = ParametricRegion((t, t), (t,1,2))
+    integral = vector_integrate(v.rhs, path)
+    
+    display("e1.6",
+            "v=", v,
+            "path=", path,
+            var(r'\int{\bf{v}\cdot{d\bf{l}}}='), integral
+            )
+    
+#kaldik e1.8

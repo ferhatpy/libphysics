@@ -6,12 +6,15 @@
 test_mechanics.py
 
 References:
+===========    
     Books:
+    ======    
     Douglas Cline, Variational Principles In Classical Mechanics
     Christopher W. Kulp, Vasilis Pagonis, Classical Mechanics A Computational Approach with Examples Using Mathematica and Python
     Gerald Jay Sussman, Jack Wisdom - Structure and Interpretation of Classical Mechanics, MIT Press (2014)
     
     Problem Books:
+    ==============    
     Vladimir Pletser - Lagrangian and Hamiltonian Analytical Mechanics Forty Exercises Resolved and Explained-Springer Singapore (2018)
 """
 import copy

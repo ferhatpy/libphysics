@@ -5,9 +5,15 @@
 """
 test_template.py
 
-References:
+Installation:
+=============    
+sudo apt install pandoc             # Converts a *.ipynb file to a *.pdf file via latex.
+sudo pip3 install nbextensions      # Jupyter-notebook extension.
 
-sudo apt install pandoc # Converts a *.ipynb file to a *.pdf file via latex.
+
+References:
+===========    
+
 
 Find and replace template with desired class name.
 
@@ -28,6 +34,9 @@ display(Zsp)
 # Deep copy to create new instances of obranch class.
 import copy
 ostat2 = copy.deepcopy(ostat)
+
+
+assert euler_equations(D(x, t)**2/2, {x}) == [Eq(-D(x, t, t), 0)]
 """
 import copy
 import sys

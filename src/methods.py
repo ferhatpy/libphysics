@@ -58,9 +58,7 @@ class methods(branch):
 
         class cderivatives:
             """
-            Sub formulary class.
-            
-            Define global symbols in the outer class.
+            Sub formulary class for derivatives.
             """
             def __init__(self):
                 # Trigonometric Functions.
@@ -69,16 +67,37 @@ class methods(branch):
                 self.dtan   = Eq(Derivative(tan(x),x), tan(x).diff(x))
                 self.dcot   = Eq(Derivative(cot(x),x), cot(x).diff(x))
                 self.dsec   = Eq(Derivative(sec(x),x), sec(x).diff(x))
-                self.dcsch  = Eq(Derivative(csc(x),x), csc(x).diff(x))
+                self.dcsc   = Eq(Derivative(csc(x),x), csc(x).diff(x))
                 
                 # Hyperbolic Functions.
-                self.dsinh   = Eq(Derivative(sinh(x),x), sinh(x).diff(x))
-                self.dcosh   = Eq(Derivative(cosh(x),x), cosh(x).diff(x))
-                self.dtanh   = Eq(Derivative(tanh(x),x), tanh(x).diff(x))
-                self.dcoth   = Eq(Derivative(coth(x),x), coth(x).diff(x))
-                self.dsech   = Eq(Derivative(sech(x),x), sech(x).diff(x))
-                self.dcschh  = Eq(Derivative(csch(x),x), csch(x).diff(x))
+                self.dsinh  = Eq(Derivative(sinh(x),x), sinh(x).diff(x))
+                self.dcosh  = Eq(Derivative(cosh(x),x), cosh(x).diff(x))
+                self.dtanh  = Eq(Derivative(tanh(x),x), tanh(x).diff(x))
+                self.dcoth  = Eq(Derivative(coth(x),x), coth(x).diff(x))
+                self.dsech  = Eq(Derivative(sech(x),x), sech(x).diff(x))
+                self.dcsch  = Eq(Derivative(csch(x),x), csch(x).diff(x))
+        class cintegrals:
+            """
+            Sub formulary class for integrals.
+            """
+            def __init__(self):
+                # Trigonometric Functions.
+                self.isin   = Eq(Integral(sin(x),x), integrate(sin(x),x))
+                self.icos   = Eq(Integral(cos(x),x), integrate(cos(x),x))
+                self.itan   = Eq(Integral(tan(x),x), integrate(tan(x),x))
+                self.icot   = Eq(Integral(cot(x),x), integrate(cot(x),x))
+                self.isec   = Eq(Integral(sec(x),x), integrate(sec(x),x))
+                self.icsc   = Eq(Integral(csc(x),x), integrate(sin(x),x))
+                
+                # Hyperbolic Functions.
+                self.isinh  = Eq(Integral(sinh(x),x), integrate(sinh(x),x))
+                self.icosh  = Eq(Integral(cosh(x),x), integrate(cosh(x),x))
+                self.itanh  = Eq(Integral(tanh(x),x), integrate(tanh(x),x))
+                self.icoth  = Eq(Integral(coth(x),x), integrate(coth(x),x))
+                self.isech  = Eq(Integral(sech(x),x), integrate(sech(x),x))
+                self.icsch  = Eq(Integral(csch(x),x), integrate(sinh(x),x))
         self.cderivatives = cderivatives()        
+        self.cintegrals   = cintegrals()
         
         class subformulary:
             """

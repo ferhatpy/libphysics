@@ -401,6 +401,7 @@ def pprints(func, *funcs, **kwargs):
             output_style = {1:"display", 2:"pprint", 3:"print", 4:"latex"}[1],
             newline=True)
     """
+    # Get **kwargs optional parameters.
     output_style = kwargs.get("output_style", "display")
     newline = kwargs.get("newline", False)
     

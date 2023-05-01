@@ -9,12 +9,15 @@ Important Points:
     self.v = self.velocity = Eq(S('v'), diff(self.x, t, evaluate=False))
 """
 from itertools import combinations_with_replacement
+import matplotlib.pyplot as plt
+import mpl_toolkits.mplot3d.axes3d as axes3d
 from sympy import*
 from sympy import Derivative as D
 from sympy.diffgeom import *
 from sympy.diffgeom.rn import *
 from sympy.diffgeom.rn import R3_r, R3_s
 from sympy.plotting import plot_parametric
+from sympy.plotting import plot3d_parametric_line
 from sympy.vector import CoordSys3D
 from sympy.physics import mechanics
 from sympy.physics.quantum.operator import *
@@ -32,7 +35,7 @@ class mechanics(branch):
 
     """
     _name = "mechanics"
-    class_type = {1:"scalar", 2:"vectorial", 3:"EulerLagrange"}[3]
+    # class_type = {1:"scalar", 2:"vectorial", 3:"EulerLagrange"}[3]
         
     def define_symbols(self):
         """
@@ -49,6 +52,8 @@ class mechanics(branch):
         alpha,beta,gamma,tau = symbols('alpha beta gamma tau', real=True, positive=True)
         global g,t
         g,t = symbols('g t', real=True, positive=True)
+        global p
+        p = symbols('p')
         global k,m,w,w0,w1,w2,A,M 
         k,m,w,w0,w1,w2,A,M = symbols('k m w w0 w1 w2 A M', real=True, positive=True)
         global F0,m1,m2,m3,m4,m5
@@ -66,6 +71,9 @@ class mechanics(branch):
         global r,x,y,z
         r,x,y,z  = [Function('r')(t),
                     Function('x')(t), Function('y')(t), Function('z')(t)]
+        global px,py,pz
+        # px,py,pz = symbols('p_x p_y p_z', real=True)
+        px,py,pz = [Function('p_x')(t), Function('p_y')(t), Function('p_z')(t)]
         
         # Object symbols
         global C
@@ -97,19 +105,25 @@ class mechanics(branch):
             [x1,x2,x3,x4,x5,
              y1,y2,y3,y4,y5,
              z1,z2,z3,z4,z5] = [Function(ifun)(t) for ifun in lst_funcs]
+            global xdot, ydot, zdot
+            global pxdot, pydot, pzdot
             global q_i,p_i,q_idot,p_idot
+            xdot, ydot, zdot = [Function('xdot')(t), Function('ydot')(t), Function('zdot')(t)]
+            pxdot, pydot, pzdot = [Function('pdot_x')(t), Function('pdot_y')(t), Function('pdot_z')(t)]
             q_i,p_i       = [Function('q_i')(t), Function('p_i')(t)]  # Generalized coordinates
             q_idot,p_idot = [Function('qdot_i')(t), Function('pdot_i')(t)] 
-            global f,L,T,V
+            global f,H,L,T,V
             f       = Function('f')(u,t)
-            L,T     = [Function('L')(q_i,q_idot,t), Function('T')(q_i,q_idot,t)]
-            V       = Function('V')(q_i)           # Kinetic energy.
+            H,L,T,V = [Function('H')(q_i,p_i,t), # Hamiltonian
+                       Function('L')(q_i,q_idot,t), # Lagrangian
+                       Function('T')(q_i,q_idot,t), # Kinetic energy
+                       Function('V')(q_i)]          # Potential enerhy
         
 
-#    def __init__(self, class_type='scalar'):
-    def __init__(self):
+    def __init__(self, class_type='EulerLagrange'):
+    # def __init__(self):
         super().__init__()
-#        self.class_type = class_type
+        self.class_type = class_type
         self.define_symbols()
         
         class subformulary:
@@ -146,7 +160,7 @@ class mechanics(branch):
 
 ####    scalar        
         if self.class_type in ["scalar"]:
-            #----Green's Function Methods
+            #----> Green's Function Methods
             self.G  = self.Greens_function  = _G     # Green's function.
             self.Gw = self.Greensw_function = _Gw    # Green's tilde function.
             self.IFT_Gw = Eq(self.G, 1/sqrt(2*pi)*Integral(self.Gw*exp(I*w*(t-tau)), (w)))
@@ -158,7 +172,7 @@ class mechanics(branch):
             self.G_driven_oscillator_strong_damping = 1/(m*sqrt(gamma**2-w0**2))*exp(-gamma*(t-tau))*sinh(sqrt(gamma**2-w0**2)*(t-tau))
             self.G_driven_oscillator_critical_damping = (t-tau)/m*exp(-gamma*(t-tau))
             
-            #----Mechanics Methods
+            #----> Mechanics Methods
             self.x = self.position = x
             self.v = self.velocity = Eq(S('v'), diff(self.x, t, evaluate=False))
             self.a = self.acceleration = Eq(S('a'), diff(self.x, t, 2, evaluate=False))
@@ -216,23 +230,41 @@ class mechanics(branch):
             todo
             """
             self.x, self.y, self.z = [x, y, z]
-            self.T = self.kinetic_energy   = Eq(S('T'), S(1)/2*m*D(q)**2)
+            self.f, self.q, self.u, self.v = [f,q,u,v]
+#            self.T = self.kinetic_energy   = Eq(S('T'), S(1)/2*m*D(q)**2) todo erase
+            self.T = self.kinetic_energy   = Eq(S('T'), T)
             self.V = self.potential_energy = Eq(S('V'), V)
+            
+            #----> Lagrangian Mechanics
             self.L = L
-            self.Lag = self.Lagrangian = Eq(S('L'), self.T.rhs-self.V.rhs)
-            self.Eulers_equation = Eq( Sum((-1)**n*D(D(f,u), (t,n), ), (n,0,oo)), 0 )
-            self.Lagrange_equations_I = Eq( D( D(var('L'), q_idot), t) - D(var('L'), q_i), 0 )
-            # self.Lagrange_equations_I = UnevaluatedExpr(Eq( D( D(S('L'), q_idot), t) - D(S('L'), q_i), 0 ))
+            self.Lag = self.Lagrangian = Eq(L, self.T.rhs-self.V.rhs)
+            self.Eulers_equation = Eq( Sum((-1)**n*D(D(f,u), (t,n), ), (n,1,m)), 0 )
+            self.Lagrange_equations_I = Eq( D( D(L, q_idot), t) - D(L, q_i), 0 )
+#            self.Lagrange_equations_I = UnevaluatedExpr(Eq( D( D(S('L'), q_idot), t) - D(S('L'), q_i), 0 ))
 #            self.u = dynamicsymbols('u')   # gives time dependent function
 #            u = IndexedBase('u')           # Generates an error.
 #            f = Function('f')(u[n],x)
-#            self.Eulers_equation = Eq( Sum((-1)**n*diff(diff(f,u[n]), (x,n)), (n,0,oo)), 0)
+#            self.Eulers_equations = Eq( Sum((-1)**n*diff(diff(f,u[n]), (x,n)), (n,0,oo)), 0)
             
+            #self.Lagrange_equations_II with constraints todo
+            
+            #----> Hamiltonian Mechanics
+            self.H   = Eq(S('H'), Sum(p_i*q_idot, (i,1,n)) - L)
+            self.F_i = Eq(S('F_i'), D(L, q_i))
+            self.q_i = q_i
+            self.p_i = Eq(p_i, D(L, q_idot))
+#            self.q_idot = self.Hamiltons_equations_I  = Eq(var('qdot_i'),  D(H, p_i))
+            self.q_idot = self.Hamiltons_equations_I  = Eq(q_idot,  D(H, p_i))
+            # self.p_idot = self.Hamiltons_equations_II = Eq(var('pdot_i'), -D(H, q_i))
+            self.p_idot = self.Hamiltons_equations_II = Eq(p_idot, -D(H, q_i))
+            
+#            omech.q_idot.xreplace({H:omech.H})
             
         # Common text definitions.
         self.Hamiltonian = self.H
     
-    # Global Methods        
+#### Global Methods
+#----> Eulers_equation_sympy
     @staticmethod
     def Eulers_equation_sympy(L, funcs=(), vars=()):
         r"""
@@ -351,6 +383,7 @@ class mechanics(branch):
     
         return(eqns, steps)
 
+#----> Eulers_equation_1D
     @staticmethod
     def Eulers_equation_1D(f, uns, ivar):
         """
@@ -378,6 +411,91 @@ class mechanics(branch):
         eqn = Eq(_sum, 0)
         return(eqn, steps)
 
+#----> Hamiltons_equations
+    def Hamiltons_equations(self, pL, lst_qi, lst_qidot, lst_pi, lst_pidot):
+        """
+        Usage:
+        ======    
+        lst_qi    = [x,y,z]
+        lst_qidot = [xdot, ydot, zdot]
+        lst_pi    = [px,py,pz]
+        lst_pidot = [pxdot, pydot, pzdot]
+        pL = omech.L
+        
+        [lst_qidot, lst_pidot] = omech.Hamiltons_equations(pL, lst_qi, lst_qidot, lst_pi, lst_pidot)
+        display(lst_qidot, lst_pidot)
+        
+        1. Calculate generalize momenta by taking derivative of Lagrangian with respect to q_idot.
+        2. Solve q_idots from generalize momenta equations.
+        3. Replace q_idots in Lagrangian with corresponding generalize momenta.
+        4. Replace pi*qidot in Hamiltonian with expressions written in terms of generalize momenta.
+        5. Calculate qidot, p_idot, p_idot by Hamilton's equations. 
+        """
+
+        #    1. Calculate generalize momenta by taking derivative of Lagrangian with respect to q_idot.
+        dim = len(lst_qidot)
+        eq_pis, sol_qidots, res_qidots, res_pidots = [],[],[],[]
+        sub_qidots = dict()
+        for i in range(dim):
+            """
+            eq_px = omech.p_i.xreplace({L:omech.L.rhs, q_idot:xdot, p_i:px}).doit() -> p_x = m*xdot
+            eq_py = omech.p_i.xreplace({L:omech.L.rhs, q_idot:ydot, p_i:py}).doit()
+            eq_pz = omech.p_i.xreplace({L:omech.L.rhs, q_idot:zdot, p_i:pz}).doit()
+            """
+            # ieq_pi = self.p_i.xreplace({L:pL.rhs, q_idot:lst_qidot[i], p_i:lst_pi[i]}).doit()
+            ieq_pi = self.p_i.xreplace({L:self.L.rhs, q_idot:lst_qidot[i], p_i:lst_pi[i]}).doit()
+            eq_pis.append(ieq_pi)
+   
+        # 2. Solve q_idots from generalize momenta equations.
+        for i in range(dim):
+            """
+            sol_x_dot = solve(eq_px, xdot)[0]
+            sol_y_dot = solve(eq_py, ydot)[0]
+            sol_z_dot = solve(eq_pz, zdot)[0]
+            """
+            isol = solve(eq_pis[i], lst_qidot[i])[0]
+            sol_qidots.append(isol)
+        
+        # 3. Replace q_idots in Lagrangian with corresponding generalize momenta.
+        for i in range(dim):
+            # sub_qidots = {xdot:sol_x_dot, ydot:sol_y_dot, zdot:sol_z_dot}
+            sub_qidots[lst_qidot[i]] =  sol_qidots[i]
+        self.L = self.L.subs(sub_qidots)
+        
+        # 4. Replace pi*qidot in Hamiltonian with expressions written in terms of generalize momenta.
+        # piqidot = Matrix([[px,py,pz]]).dot(Matrix([[sol_x_dot,sol_y_dot,sol_z_dot]]))
+        piqidot = Matrix([lst_pi]).dot(Matrix([sol_qidots]))
+        sub_H = {n:1, L:self.L.rhs, p_i*q_idot:piqidot}
+        self.H = Eq(self.H.lhs, ratsimp(self.H.rhs.xreplace(sub_H).doit()))
+        
+        # 5. Calculate qidot, p_idot by Hamilton's equations.
+        for i in range(dim):
+            """
+            xdot = omech.q_idot.xreplace({H:omech.H.rhs, p_i:px, q_idot:xdot})
+            ydot = omech.q_idot.xreplace({H:omech.H.rhs, p_i:py, q_idot:ydot})
+            zdot = omech.q_idot.xreplace({H:omech.H.rhs, p_i:pz, q_idot:zdot})
+            # zdot = omech.Hamiltons_equations_I.xreplace({H:omech.H.rhs, p_i:pz, q_idot:zdot})
+            pxdot = omech.p_idot.xreplace({H:omech.H.rhs, q_i:x, p_idot:pxdot})
+            pydot = omech.p_idot.xreplace({H:omech.H.rhs, q_i:y, p_idot:pydot})
+            pzdot = omech.p_idot.xreplace({H:omech.H.rhs, q_i:z, p_idot:pzdot})
+            """
+            iqidot = self.q_idot.xreplace({H:self.H.rhs, p_i:lst_pi[i], q_idot:lst_qidot[i]}).doit()
+            ipidot = self.p_idot.xreplace({H:self.H.rhs, q_i:lst_qi[i], p_idot:lst_pidot[i]}).doit()
+            res_qidots.append(iqidot)
+            res_pidots.append(ipidot)
+            
+        if self.verbose:
+            libsympy.pprints(
+                pL, lst_qi, lst_qidot, lst_pi, lst_pidot, omech.p_i,
+                eq_pis, sub_qidots, self.L,
+                sub_H, self.H,
+                self.Hamiltons_equations_I,
+                self.Hamiltons_equations_II,
+                *res_qidots,
+                *res_pidots,
+                output_style=self.output_style)
+
+        return(res_qidots, res_pidots)
         
     @staticmethod
     def __doc__():

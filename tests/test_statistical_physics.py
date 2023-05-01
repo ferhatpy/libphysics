@@ -56,7 +56,7 @@ class sets:
                 331:"1D_simple_harmonic_oscillator", 332:"",
                 430:"monoatomic_ideal_gas",
                 710:"ideal_gas_canonical"}
-    flow = [dictflow[i] for i in [331]]
+    flow = [dictflow[i] for i in [310]]
     if test_all: flow = [dictflow[i] for i in dictflow.keys()]
 
 print("Test of the {0}.".format(sets.flow))
