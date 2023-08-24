@@ -27,7 +27,7 @@ for ipath in lstPaths:
 from libsympy import *
 from mechanics import *
 from sympy.physics import mechanics as mech
-mech.mechanics_printing()
+mech.mechanics_printing() # for xdot printing etc.
 #print(sys.version)
 #print(sys.path)
 # Execute jupyter-notebook related commands.
@@ -61,7 +61,7 @@ class sets:
     dictflow = {100:"get_formulary", 150:"get_subformulary",
                 200:"simple_harmonic_oscillator_scalar", 201:"simple_harmonic_oscillator_vectorial", 
                 2321:"coordinate_systems"}
-    flow = [dictflow[i] for i in [201]]
+    flow = [dictflow[i] for i in [200]]
     if test_all: flow = [dictflow[i] for i in dictflow.keys()]
 
 print("Test of the {0}.".format(sets.flow))
@@ -70,18 +70,15 @@ print("Test of the {0}.".format(sets.flow))
 
 ### get_formulary
 if "get_formulary" in sets.flow:
-    omech.class_type = "scalar"
-    omech.__init__()
+    omech.__init__(class_type = "scalar")
     omech.output_style = "latex"
     omech.get_formulary()
     omech.get_formulary(style="eq")
     
-    omech.class_type = "vectorial"
-    omech.__init__()
+    omech.__init__(class_type = "vectorial")
     omech.get_formulary()    
     
-    omech.class_type = "EulerLagrange"
-    omech.__init__()
+    omech.__init__(class_type = "EulerLagrange")
     omech.get_formulary()    
 
     omech2 = mechanics()
@@ -100,8 +97,7 @@ if "simple_harmonic_oscillator_scalar" in sets.flow:
     """
 #    omech = mechanics() # DO NOT create any instance.
     print("2.4.8.2 Harmonic Oscillator, p126.")
-    omech.class_type = "scalar"
-    omech.__init__()
+    omech.__init__(class_type = "scalar")
     omech.verbose = True
     commands = ["solve", "NewtonsLaw2", omech.a.rhs]
     omech.process(commands)
@@ -115,8 +111,7 @@ if "simple_harmonic_oscillator_scalar" in sets.flow:
     x(t) = C1*sin(wt) + C2*sin(wt)
     """
     # Scalar Way.
-    omech.class_type = "scalar"
-    omech.__init__()
+    omech.__init__(class_type = "scalar")
     omech.verbose = True
     display("Newton's 2nd Law", omech.NewtonsLaw2, 
             "Hooke's Law", omech.HookesLaw)
@@ -160,8 +155,7 @@ if "simple_harmonic_oscillator_scalar" in sets.flow:
 
 if "simple_harmonic_oscillator_vectorial" in sets.flow:
     # Vectorial Way.
-    omech.class_type = "vectorial"
-    omech.__init__()
+    omech.__init__(class_type = "vectorial")
     omech.verbose = True
     
     commands = ["Eq", "NewtonsLaw2", "HookesLaw"]
@@ -200,8 +194,7 @@ if "coordinate_systems" in sets.flow:
     print("Coordinate Systems")
     
     print("Polar Coordinates")
-    omech.class_type = "vectorial"
-    omech.__init__()
+    omech.__init__(class_type = "vectorial")
     omech.verbose = False
     
     xreplaces = {x:r*cos(theta)*C.i,

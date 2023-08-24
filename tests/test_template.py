@@ -17,7 +17,7 @@ References:
 
 Find and replace template with desired class name.
 
-Example: ostat
+Example: otemp
 ============= 
 template.class_type = "micro_canonical_discrete_distinguihable"
 template.__init__()
@@ -26,14 +26,14 @@ template.solver.verbose = False
 xreplaces = {g:1, engF:mu*B*(2*i-3), j:1, n:2}
 
 # 4 lines
-commands = ["xreplace", "ostat.Zsp", xreplaces]
+commands = ["xreplace", "otemp.Zsp", xreplaces]
 template.process(commands)
 Zsp = simplify(template.result.doit())
 display(Zsp)
 
 # Deep copy to create new instances of obranch class.
 import copy
-ostat2 = copy.deepcopy(ostat)
+otemp2 = copy.deepcopy(otemp)
 
 
 assert euler_equations(D(x, t)**2/2, {x}) == [Eq(-D(x, t, t), 0)]
@@ -113,35 +113,38 @@ if "get_subformulary" in sets.flow:
 ### A Spin-1/2 Paramagnet
 if "topic1" in sets.flow:
     print("A Spin-1/2 Paramagnet")
-    
-    ostat.class_type = "micro_canonical_discrete_distinguihable"
-    ostat.__init__()
-    ostat.solver.verbose = True
+    otemp.__init__(class_type = "micro_canonical_discrete_distinguihable")
+    otemp.verbose = True
     
     [mu,B] = symbols('mu B', real=True)
     xreplaces = {g:1, engF:mu*B*(2*i-3), j:1, n:2}
-    display("Single particle partition function:", ostat.Zsp)
+    display("Single particle partition function:", otemp.Zsp)
 
     ### Magic 4 lines
-    commands = ["xreplace", "ostat.Zsp", xreplaces]
-    ostat.result = ostat.process(commands).rhs
-    Zsp = simplify(ostat.result.doit())
+    commands = ["xreplace", "otemp.Zsp", xreplaces]
+    otemp.result = otemp.process(commands).rhs
+    Zsp = simplify(otemp.result.doit())
     display(Zsp)
     
     ### Alternative ways.
-    commands = ["xreplace", "ostat.Zsp", xreplaces]
-    ostat.process(commands)
-    Zsp1 = simplify(ostat.result.evalf())   # 1. Way; evalf() can give a result in a different format.
-    Zsp2 = simplify(ostat.result.doit())    # 2. Way.
-    Zsp3 = simplify(ostat.Zsp.evalf(subs=xreplaces))        # 3. Way, substituion without commands and execution.
-    Zsp4 = simplify(ostat.Zsp.evalf(subs=xreplaces).doit()) # 4. Way, execution without commands.
-    Zsp5 = simplify(ostat.Zsp.xreplace(xreplaces).doit())   # 5. Way.
+    commands = ["xreplace", "otemp.Zsp", xreplaces]
+    otemp.process(commands)
+    Zsp1 = simplify(otemp.result.evalf())   # 1. Way; evalf() can give a result in a different format.
+    Zsp2 = simplify(otemp.result.doit())    # 2. Way.
+    Zsp3 = simplify(otemp.Zsp.evalf(subs=xreplaces))        # 3. Way, substituion without commands and execution.
+    Zsp4 = simplify(otemp.Zsp.evalf(subs=xreplaces).doit()) # 4. Way, execution without commands.
+    Zsp5 = simplify(otemp.Zsp.xreplace(xreplaces).doit())   # 5. Way.
     display(Zsp1, Zsp2, Zsp3, Zsp4, Zsp5)
     
-    commands = ["xreplace", "ostat.U", xreplaces]
-    ostat.process(commands)
-    U = simplify(ostat.result.doit())
+    commands = ["xreplace", "otemp.U", xreplaces]
+    otemp.process(commands)
+    U = simplify(otemp.result.doit())
     display(U)
     
-    ### Get generated SymPy codes.
-    print("Codes:\n", *ostat.solver.get_codes())
+    #### Get generated SymPy codes.
+    print("Codes:\n", *otemp.solver.get_codes())
+    
+    #### Print calculations, results, etc.
+    pprints("Z_{sp}1=", Zsp1, 
+            "U=", U,
+            output_style = otemp.output_style )

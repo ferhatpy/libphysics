@@ -12,6 +12,8 @@ Newton2 := EqualTo[F][m a]
 TraditionalForm[Sort[Newton2]]
 Solve[Newton2, a]
 
+todo correct
+
 """
 from sympy import*
 from sympy.abc import*
@@ -32,8 +34,8 @@ class template(branch):
 
     """
     _name = "template"
-    class_type = {1:"scalar", 2:"vectorial"}[1]
-    
+
+    global g,engF
 
     def define_symbols(self):
         """
@@ -78,19 +80,39 @@ class template(branch):
         x  = Function('x')(t)
         U  = Function('U')(T)    # Function is accesible out of the module.
         _U = Function('U')(T)    # Function is not accesible out of the module.
-        G  = Function('G')(t,tau)                    # A noncallable function.
-        G  = Lambda((t,tau), Function('G')(t,tau))   # A callable function.
+        Gnon  = Function('G')(t,tau)                    # A noncallable function.
+        Gcal1 = Lambda((t,tau), Function('G')(t,tau))   # A callable function.
+        Gcal2 = lambda t,tau: Function('G')(t,tau)      # A callable function.
         lst_functions = ['fV','fE','psi']
         [fV, fE, psi] = [Function(ifun)(x) for ifun in lst_functions]
+    
+    
+        # Global Functions
+        if self.class_type in ["micro_canonical_discrete_distinguihable",
+                               "micro_canonical_discrete_indistinguihable",
+                               "micro_canonical_continuous_indistinguihable"]:
+            g   = Function('g')(i)           # Degeneracy function.
+            engF= Function('varepsilon')(i)  # Energy function.
+        
+        elif self.class_type in ["canonical"]:
+            g   = Function('g')(i)           # Degeneracy function.
+            engF= Function('varepsilon')(i)  # Energy function.
     
     	# Common definitions.
         if self.class_type in ["scalar", "vectorial"]:
             _H = Function('H')(t)           # Total energy.
             
-#    def __init__(self, class_type='scalar'):
-    def __init__(self):
+    def __init__(self, class_type='scalar'):
+        """
+        class_type = \
+        {1:"micro_canonical_discrete_distinguihable",
+         2:"micro_canonical_discrete_indistinguihable",
+         3:"micro_canonical_continuous_indistinguihable",
+         4:"canonical",
+         5:"grand_canonical"}
+        """
         super().__init__()
-#        self.class_type = class_type
+        self.class_type = class_type
         self.define_symbols()
         
         class subformulary:
@@ -108,7 +130,6 @@ class template(branch):
         if self.class_type == "scalar":
             # Construct a cascaded formulary structure.
             self.NewtonsLaw2_1 = Eq(var('F'), m*a) # Default one is var.
-            self.exp_x    = Eq(var(r'\langle{x}\rangle'),   Integral(conjugate(self.Psi)*x*self.Psi, (x,xmin,xmax)))
             self.NewtonsLaw2_2 = Eq(symbols('F'), m*a)
             self.NewtonsLaw2_3 = Eq(S('F'), m*a)
             self.HookesLaw   = Eq(F, -k*x)
@@ -119,8 +140,8 @@ class template(branch):
         if hasattr(self, "Zsp"): self.partition_function_sp = self.Zsp
     
     @staticmethod
+    # Abstract method
     def __doc__():
         return("Document of template class.")
         
 otemp = template() # Create an otemp object from template class.
-#otemp.__init__()

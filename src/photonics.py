@@ -14,8 +14,6 @@ class photonics(branch):
 
     """
     _name = "photonics"
-    class_type = "default"
-
     
     def define_symbols(self):
         """
@@ -46,8 +44,9 @@ class photonics(branch):
         U  = Function('U')(T)  # Function is accesible out of the module.
         _U = Function('U')(T)  # Function is not accesible out of the module.
     
-    def __init__(self):
+    def __init__(self, class_type='default'):
         super().__init__()
+        self.class_type = class_type
         self.define_symbols()
         
         class subformulary:

@@ -13,13 +13,21 @@ commands = ["solve", "NewtonsLaw2", a]
 print(omech.process(commands))
 """
 import libsympy
-from sympy import *
 import sys
 lstPaths = ["../../libpython/src"]
 for ipath in lstPaths:
     if ipath not in sys.path:
         sys.path.append(ipath)
+import inspect        
 #from collections import namedtuple
+import matplotlib.pyplot as plt
+import mpl_toolkits.mplot3d.axes3d as axes3d        
+import numpy as np
+from sympy import *
+
+# todo handle
+#import scienceplots
+#plt.style.use(['science', 'notebook'])
 
 """
 Getting Class Name:
@@ -99,16 +107,65 @@ class branch:
         display(*omech.get_subformulary())
         """
         if style == "eq":
+#            res = [getattr(self, ikey) for (ikey, ival) in vars(self).items()]
             res = [getattr(self, ikey) for (ikey, ival) in vars(self).items()]
+            
             if verbose:
                 libsympy.pprints(*res,
                                  output_style=self.output_style,
                                  newline=self.newline)
         if style == "name-eq":
             """
-            name = ikey; ival = eq
-            """
+            name = ikey; eq = ival
+            
+            Examples:
+            =========
             res = [(ikey, ival) for (ikey, ival) in vars(self).items()]
+            
+            members = dict(vars(oqmec).items())
+            for (ikey, ival) in members.items():
+                sub_class = vars(members["sho"])
+                for (jkey, jval) in sub_class.items():
+                    # Call if the type of member is a function.
+                    if callable(jval):
+                        print((jkey, jval()))
+                    else:
+                        print((jkey, jval))
+                            
+            for (ikey, ival) in vars(vars(oqmec)["sho"]).items():
+                print((ikey, ival))
+            
+            for (ikey, ival) in vars(oqmec).items():
+                print(inspect.isclass(vars(oqmec)["sho"])) # todo Can not detect subclass!!!
+            
+            """
+            # kaldik todo convert below to a function chatgpt and unite with above "eq" option.
+            res = []      
+            members = dict(vars(self).items())
+            # members = dict(inspect.getmembers(self)) # or more lengthy
+            # Iterate over class members.
+            for (ikey, ival) in members.items():
+                # Check the existence of a subclass.
+                try:
+                    sub_class = vars(members[ikey])
+                    res.append((ikey,ival)) # Append 
+                    # Iterate over subclass members.
+                    for (jkey, jval) in sub_class.items():
+                        # Call if the type of member is a function.
+                        if callable(jval):
+                            res.append((jkey, jval()))
+                        else:
+                            res.append((jkey, jval))
+                except:
+                    res.append((ikey, ival))
+                    """
+                    todo: All functions in a branch must be callable with default parameters.
+                    if callable(ival):
+                        res.append((ikey, ival()))
+                    else:
+                        res.append((ikey, ival))
+                    """
+            
             if verbose:
                 for ikey, ival in res:
                     libsympy.pprints(ikey, ival,
@@ -118,7 +175,8 @@ class branch:
             res = []
             for (ikey, ival) in vars(self).items():
                 try:
-                    icode = mathematica_code(ival)
+                    icode = mathematica_code(ival),
+                    
                     if verbose:
                         libsympy.pprints(ikey, icode,
                                          output_style=self.output_style,
@@ -150,8 +208,7 @@ class branch:
             """
             name = ikey; ival = eq
             """
-            res = [(ikey, ival)
-                   for (ikey, ival) in vars(self.subformulary).items()]
+            res = [(ikey, ival) for (ikey, ival) in vars(self.subformulary).items()]
             if verbose:
                 for ikey, ival in res:
                     libsympy.pprints(ikey, ival,
@@ -169,7 +226,7 @@ class branch:
     def process(self, commands):
         """
         Structure
-        ---------
+        =========
         Sentence with 3 words: 
             verb - subject - object
             commands = ["verb", "subject", "object"]
@@ -190,7 +247,7 @@ class branch:
         globals()["solve"](omech.NewtonsLaw2, omech.a.rhs)
 
         Equate Newton's 2nd Law to Hooke's Law
-        --------------------------------------
+        ======================================
         commands = [verb, subject, object] --> ["Eq", "NewtonsLaw2", "HookesLaw"]
         commands = [verb, subject, object] --> ["solve", "NewtonsLaw2", a]
         Equate Newton's 2nd Law to Hooke
@@ -204,7 +261,7 @@ class branch:
 
 
         Example: Solve a from F = ma
-        ----------------------------
+        ============================
         [a,F] = symbols('a F', real=True)
         [k,m,t,w] = symbols('k m t w', real=True, positive=True)
         x = Function('x')(t)
@@ -226,7 +283,7 @@ class branch:
             [verb, subject, obj, args] = [commands[0],
                                           commands[1], commands[2], commands[3]]
 
-        # kaldik dallanma yap verbose_type = python_code, text_explanation
+        # todo dallanma yap verbose_type = python_code, text_explanation
         if self.verbose:
             output = [  # "{0}({1}, {2})".format(cmd.__name__, expr, params),
                 ' '.join(map(str, commands))]
@@ -269,7 +326,7 @@ class branch:
 
             if len(commands) == 3:
                 res = cmd(expr, params)
-                # kaldik strcode yerine print_python denenmelidir.
+                # todo strcode yerine print_python denenmelidir.
                 strcode = "{0}({1}, {2})".format(cmd.__name__, expr, params)
             elif len(commands) == 4:
                 res = cmd(expr, params, args)

@@ -24,8 +24,6 @@ class methods(branch):
 
     """
     _name = "methods"
-    class_type = "default"
-
     
     def define_symbols(self):
         """
@@ -52,8 +50,9 @@ class methods(branch):
         global dl
         dl = 1*C.i + 1*C.j + 1*C.k  # Differential position element.
     
-    def __init__(self):
+    def __init__(self, class_type='default'):
         super().__init__()
+        self.class_type = class_type
         self.define_symbols()
 
         class cderivatives:

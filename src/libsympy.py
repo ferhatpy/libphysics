@@ -327,15 +327,15 @@ def plot_list(plist2Ds, plabels=[1,2,3],
     fig.tight_layout()
 
 
-def plot_sympfunc(pfuncs, prange=(-1,1,100), plabels=[1,2,3], xlabel="$x$", ylabel="$y$", 
-                  pxscale="linear", pyscale="linear", pgrid=False, paxis=False):
+def plot_sympfunc(pfuncs, prange=(-1,1,500), plabels=[1,2,3], xlabel="$x$", ylabel="$y$", 
+                  pxscale="linear", pyscale="linear", pgrid=False, paxis=True):
     """
     Plots sympy functions within a specified region.
     
     Parameters
     ==========
     
-    pfuncs: A sympy function.
+    pfuncs: A list of sympy functions.
     prange: (xmin,xmax,# of points)
 
     Examples
@@ -351,7 +351,8 @@ def plot_sympfunc(pfuncs, prange=(-1,1,100), plabels=[1,2,3], xlabel="$x$", ylab
     linestyles = ['-',':','-.','--']
     
     for i, ifunc in enumerate(pfuncs):
-        # Lambdify function and obtain f. lambdify(x, pfunc)(ix)->f(x)
+        # Lambdify sympy function and obtain f(x) for processing with numpy.
+        # lambdify(x, pfunc)(ix)->f(x)
         f = lambdify(x, ifunc, 'numpy') # 'mpmath'
         ys=[f(ix) for ix in xs]
 #        ys=[lambdify(x,ifunc,'numpy')(ix) for ix in xs]

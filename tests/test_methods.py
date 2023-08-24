@@ -69,7 +69,7 @@ class sets:
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]
     
     # Execution settings.
-    test_all = {0:False, 1:True}[0]
+    test_all = {0:False, 1:True}[1]
     dictflow = dict(examples = {13:"e1.3",14:"e1.4",15:"e1.5",16:"e1.6"},
                     problems = {13:"p1.3"})
     flow = [dictflow["examples"][i] for i in [16]]
@@ -84,7 +84,6 @@ print("Test of the {0}.".format(sets.flow))
 ### get_formulary
 if "get_formulary" in sets.flow:
 #    omech = mechanics() # DO NOT create any instance.
-    ometh.class_type = ""
     ometh.__init__()
     ometh.get_formulary()
     ometh.get_formulary(style="eq")
@@ -92,7 +91,6 @@ if "get_formulary" in sets.flow:
 # ### get_subformulary
 
 if "get_subformulary" in sets.flow:
-    ometh.class_type = ""
     ometh.__init__()
     ometh.get_subformulary()    
 

@@ -1,5 +1,7 @@
 # libphysics
 
+A physics library for performing symbolic and numerical calculations.
+
 ## Setting up coding environment
 
 ### Create virtual environment

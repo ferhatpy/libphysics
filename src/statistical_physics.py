@@ -14,11 +14,6 @@ class statistical_mechanics(branch):
 
     """
     _name = "statistical_mechanics"
-    class_type = {1:"micro_canonical_discrete_distinguihable",
-                  2:"micro_canonical_discrete_indistinguihable",
-                  3:"micro_canonical_continuous_indistinguihable",
-                  4:"canonical",
-                  5:"grand_canonical"}[1]
     
     def define_symbols(self):
         """
@@ -51,8 +46,17 @@ class statistical_mechanics(branch):
             g   = Function('g')(i)           # Degeneracy function.
             engF= Function('varepsilon')(i)  # Energy function.
 
-    def __init__(self):
+    def __init__(self, class_type='micro_canonical_discrete_indistinguihable'):
+        """
+        class_type = \
+        {1:"micro_canonical_discrete_distinguihable",
+         2:"micro_canonical_discrete_indistinguihable",
+         3:"micro_canonical_continuous_indistinguihable",
+         4:"canonical",
+         5:"grand_canonical"}
+        """
         super().__init__()
+        self.class_type = class_type
         self.define_symbols()
         
         class subformulary:
@@ -67,6 +71,7 @@ class statistical_mechanics(branch):
                 
         self.subformulary = subformulary()
 
+#### 1) micro_canonical_discrete_distinguihable
         if self.class_type == "micro_canonical_discrete_distinguihable":
             self.Zsp = Eq(symbols('Z_sp'), Sum(g*exp(-engF/(kB*T)), (i,j,n)))
             self.U   = Eq(symbols('U'),   N*kB*T**2*diff(log(self.Zsp.rhs), T, evaluate=False))
@@ -74,7 +79,8 @@ class statistical_mechanics(branch):
             self.F   = Eq(symbols('F'),  -N*kB*T*log(self.Zsp.rhs))
             self.Cv  = Eq(symbols('C_v'), diff(self.U.rhs, T, evaluate=False))
             self.M   = Eq(symbols('M'),  -diff(self.F.rhs, B, evaluate=False))
-           
+
+#### 2) micro_canonical_discrete_indistinguihable
         if self.class_type == "micro_canonical_discrete_indistinguihable":
             self.Zsp = Eq(symbols('Z_sp'), Sum(g*exp(-engF/(kB*T)), (i,j,n)))
             self.ZN  = Eq(symbols('Z_N'),  self.Zsp.rhs**N/factorial(N))
@@ -83,6 +89,7 @@ class statistical_mechanics(branch):
             self.F   = Eq(symbols('F'),   -N*kB*T*log(self.Zsp.rhs) + kB*T*log(factorial(N)))
             self.Cv  = Eq(symbols('C_v'),  diff(self.U.rhs, T, evaluate=False))
 
+#### 3) micro_canonical_continuous_indistinguihable
         if self.class_type == "micro_canonical_continuous_indistinguihable":
             self.Zsp = Eq(symbols('Z_sp'), Integral(g*exp(-engF/(kB*T)), (eng,0,oo)))
             self.ZN  = Eq(symbols('Z_N'), self.Zsp.rhs**N/factorial(N))
@@ -90,12 +97,14 @@ class statistical_mechanics(branch):
             self.S   = Eq(symbols('S'),  N*kB*log(self.Zsp.rhs) + N*kB*T*diff(log(self.Zsp.rhs), T, evaluate=False) - kB*log(factorial(N)) )
             self.F   = Eq(symbols('F'), -N*kB*T*log(self.Zsp.rhs) + kB*T*log(factorial(N)))
             self.Cv  = Eq(symbols('C_v'), diff(self.U.rhs, T, evaluate=False))
-            
+
+#### 4) canonical            
         if self.class_type == "canonical":
-#            self.ZN  = Eq( _ZN, (1/(factorial(N)*h**(3*N)))*Integral(exp(-engF/(kB*T)), (p_i,-oo,oo), (q_i,-oo,oo)) )
+            self.ZN_ideal_gas  = Eq(symbols('Z_N(Ideal gas)'), (1/(factorial(N)*h**(3*N)))*Integral(exp(-engF/(kB*T)), (p_i,-oo,oo), (q_i,-oo,oo)) )
             self.ZN  = Eq(symbols('Z_N'), self.subformulary.Z_Ideal_Gas) # todo sil
             self.F   = Eq(symbols('F'), -kB*T*log(self.ZN.rhs))
-        
+
+#### 5) grand_canonical        
         if self.class_type == "grand_canonical":
             pass
 

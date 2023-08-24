@@ -35,7 +35,6 @@ class mechanics(branch):
 
     """
     _name = "mechanics"
-    # class_type = {1:"scalar", 2:"vectorial", 3:"EulerLagrange"}[3]
         
     def define_symbols(self):
         """
@@ -72,13 +71,15 @@ class mechanics(branch):
         r,x,y,z  = [Function('r')(t),
                     Function('x')(t), Function('y')(t), Function('z')(t)]
         global px,py,pz
-        # px,py,pz = symbols('p_x p_y p_z', real=True)
         px,py,pz = [Function('p_x')(t), Function('p_y')(t), Function('p_z')(t)]
         
         # Object symbols
         global C
         C = CoordSys3D('C') # Cartesian coordinate system.
         
+        """
+        class_type specific global symbols, functions, objects.
+        """ 
         if self.class_type in ["scalar"]:
             pass
             
@@ -114,14 +115,13 @@ class mechanics(branch):
             q_idot,p_idot = [Function('qdot_i')(t), Function('pdot_i')(t)] 
             global f,H,L,T,V
             f       = Function('f')(u,t)
-            H,L,T,V = [Function('H')(q_i,p_i,t), # Hamiltonian
+            H,L,T,V = [Function('H')(q_i,p_i,t),    # Hamiltonian
                        Function('L')(q_i,q_idot,t), # Lagrangian
                        Function('T')(q_i,q_idot,t), # Kinetic energy
                        Function('V')(q_i)]          # Potential enerhy
         
 
-    def __init__(self, class_type='EulerLagrange'):
-    # def __init__(self):
+    def __init__(self, class_type='scalar'):
         super().__init__()
         self.class_type = class_type
         self.define_symbols()
@@ -152,19 +152,24 @@ class mechanics(branch):
                 self.sph_to_cart_x = r*sin(theta)*cos(phi)
                 self.sph_to_cart_y = r*sin(theta)*sin(phi)
                 self.sph_to_cart_z = r*cos(theta)
-                
-                # List of Moment of Inertia
-                self.Icm_sphere = S(2)/5*M*r**2
-                
         self.subformulary = subformulary()
+        
+        class moment_of_inertia():
+            """
+            List of Moment of Inertia
+            """
+            def __init__(self):
+                self.Icm_sphere = S(2)/5*M*r**2
+            def __doc__(self):
+                print("List of Moment of Inertia")
+        self.moment_of_inertia = moment_of_inertia()
 
-####    scalar        
+####    1) scalar        
         if self.class_type in ["scalar"]:
             #----> Green's Function Methods
             self.G  = self.Greens_function  = _G     # Green's function.
             self.Gw = self.Greensw_function = _Gw    # Green's tilde function.
             self.IFT_Gw = Eq(self.G, 1/sqrt(2*pi)*Integral(self.Gw*exp(I*w*(t-tau)), (w)))
-            # IFT_Gw = 1/sqrt(2*pi)*Integral(Gw*exp(I*w*(t-tau)), (w))
             self.IFT_Dirac_delta = Eq(DiracDelta(t-tau), 1/(2*pi)*Integral(exp(I*w*(t-tau)), (w)))
             self.inverse_Fourier_transform_Gw = self.IFT_Gw
             self.inverse_Fourier_transform_Dirac_delta = self.IFT_Dirac_delta
@@ -193,7 +198,7 @@ class mechanics(branch):
             self.phase = None
             self.scaled_amplitude = None
 
-####    vectorial            
+####    2) vectorial            
         if self.class_type in ["vectorial"]:
             """
             Example:
@@ -224,14 +229,13 @@ class mechanics(branch):
             self.H = self.energy = Eq(S('H'), self.T.rhs + self.U.rhs)
             self.HookesLaw = Eq(S('F_x')*C.i+S('F_y')*C.j+S('F_z')*C.k, -k*self.x)
         
-####    EulerLagrange
+####    3) EulerLagrange
         if self.class_type in ["EulerLagrange"]:
             """
-            todo
+            todo Write explanation
             """
             self.x, self.y, self.z = [x, y, z]
             self.f, self.q, self.u, self.v = [f,q,u,v]
-#            self.T = self.kinetic_energy   = Eq(S('T'), S(1)/2*m*D(q)**2) todo erase
             self.T = self.kinetic_energy   = Eq(S('T'), T)
             self.V = self.potential_energy = Eq(S('V'), V)
             
@@ -258,12 +262,10 @@ class mechanics(branch):
             # self.p_idot = self.Hamiltons_equations_II = Eq(var('pdot_i'), -D(H, q_i))
             self.p_idot = self.Hamiltons_equations_II = Eq(p_idot, -D(H, q_i))
             
-#            omech.q_idot.xreplace({H:omech.H})
-            
         # Common text definitions.
         self.Hamiltonian = self.H
     
-#### Global Methods
+#### 4) Global Methods
 #----> Eulers_equation_sympy
     @staticmethod
     def Eulers_equation_sympy(L, funcs=(), vars=()):
@@ -432,7 +434,7 @@ class mechanics(branch):
         5. Calculate qidot, p_idot, p_idot by Hamilton's equations. 
         """
 
-        #    1. Calculate generalize momenta by taking derivative of Lagrangian with respect to q_idot.
+        #  1. Calculate generalize momenta by taking derivative of Lagrangian with respect to q_idot.
         dim = len(lst_qidot)
         eq_pis, sol_qidots, res_qidots, res_pidots = [],[],[],[]
         sub_qidots = dict()
@@ -442,7 +444,6 @@ class mechanics(branch):
             eq_py = omech.p_i.xreplace({L:omech.L.rhs, q_idot:ydot, p_i:py}).doit()
             eq_pz = omech.p_i.xreplace({L:omech.L.rhs, q_idot:zdot, p_i:pz}).doit()
             """
-            # ieq_pi = self.p_i.xreplace({L:pL.rhs, q_idot:lst_qidot[i], p_i:lst_pi[i]}).doit()
             ieq_pi = self.p_i.xreplace({L:self.L.rhs, q_idot:lst_qidot[i], p_i:lst_pi[i]}).doit()
             eq_pis.append(ieq_pi)
    
@@ -502,4 +503,3 @@ class mechanics(branch):
         return("Document of mechanics class.")
         
 omech = mechanics() # Create an omech object from mechanics class.
-#omech.__init__()
