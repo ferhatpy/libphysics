@@ -1,6 +1,6 @@
 # libphysics
 
-A physics library for performing symbolic and numerical calculations.
+A physics formulary library written in Python for performing symbolic and numerical calculations.
 
 ## Setting up coding environment
 
