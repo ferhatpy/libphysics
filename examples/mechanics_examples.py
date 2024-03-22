@@ -2,13 +2,15 @@
 # -*- coding: utf-8 -*-
 """
 _1_classical_mechanics.py
-After completing move to
-.../python/projects/physics/theoretical_physics/baumann_mathematica_for_theoretical_physics/
 
-Installation:
-=============
-sudo pip3 install wolframclient
-sudo pip3 install nbextensions
+Installation in a Local Computer
+==============================
+sudo apt install sagemath
+sudo pip3 install nbextensions, wolframclient
+
+Intallation in a Cloud
+======================
+!pip install scipy, wolframclient
 
 Functions:
 ========== 
@@ -35,6 +37,15 @@ References:
     Problem Books:
     ==============    
     Vladimir Pletser - Lagrangian and Hamiltonian Analytical Mechanics Forty Exercises Resolved and Explained-Springer Singapore (2018)
+    
+    Web Sites:
+    ==========
+    1. The Full Python Tutorial, Luke Polson
+       https://www.youtube.com/playlist?list=PLkdGijFCNuVnGxo-1fSNcdHh5gZc17oRM
+       https://github.com/lukepolson/youtube_channel/tree/main/Python%20Tutorial%20Series
+    2. Physics Problems, Luke Polson
+       https://www.youtube.com/playlist?list=PLkdGijFCNuVnMsuC4uFncWusSA9aUzzIp
+       https://github.com/lukepolson/youtube_channel/tree/main/Python%20Metaphysics%20Series
 
 Homeworks
 =========

@@ -133,7 +133,7 @@ if "topic1" in sets.flow:
     Zsp2 = simplify(otemp.result.doit())    # 2. Way.
     Zsp3 = simplify(otemp.Zsp.evalf(subs=xreplaces))        # 3. Way, substituion without commands and execution.
     Zsp4 = simplify(otemp.Zsp.evalf(subs=xreplaces).doit()) # 4. Way, execution without commands.
-    Zsp5 = simplify(otemp.Zsp.xreplace(xreplaces).doit())   # 5. Way.
+    Zsp5 = simplify(otemp.Zsp.xreplace(xreplaces).doit())   # 5. Way. THe most beautiful way.
     display(Zsp1, Zsp2, Zsp3, Zsp4, Zsp5)
     
     commands = ["xreplace", "otemp.U", xreplaces]
