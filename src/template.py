@@ -20,6 +20,7 @@ from sympy.abc import*
 from sympy.diffgeom import *
 from sympy.diffgeom.rn import *
 from sympy.diffgeom.rn import R3_r, R3_s
+from sympy.physics.quantum.constants import * # hbar etc.
 from sympy.physics.vector import *
 from sympy.plotting import plot_parametric
 from sympy.vector import CoordSys3D
@@ -115,6 +116,10 @@ class template(branch):
         self.class_type = class_type
         self.define_symbols()
         
+        # File settings
+        self.input_dir  = "input/template"
+        self.output_dir = "output/template"
+        
         class subformulary:
             """
             Sub formulary class.
@@ -126,6 +131,18 @@ class template(branch):
                 self.Icm_sphere = S(2)/5*M*r**2
                 
         self.subformulary = subformulary()
+        
+        #### Quantum Harmonic Oscillator
+        class sho(branch):
+            """
+            Sub class for quantum simple harmonic oscillator.
+            """
+            def __init__(self):
+                super().__init__()
+                self.name = "Quantum Harmonic Oscillator"
+                self.xi = Eq(S('xi'), sqrt(m*w/hbar)*x)
+                self.psi = lambda n=n: Eq(S(f'psi_{n}'), (m*w/(pi*hbar))**(S(1)/4)*(1/sqrt((2**n)*factorial(n)))*hermite(n, xi)*exp(-xi**2/2))
+        self.sho = sho()
         
         if self.class_type == "scalar":
             # Construct a cascaded formulary structure.

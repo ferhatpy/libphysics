@@ -49,6 +49,10 @@ class condensed(branch):
         self.class_type = class_type
         self.define_symbols()
         
+        # File settings
+        self.input_dir  = "input/condensed"
+        self.output_dir = "output/condensed"
+        
         class subformulary:
             """
             Sub formulary class.

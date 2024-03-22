@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-template.py
+methods.py
 Created on Fri Mar 11 12:53:36 2022
 
 Find and replace template with desired class name.
@@ -21,7 +21,7 @@ import libphyscon as pc
 
 class methods(branch):
     """
-
+    Displaying Tables: display(*ometh.cYnm.Table())
     """
     _name = "methods"
     
@@ -54,49 +54,78 @@ class methods(branch):
         super().__init__()
         self.class_type = class_type
         self.define_symbols()
+        
+        # File settings
+        self.input_dir  = "input/methods"
+        self.output_dir = "output/methods"
 
         class cderivatives:
             """
-            Sub formulary class for derivatives.
+            Sub Formulary Class for Derivatives.
+            
+            ometh.cderivatives.cosh.replace(u,x**2).rhs.doit()
             """
+            global u 
+            u = Function('u')(x)
+            
             def __init__(self):
+                self.name   = "Derivatives"
+                
                 # Trigonometric Functions.
-                self.dsin   = Eq(Derivative(sin(x),x), sin(x).diff(x))
-                self.dcos   = Eq(Derivative(cos(x),x), cos(x).diff(x))
-                self.dtan   = Eq(Derivative(tan(x),x), tan(x).diff(x))
-                self.dcot   = Eq(Derivative(cot(x),x), cot(x).diff(x))
-                self.dsec   = Eq(Derivative(sec(x),x), sec(x).diff(x))
-                self.dcsc   = Eq(Derivative(csc(x),x), csc(x).diff(x))
+                self.sin   = Eq(Derivative(sin(u),x), sin(u).diff(x))
+                self.cos   = Eq(Derivative(cos(u),x), cos(u).diff(x))
+                self.tan   = Eq(Derivative(tan(u),x), tan(u).diff(x))
+                self.cot   = Eq(Derivative(cot(u),x), cot(u).diff(x))
+                self.sec   = Eq(Derivative(sec(u),x), sec(u).diff(x))
+                self.csc   = Eq(Derivative(csc(u),x), csc(u).diff(x))
                 
                 # Hyperbolic Functions.
-                self.dsinh  = Eq(Derivative(sinh(x),x), sinh(x).diff(x))
-                self.dcosh  = Eq(Derivative(cosh(x),x), cosh(x).diff(x))
-                self.dtanh  = Eq(Derivative(tanh(x),x), tanh(x).diff(x))
-                self.dcoth  = Eq(Derivative(coth(x),x), coth(x).diff(x))
-                self.dsech  = Eq(Derivative(sech(x),x), sech(x).diff(x))
-                self.dcsch  = Eq(Derivative(csch(x),x), csch(x).diff(x))
+                self.sinh  = Eq(Derivative(sinh(u),x), sinh(u).diff(x))
+                self.cosh  = Eq(Derivative(cosh(u),x), cosh(u).diff(x))
+                self.tanh  = Eq(Derivative(tanh(u),x), tanh(u).diff(x))
+                self.coth  = Eq(Derivative(coth(u),x), coth(u).diff(x))
+                self.sech  = Eq(Derivative(sech(u),x), sech(u).diff(x))
+                self.csch  = Eq(Derivative(csch(u),x), csch(u).diff(x))
+        
         class cintegrals:
             """
-            Sub formulary class for integrals.
+            Sub Formulary Class for Integrals.
             """
             def __init__(self):
+                self.name   = "Indefinite Integrals"
                 # Trigonometric Functions.
-                self.isin   = Eq(Integral(sin(x),x), integrate(sin(x),x))
-                self.icos   = Eq(Integral(cos(x),x), integrate(cos(x),x))
-                self.itan   = Eq(Integral(tan(x),x), integrate(tan(x),x))
-                self.icot   = Eq(Integral(cot(x),x), integrate(cot(x),x))
-                self.isec   = Eq(Integral(sec(x),x), integrate(sec(x),x))
-                self.icsc   = Eq(Integral(csc(x),x), integrate(sin(x),x))
+                self.sin   = Eq(Integral(sin(x),x), integrate(sin(x),x))
+                self.cos   = Eq(Integral(cos(x),x), integrate(cos(x),x))
+                self.tan   = Eq(Integral(tan(x),x), integrate(tan(x),x))
+                self.cot   = Eq(Integral(cot(x),x), integrate(cot(x),x))
+                self.sec   = Eq(Integral(sec(x),x), integrate(sec(x),x))
+                self.csc   = Eq(Integral(csc(x),x), integrate(sin(x),x))
                 
                 # Hyperbolic Functions.
-                self.isinh  = Eq(Integral(sinh(x),x), integrate(sinh(x),x))
-                self.icosh  = Eq(Integral(cosh(x),x), integrate(cosh(x),x))
-                self.itanh  = Eq(Integral(tanh(x),x), integrate(tanh(x),x))
-                self.icoth  = Eq(Integral(coth(x),x), integrate(coth(x),x))
-                self.isech  = Eq(Integral(sech(x),x), integrate(sech(x),x))
-                self.icsch  = Eq(Integral(csch(x),x), integrate(sinh(x),x))
+                self.sinh  = Eq(Integral(sinh(x),x), integrate(sinh(x),x))
+                self.cosh  = Eq(Integral(cosh(x),x), integrate(cosh(x),x))
+                self.tanh  = Eq(Integral(tanh(x),x), integrate(tanh(x),x))
+                self.coth  = Eq(Integral(coth(x),x), integrate(coth(x),x))
+                self.sech  = Eq(Integral(sech(x),x), integrate(sech(x),x))
+                self.csch  = Eq(Integral(csch(x),x), integrate(sinh(x),x))
+                
+        class cYnm:
+            """
+            Sub Formulary Class for Spherical Harmonics.
+            """
+            def __init__(self):
+                self.name   = "Spherical Harmonics"
+                self.expand = Eq(Ynm(n,m,theta,phi), Ynm(n,m,theta,phi).expand(func=True))
+            def Table(self, ns=Range(3), ms=Range(3)):
+                self.table = []
+                for i in ms:
+                    for j in ns:
+                        if j>=i:self.table.append( Eq(Ynm(j,i,theta,phi), simplify(Ynm(j,i,theta,phi).expand(func=True))) )
+                return self.table                               
+                
         self.cderivatives = cderivatives()        
         self.cintegrals   = cintegrals()
+        self.cYnm = self.spherical_harmonics = cYnm()
         
         class subformulary:
             """

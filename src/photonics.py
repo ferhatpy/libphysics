@@ -49,6 +49,10 @@ class photonics(branch):
         self.class_type = class_type
         self.define_symbols()
         
+        # File settings
+        self.input_dir  = "input/photonics"
+        self.output_dir = "output/photonics"
+        
         class subformulary:
             """
             Sub formulary class.

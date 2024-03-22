@@ -49,6 +49,10 @@ class electromagnetics(branch):
         self.class_type = class_type
         self.define_symbols()
         
+        # File settings
+        self.input_dir  = "input/electromagnetic"
+        self.output_dir = "output/electromagnetic"
+        
         class subformulary:
             """
             Sub formulary class.

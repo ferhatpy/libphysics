@@ -29,6 +29,7 @@ from sympy.abc import x,y,z,t
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.plotting import *
 from sympy.solvers.ode import *
+from sympy import sympify
 from sympy.vector import *
 
 # Initiate rendering Latex, HTML, Math etc.
@@ -146,7 +147,43 @@ def solve_odes(equations, func=y, output_style="display"):
                 "Simplified solution=", simplify(sol),
                 "Checking=", checkodesol(eq,sol),
                 output_style = output_style)
-        
+
+
+#----Converters
+def read_latex_file(file_path):
+    import re
+    from sympy.parsing.latex import parse_latex
+    
+    def convert_latex_expression(latex_expression):
+        # Replace any occurrence of \hat{} with 'hat'
+        hat_pattern = re.compile(r'\\hat\{(.+?)\}')
+        latex_expression = re.sub(hat_pattern, r'\hat', latex_expression)
+        return latex_expression
+    
+    try:
+        with open(file_path, 'r') as file:
+            latex_content = file.read()
+
+            # Extracting equations using regex without dollar signs
+            equation_pattern = re.compile(r'(?<=\$).*?(?=\$)')
+            tex = re.findall(equation_pattern, latex_content)
+
+            # Perform additional conversions on each equation
+            converted_equations = [convert_latex_expression(eq) for eq in tex]
+
+            # Converting LaTeX expressions to Sympy objects using parse_latex
+            res = []
+            for ieq in converted_equations:
+                try:
+                    res.append(parse_latex(ieq))
+                except:
+                    continue
+            return(res, tex)
+
+    except FileNotFoundError:
+        print(f"Error: File {file_path} not found.")
+        return None
+       
 
 #----Functions
 def get_iterated_functions(f, fixed_vals={C1:0, C2:0}, prm=alpha, 
@@ -327,8 +364,8 @@ def plot_list(plist2Ds, plabels=[1,2,3],
     fig.tight_layout()
 
 
-def plot_sympfunc(pfuncs, prange=(-1,1,500), plabels=[1,2,3], xlabel="$x$", ylabel="$y$", 
-                  pxscale="linear", pyscale="linear", pgrid=False, paxis=True):
+def plot_sympfunc(pfuncs, prange=(-1,1,500), plabels=[1,2,3], xlabel="$x$", ylabel="$y$",
+                  pxscale="linear", pyscale="linear", pgrid=False, paxis=True, ptitle=""):
     """
     Plots sympy functions within a specified region.
     
@@ -361,7 +398,8 @@ def plot_sympfunc(pfuncs, prange=(-1,1,500), plabels=[1,2,3], xlabel="$x$", ylab
     ax.set_ylabel(ylabel, fontsize=18)
     ax.set_xscale(pxscale)
     ax.set_yscale(pyscale)
-    ax.legend(loc='best')
+    ax.set_title(ptitle)
+    ax.legend(loc='best', frameon=True, edgecolor='black')
     ax.grid(pgrid)
     # Plot axis of the origin.
     if paxis:
@@ -369,11 +407,14 @@ def plot_sympfunc(pfuncs, prange=(-1,1,500), plabels=[1,2,3], xlabel="$x$", ylab
         plt.axhline(0, color='k')
     plt.rcParams["text.usetex"]
     fig.tight_layout()
+    plt.show()
     
 def plot_save(pfilepath="output", ppad_inches=0.05, pformats=("png","pdf","svg")):
     """
     Saves plot into an image file.
     ppad_inches=0.05 gives nice padding.
+    
+    plot_save(pfilepath="output/libdiscretemath_DFT_"+seq_name, pformats="pdf")
     """
     if "eps" in pformats:
         plt.savefig(pfilepath+".eps",format='eps',dpi=1200,bbox_inches='tight',pad_inches=ppad_inches)
@@ -431,7 +472,7 @@ def pprints(func, *funcs, **kwargs):
         print(func)
         if funcs is None: return
         for i, f in enumerate(funcs):
-            # todo select by type 
+            # If type is a string 
             if type(f) == type(""):
                 print(r"$\rm {0}$".format(f))
             # elif type(f) == type([]):
@@ -444,12 +485,16 @@ def pprints(func, *funcs, **kwargs):
 
 def print_matrix_elements(mat, **kwargs):
     """
+    Usage
+    =====
     M = Matrix([[1,2],[3,4]])
+    print_matrix_elements(M)
+    print_matrix_elements(M, output_style="display")
+    
     todo apply latex template.
     """
     output_style = kwargs.get("output_style", "latex")
-    
-    M = Matrix([[1,2],[3,4]])
+
     for i in range(mat.rows):
         for j in range(mat.cols):
             if output_style == "display":

@@ -126,6 +126,10 @@ class mechanics(branch):
         self.class_type = class_type
         self.define_symbols()
         
+        # File settings
+        self.input_dir  = "input/mechanics"
+        self.output_dir = "output/mechanics"
+        
         class subformulary:
             """
             Sub formulary class.
@@ -272,7 +276,7 @@ class mechanics(branch):
         r"""
         Modified verbose version of sympy.calculus.euler.euler_equations.
         
-        Find the Euler-Lagrange equations [1]_ for a given Lagrangian.
+        Find the Euler-Lagrange equations [1] for a given Lagrangian.
     
                ∞                                  
             _____                                
@@ -342,7 +346,7 @@ class mechanics(branch):
         References
         ==========
     
-        .. [1] http://en.wikipedia.org/wiki/Euler%E2%80%93Lagrange_equation
+        [1] http://en.wikipedia.org/wiki/Euler%E2%80%93Lagrange_equation
     
         """
     
@@ -502,4 +506,4 @@ class mechanics(branch):
     def __doc__():
         return("Document of mechanics class.")
         
-omech = mechanics() # Create an omech object from mechanics class.
+omech = mechanics("EulerLagrange") # Create an omech object from mechanics class.

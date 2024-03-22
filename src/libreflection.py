@@ -25,6 +25,7 @@ import mpl_toolkits.mplot3d.axes3d as axes3d
 import numpy as np
 from sympy import *
 
+
 # todo handle
 #import scienceplots
 #plt.style.use(['science', 'notebook'])
@@ -62,7 +63,7 @@ class branch:
         # self.classname = self.__class__.__name__ # same as above
         self.codes = []
         self.newline = True     # enable newline break in the output
-        self.verbose = False    # enable verbose output of intermediate steps.
+        self.verbose = False    # enable output of intermediate steps.
         self.output_style = {1: "display",
                              2: "pprint", 3: "print", 4: "latex"}[1]
         # self.solver = solver() # Assign a solver to my branch.
@@ -77,7 +78,7 @@ class branch:
     def get_codes(self):  # todo
         return(self.codes)
 
-    def get_formulary(self, style="name-eq", verbose=True):
+    def get_formulary(self, style="name-eq", verbose=True, **kwargs):
         """
         Display all instance variables of a <branch> object as a formulary list.
 
@@ -95,95 +96,113 @@ class branch:
 
         Parameters
         ==========
+        style : ["eq","name-eq","latex","mathematica"]
 
-        expr : .
+        vars : 
 
-        vars : .
+        kwargs : "latex_mode":['inline', 'plain', 'equation', 'equation*']
 
-        kwargs : ``style``, ``newline`` 
-
-        Examples
-        ========
+        name = ikey; eq = ival
+        
+        Examples:
+        =========
         display(*omech.get_subformulary())
-        """
+        oqmec.sho.get_formulary("latex", latex_mode="equation")
+        
+        Snippets:
+        =========
         if style == "eq":
-#            res = [getattr(self, ikey) for (ikey, ival) in vars(self).items()]
-            res = [getattr(self, ikey) for (ikey, ival) in vars(self).items()]
-            
-            if verbose:
-                libsympy.pprints(*res,
-                                 output_style=self.output_style,
-                                 newline=self.newline)
-        if style == "name-eq":
-            """
-            name = ikey; eq = ival
-            
-            Examples:
-            =========
-            res = [(ikey, ival) for (ikey, ival) in vars(self).items()]
-            
-            members = dict(vars(oqmec).items())
-            for (ikey, ival) in members.items():
-                sub_class = vars(members["sho"])
+            res.append(ival)
+            res = ([getattr(self, ikey) for (ikey, ival) in vars(self).items()])
+        elif style == "name-eq":
+            res.append((ikey, ival))
+        elif style == "mathematica":
+            icode = mathematica_code(ival)
+            res.append((ikey, icode))
+        
+        members = dict(vars(oqmec).items())
+        for (ikey, ival) in members.items():
+            sub_class = vars(members["sho"])
+            for (jkey, jval) in sub_class.items():
+                # Call if the type of member is a function.
+                if callable(jval):
+                    print((jkey, jval()))
+                else:
+                    print((jkey, jval))
+                        
+        for (ikey, ival) in vars(vars(oqmec)["sho"]).items():
+            print((ikey, ival))
+        
+        res = [(ikey, ival) for (ikey, ival) in vars(self).items()]
+        """
+        res = []      
+        members = dict(vars(self).items())
+        latex_mode = kwargs.get("latex_mode", "inline")
+        # members = dict(inspect.getmembers(self)) # or more lengthy
+        
+        # Iterate over class members.
+        for (ikey, ival) in members.items():
+            # Check the existence of a subclass.
+            try:
+#                 Iterate over subclass members.
+                sub_class = vars(members[ikey])
                 for (jkey, jval) in sub_class.items():
                     # Call if the type of member is a function.
                     if callable(jval):
-                        print((jkey, jval()))
-                    else:
-                        print((jkey, jval))
-                            
-            for (ikey, ival) in vars(vars(oqmec)["sho"]).items():
-                print((ikey, ival))
-            
-            for (ikey, ival) in vars(oqmec).items():
-                print(inspect.isclass(vars(oqmec)["sho"])) # todo Can not detect subclass!!!
-            
-            """
-            # kaldik todo convert below to a function chatgpt and unite with above "eq" option.
-            res = []      
-            members = dict(vars(self).items())
-            # members = dict(inspect.getmembers(self)) # or more lengthy
-            # Iterate over class members.
-            for (ikey, ival) in members.items():
-                # Check the existence of a subclass.
-                try:
-                    sub_class = vars(members[ikey])
-                    res.append((ikey,ival)) # Append 
-                    # Iterate over subclass members.
-                    for (jkey, jval) in sub_class.items():
-                        # Call if the type of member is a function.
-                        if callable(jval):
+                        if style == "eq":
+                            res.append(jval())
+                        elif style == "name-eq":
                             res.append((jkey, jval()))
-                        else:
-                            res.append((jkey, jval))
-                except:
-                    res.append((ikey, ival))
-                    """
-                    todo: All functions in a branch must be callable with default parameters.
-                    if callable(ival):
-                        res.append((ikey, ival()))
+                        elif style == "latex":
+                            res.append(latex(jval(), mode=latex_mode))
+                        elif style == "mathematica":
+                            res.append((jkey, mathematica_code(jval())))
                     else:
+                        if style == "eq":
+                            res.append(jval)
+                        elif style == "name-eq":
+                            res.append((jkey, jval))
+                        elif style == "latex":
+                            res.append(latex(jval, mode=latex_mode))
+                        elif style == "mathematica":
+                            res.append((jkey, mathematica_code(jval)))
+            except:
+#                All functions in a branch must be callable with default parameters.
+                if callable(ival):
+                    if style == "eq":
+                        res.append(ival())
+                    elif style == "name-eq":
+                        res.append((ikey, ival()))
+                    elif style == "latex":
+                        res.append(latex(ival(), mode=latex_mode))
+                    elif style == "mathematica":
+                        icode = mathematica_code(ival())
+                        res.append((ikey, icode))
+                else:
+                    if style == "eq":
+                        res.append(ival)
+                    elif style == "name-eq":
                         res.append((ikey, ival))
-                    """
-            
-            if verbose:
+                    elif style == "latex":
+                        res.append(latex(ival, mode=latex_mode))
+                    elif style == "mathematica":
+                        pass
+        
+        if verbose:
+            if style == "eq":
+                libsympy.pprints(*res,
+                                 output_style=self.output_style,
+                                 newline=self.newline)
+            elif style in ["name-eq", "mathematica"]:
                 for ikey, ival in res:
                     libsympy.pprints(ikey, ival,
                                      output_style=self.output_style,
                                      newline=self.newline)
-        if style == "mathematica":
-            res = []
-            for (ikey, ival) in vars(self).items():
-                try:
-                    icode = mathematica_code(ival),
-                    
-                    if verbose:
-                        libsympy.pprints(ikey, icode,
-                                         output_style=self.output_style,
-                                         newline=self.newline)
-                except:
-                    pass
-                res.append((ikey, icode))
+            elif style in ["latex"]:
+                for ival in res:
+                    libsympy.pprints(ival,
+                                     output_style="latex",
+                                     newline=True)
 
         return(res)
 

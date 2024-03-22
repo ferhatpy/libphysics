@@ -59,6 +59,10 @@ class statistical_mechanics(branch):
         self.class_type = class_type
         self.define_symbols()
         
+        # File settings
+        self.input_dir  = "input/statistical_physics"
+        self.output_dir = "output/statistical_physics"
+        
         class subformulary:
             """
             Sub formulary class.
