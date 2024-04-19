@@ -61,7 +61,7 @@ Homeworks
 import copy
 import sys
 import os
-lstPaths = ["../src"]
+lstPaths = ["../../src"]
 for ipath in lstPaths:
     if ipath not in sys.path:
         sys.path.append(ipath)

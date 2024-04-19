@@ -35,6 +35,7 @@ from sympy.vector import *
 # Initiate rendering Latex, HTML, Math etc.
 from IPython import get_ipython
 from IPython.display import display, HTML, Latex, Math
+from sympy.parsing.latex import parse_latex
 from sympy.interactive import printing
 printing.init_printing()
 
@@ -152,12 +153,10 @@ def solve_odes(equations, func=y, output_style="display"):
 #----Converters
 def read_latex_file(file_path):
     import re
-    from sympy.parsing.latex import parse_latex
-    
     def convert_latex_expression(latex_expression):
         # Replace any occurrence of \hat{} with 'hat'
         hat_pattern = re.compile(r'\\hat\{(.+?)\}')
-        latex_expression = re.sub(hat_pattern, r'\hat', latex_expression)
+        latex_expression = re.sub(hat_pattern, r'\\hat', latex_expression)
         return latex_expression
     
     try:
