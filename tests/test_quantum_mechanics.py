@@ -94,7 +94,7 @@ class sets:
         ch5 = {1:"p5.1 todo"},
         ch6 = {61:"p6.1", 62:"p6.2", 611:"p6.11", 614:"p6.14", 615:"p6.15", 
                253:"c25.3"})
-    flow = [dictflow["ch6"][i] for i in [253]]
+    flow = [dictflow["ch6"][i] for i in [615]]
     if test_all: flow = [dictflow[i] for i in dictflow.keys()]
 
 print("Test of the {0}.".format(sets.flow))

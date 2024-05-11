@@ -9,7 +9,7 @@ https://github.com/ferhatpy/libphysics
 
 omech.__init__()
 omech.verbose = True
-commands = ["solve", "NewtonsLaw2", a]
+commands = ["solve", "NewtonsLaw2", a] 
 print(omech.process(commands))
 """
 import libsympy
