@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 # +
 """
-baumann_classical_mechanics.py connected to baumann_classical_mechanics.ipynb via jupytext.
+baumann_classical_mechanics.py connected to baumann_classical_mechanics.ipynb 
+via "jupytext" light pairing.
 
 Installation:
 =============

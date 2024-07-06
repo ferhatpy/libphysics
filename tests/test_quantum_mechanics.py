@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# ## test_template.py
+# ## test_quantum_mechanics.py
 
 """
-test_quantum_mechanics.py
+test_quantum_mechanics.py connected to test_quantum_mechanics.ipynb 
+via "jupytext" light pairing.
 
 References:
-    Leonardo Angelini - Solved Problems in Quantum Mechanics-Springer (2019)
+===========
+    Leonardo Angelini, Solved Problems in Quantum Mechanics, Springer, 2019
+    David J. Griffiths, Introduction to Quantum Mechanics, Pearson, 2005
     Zwiebach, MIT 8.05 Quantum Physics II, Fall 2013
     
 sudo apt install pandoc # Converts a *.ipynb file to a *.pdf file via latex.
@@ -46,11 +49,11 @@ for ipath in lstPaths:
 from libsympy import *
 from sympy.abc import*
 from quantum_mechanics import *
-import scienceplots
-plt.style.use(['science', 'notebook'])
+# import scienceplots
+# plt.style.use(['science', 'notebook'])
 
 # Execute jupyter-notebook related commands.
-#exec(open('libnotebook.py').read())
+# exec(open('libnotebook.py').read())
 # print(sys.version)
 # print(sys.path)
 
@@ -79,10 +82,6 @@ class sets:
     
     # Execution settings.
     test_all = {0:False, 1:True}[0]
-    dictflow = {100:"get_formulary", 150:"get_subformulary",
-                200:"topic1", 300:"topic2",
-                400:"topic3"}
-    
     dictflow = dict(
         ch1 = {1:"p1.3",3:"p1.5",4:"p1.9",5:"p1.17"},
         ch2 = {24:"p2.4",27:"p2.7",29:"p2.9",25:"e2.5",211:"p2.11",212:"p2.12",
@@ -90,12 +89,13 @@ class sets:
         ch3 = {322:"p3.22", 330:"p3.30"},
         ch4 = {401:"p4.1",402:"e4.1",421:"ch4.2.1",411:"p4.11",4:"p4.12",404:"fig4.4",
                413:"p4.13",7:"p4.14",8:"p4.15",9:"ch4.3.1",10:"ch4.4.1",
-               11:"e4.2",12:"p4.27",449:"p4.49",16:"p4.55 todo"},
-        ch5 = {1:"p5.1 todo"},
+               11:"e4.2",12:"p4.27",449:"p4.49",16:"p4.55"},
+        ch5 = {1:"p5.1"},
         ch6 = {61:"p6.1", 62:"p6.2", 611:"p6.11", 614:"p6.14", 615:"p6.15", 
-               253:"c25.3"})
-    flow = [dictflow["ch6"][i] for i in [615]]
-    if test_all: flow = [dictflow[i] for i in dictflow.keys()]
+               253:"c25.3"},
+        ch7 = {701:"e7.1"})
+    flow = [dictflow["ch6"][i] for i in [253]]
+    if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
 
 print("Test of the {0}.".format(sets.flow))
 
@@ -114,6 +114,10 @@ if "get_subformulary" in sets.flow:
     omec.class_type = ""
     omec.__init__()
     omec.get_subformulary()
+
+# ## Chapter 6 Time-Independent Perturbation Theory
+
+# ### ----> 25.3 The Anharmonic Oscillator (Zwiebach)
 
 #----> 25.3 The Anharmonic Oscillator (Zwiebach)
 if "c25.3" in sets.flow:
@@ -193,8 +197,8 @@ if "c25.3" in sets.flow:
     # Convert ket states to wavefunctions.
     # Unperturbed wavefunction of harmonic oscillator.
     wfpsi0 = lambda n=n: oqmec.qho.psix(n).rhs.xreplace(substitutions)
-    wfpsi1 = lambda n: oqmec.ket_to_wavefunction(n, psi0, wfpsi0, psi1n.rhs.xreplace(substitutions))
-    wfpsi2 = lambda n: oqmec.ket_to_wavefunction(n, psi0, wfpsi0, psi2n.rhs.xreplace(substitutions))
+    wfpsi1 = lambda n: oqmec.ket_to_wavefunction(n, j:=4, psi0, wfpsi0, psi1n.rhs.xreplace(substitutions))
+    wfpsi2 = lambda n: oqmec.ket_to_wavefunction(n, j:=4, psi0, wfpsi0, psi2n.rhs.xreplace(substitutions))
     # wfpsi3 = lambda n=n: ket_to_wavefunction(n, psi0, wfpsi0, l**3*psi3n)
     # Total perturbed wavefunction.
     wfpsi = lambda n,l: wfpsi0(n) + l*wfpsi1(n) + l**2*wfpsi2(n) #+ l**3*wfpsi3(n)
@@ -211,59 +215,9 @@ if "c25.3" in sets.flow:
                            plabels=[rf"$\psi_{n_}^0$", rf"$\psi_{n_}$"],
                            xlabel=r"$x$", ylabel=r"$\psi(x)$", prange=(-5,5,500))
 
-#### Chapter 6 Time-Independent Perturbation Theory
+# ### ----> p6.2
 
-if "p6.2todo" in sets.flow:
-    print("p6.2 Perturbation of quantum harmonic oscillator (1+e)*k")
-    oqmec.__init__("position_space")
-    oqmec.verbose = True
-
-    n = 2
-    psi = oqmec.psi_SHO.rhs.xreplace({xi:oqmec.subformularyqho_xi.rhs, n:2})
-#    psi = npsi(n)
-    T = libquantum.expT(psi)
-    V = (1/2*m*w**2)*oqmec.exp
-#    H0 = T + V
-#    H = H0 + 1/2*epsilon*m*w**2*libquantum.expX2(psi)
-#    pertH = H - H0
-    
-#    En0 = simplify(libquantum.expT(npsi(0))+(1/2*m*w**2)*libquantum.expX2(npsi(0)))
-    
-    # kaldik copy libquantum
-    En1 = integrate(conjugate(psi)*(S(1)/2*epsilon*k*x**2)*psi, (x,-oo,oo))
-#    n = symbols('n', integer=True)
-    
-    m,w = symbols('m w', real=True, positive=True)
-#    assert abs(arg(m)+arg(w)) < pi/2
-    oqmec.Psi = oqmec.psi_SHO.rhs.xreplace({xi:oqmec.subformularyqho_xi.rhs, n:1})
-    oqmec.Hp = S(1)/2*epsilon*k*x**2
-    substitutions = {oqmec.Psi:psi, Hp:oqmec.Hp, xmin:-Inf, xmax:Inf}
-    En1 = simplify(oqmec.En_ND_PT_1ord.rhs.xreplace(substitutions).doit())
-    En1.subs({n:1}).doit()
-    
-    """
-    # Mathematica Client
-    from wolframclient.evaluation import WolframLanguageSession
-    from wolframclient.language import wl, wlexpr
-    from sympy.parsing.mathematica import parse_mathematica
-    session = WolframLanguageSession()
-    math_expr = wlexpr(mathematica_code(expr))
-    """
-    integrand = (exp(-x**2)*hermite(n,x)**2).subs({n:10})
-    integrate(integrand, (x,-inf,inf))
-    
-#    En = simplify(En0 + En1)
-    
-    # Perturbation results
-    """
-    pprints("H0=", simplify(H0),
-            "En0=", En0,
-            "En1=", En1,
-            "En=", En,
-            output_style = "display")
-    """    
-    
-    
+#----> p6.2
 if "p6.2" in sets.flow:
     print("p6.2 Perturbation of quantum harmonic oscillator (1+e)*k")
     oqmec.__init__("position_space")
@@ -282,8 +236,10 @@ if "p6.2" in sets.flow:
             "En1=", En1_s2,
             "En1=", En1,
             output_style = "display")
-    
-    
+
+
+# ### ----> p6.11
+
 #----> 6.11 Harmonic Oscillator: Cubic Correction 
 if "p6.11" in sets.flow:
     print("6.11 Harmonic Oscillator: Cubic Correction (Angelini2019)")
@@ -301,7 +257,9 @@ if "p6.11" in sets.flow:
             "En1=", En1,
             "En2=", En2,
             output_style = "display")
-    
+
+
+# ### ----> p6.14
 
 #----> 6.14 Charged Harmonic Oscillator in an Electric Field
 if "p6.14" in sets.flow:
@@ -326,7 +284,9 @@ if "p6.14" in sets.flow:
             "En2=", En2, simplify(En2),
             "psi1n", psi1n,
             "psi1n", simplify(psi1n))
-    
+
+
+# ### ----> p6.15
 
 #----> 6.15 Harmonic Oscillator: Second Harmonic Potential I
 if "p6.15" in sets.flow:
@@ -345,5 +305,33 @@ if "p6.15" in sets.flow:
     pprints("oqmec.Hp=", oqmec.Hp,
              "En1=", En1, simplify(En1),
              "En2=", En2, simplify(En2),
-             "En=", En, simplify(En)
-             )
+             "En=", En, simplify(En),
+             output_style="display")
+
+# ## Chapter 7 The Variational Principle
+
+# ### ----> 7.1
+
+#----> 7.1
+if "e7.1" in sets.flow:
+    print("Griffiths2005 e7.1")
+    oqmec.__init__("position_space")
+    oqmec.verbose = True
+    varfx = Wavefunction(A*exp(-b*x**2), x)
+    nvarfx = varfx.normalize().simplify()
+    Vx = S(1)/2*m*w**2*x**2
+    xreplaces = {xmin:-oo, xmax:oo, Psi:nvarfx.expr, V:Vx}
+    expH = oqmec.exp_H.xreplace(xreplaces)
+    expHs = expH.doit()
+    solb = solve(diff(expHs.rhs, b), b)[1]
+    expHmin = expHs.subs({b:solb})
+    
+    pprints(
+        "V(x)=", Vx,
+        "<H>=", expH,
+        "<H>=", expH.doit(),
+        "b=", solb,
+        "<H>min=", expHmin,
+        output_style="display")
+
+

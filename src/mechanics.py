@@ -507,3 +507,4 @@ class mechanics(branch):
         return("Document of mechanics class.")
         
 omech = mechanics("EulerLagrange") # Create an omech object from mechanics class.
+# omech = mechanics("scalar")

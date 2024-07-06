@@ -6,10 +6,15 @@
 test_template.py
 
 Installation:
-=============    
+=============
 sudo apt install pandoc             # Converts a *.ipynb file to a *.pdf file via latex.
 sudo pip3 install nbextensions      # Jupyter-notebook extension.
 
+Converting from .py to .ipynb format
+====================================
+In a notebook, do the following in a cell:
+%pip install jupytext
+!jupytext --to notebook <name_of_script_file>.py
 
 References:
 ===========    

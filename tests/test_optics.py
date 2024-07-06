@@ -3,7 +3,8 @@
 # ## test_optics
 
 """
-test_optics.py
+test_optics.py connected to test_optics.ipynb 
+via "jupytext" light pairing.
 
 omec.__init__()
 omec.verbose = True
@@ -26,9 +27,8 @@ from libsympy import *
 from optics import *
 # Execute jupyter-notebook related commands.
 #exec(open('libnotebook.py').read())
+print(sys.version); print(sys.path)
 
-# print(sys.version)
-# print(sys.path)
 
 # ### Settings
 
@@ -53,11 +53,12 @@ class sets:
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]
     
     # Execution settings.
-    test_all = {0:False, 1:True}[0]
-    dictflow = {100:"get_formulary", 150:"get_subformulary",
-                200:"", 300:"diffration_rectangular", 400:""}
-    flow = [dictflow[i] for i in [300]]
-    if test_all: flow = [dictflow[i] for i in dictflow.keys()]
+    test_all = {0:False, 1:True}[1]
+    dictflow = dict(
+        ch1 = {100:"get_formulary", 150:"get_subformulary",
+                200:"", 300:"diffraction_rectangular", 400:"Fraunhofer_Diff_Int"})
+    flow = [dictflow["ch1"][i] for i in [100]]
+    if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
 
 print("Test of the {0}.".format(sets.flow))
 
@@ -77,8 +78,8 @@ if "get_subformulary" in sets.flow:
 
 # ### diffration_rectangular
 
-#### diffration_rectangular
-if "diffration_rectangular" in sets.flow:
+#### diffraction_rectangular
+if "diffraction_rectangular" in sets.flow:
     """
     from scipy.integrate import quad
     from scipy.special import jn
@@ -177,7 +178,7 @@ if "diffration_rectangular" in sets.flow:
         Z = np.vectorize(fInt)(X,Y)
 
     #----> Plotting 2D Diffraction Intensity
-    fig = plt.figure(figsize=(10, 10))
+    fig = plt.figure(figsize=(5, 5))
     ax1 = fig.add_subplot(111)
     ax1.imshow(Z, cmap=plt.cm.gray, interpolation ='bilinear', origin='lower', vmin=np.min(Z), vmax=brightness*np.max(Z))
     ax1.set_xticks(np.linspace(0, n, 5))
@@ -191,6 +192,7 @@ if "diffration_rectangular" in sets.flow:
     plt.show()
 
 #----> Plotting 3D Diffraction Intensity
+if "Fraunhofer_Diff_Int" in sets.flow:
     commands = ["xreplace", "oopti.Fraunhofer_Diff_Int", xreplaces]
     oopti.process(commands)
     res = (oopti.result.doit())
@@ -198,3 +200,5 @@ if "diffration_rectangular" in sets.flow:
     intensity = simplify(res.rhs*conjugate(res.rhs))
     intensity = intensity.subs({z:0.2, l:1, Lx:1, Ly:1})
     plot3d(Int.rhs, (x,-1,1), (y,-1,1))
+
+

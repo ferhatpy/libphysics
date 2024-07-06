@@ -3,13 +3,9 @@
 # ## test_statistical_physics.py
 
 """
-test_statistical_physics.py
+test_statistical_physics.py connected to test_statistical_physics.ipynb 
+via "jupytext" light pairing.
 
-omec.class_type = ""
-omec.__init__()
-omec.verbose = True
-commands = ["solve", "NewtonsLaw2", a]
-print(omec.process(commands))
 """
 import copy
 import sys
@@ -50,14 +46,16 @@ class sets:
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]
     
     # Execution settings.
-    test_all = {0:False, 1:True}[0]
-    dictflow = {100:"get_formulary", 
+    test_all = {0:False, 1:True}[1]
+    dictflow = dict(
+        ch1 = {100:"get_formulary", 
                 310:"1D_1/2_paramagnet_way1", 311:"1D_1/2_paramagnet_way2", 
                 331:"1D_simple_harmonic_oscillator", 332:"",
                 430:"monoatomic_ideal_gas",
-                710:"ideal_gas_canonical"}
-    flow = [dictflow[i] for i in [710]]
-    if test_all: flow = [dictflow[i] for i in dictflow.keys()]
+                710:"ideal_gas_canonical"})
+    flow = [dictflow["ch1"][i] for i in [710]]
+    #if test_all: flow = [dictflow[i] for i in dictflow.keys()]
+    if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])   
 
 print("Test of the {0}.".format(sets.flow))
 
@@ -74,7 +72,7 @@ if "get_formulary" in sets.flow:
     ostat.__init__(class_type = "micro_canonical_continuous_indistinguihable")
     ostat.get_formulary()
 
-# ## 3 Paramagnets and Oscillators
+# ## Chapter 3 Paramagnets and Oscillators
 
 # ### A Spin-1/2 Paramagnet Way1
 
@@ -125,7 +123,7 @@ if "1D_1/2_paramagnet_way1" in sets.flow:
 
 # ### A Spin-1/2 Paramagnet Way2
 
-### A Spin-1/2 Paramagnet Way2
+#----A Spin-1/2 Paramagnet Way2
 if "1D_1/2_paramagnet_way2" in sets.flow:
     print("A Spin-1/2 Paramagnet Way2")
     ostat.__init__(class_type = "micro_canonical_discrete_distinguihable")
@@ -146,7 +144,7 @@ if "1D_1/2_paramagnet_way2" in sets.flow:
 
 # ### An Array of 1-D Simple Harmonic Oscillators    
 
-### An Array of 1-D Simple Harmonic Oscillators
+#----An Array of 1-D Simple Harmonic Oscillators
 if "1D_simple_harmonic_oscillator" in sets.flow:
     print("1D_simple_harmonic_oscillator")
     print("An Array of 1-D Simple Harmonic Oscillators")
@@ -173,13 +171,13 @@ if "1D_simple_harmonic_oscillator" in sets.flow:
     Cv = simplify(ostat.result.doit())
     display(Cv)
 
-# ## An Array of 3-D Simple Harmonic Oscillators todo
+# ### An Array of 3-D Simple Harmonic Oscillators todo
 
-# ## 4 Indistinguishable Particles and Monatomic Ideal Gases  
+# ## Chapter 4 Indistinguishable Particles and Monatomic Ideal Gases  
 
 # ### Monoatomic Ideal Gas
 
-### Monoatomic Ideal Gas
+#----Monoatomic Ideal Gas
 if "monoatomic_ideal_gas" in sets.flow:    
     print("Monoatomic Ideal Gas")
     ostat.__init__(class_type = "micro_canonical_continuous_indistinguihable")
@@ -203,11 +201,11 @@ if "monoatomic_ideal_gas" in sets.flow:
     S = simplify(ostat.result.doit())
     display(S)
 
-# ## 7 Electrons in Metals 
+# ## Chapter 7 Electrons in Metals 
 
 # ### The Ideal Gas in the Canonical Ensemble
 
-#---The Ideal Gas in the Canonical Ensemble
+#----The Ideal Gas in the Canonical Ensemble
 if "ideal_gas_canonical" in sets.flow:
     print("The Ideal Gas in the Canonical Ensemble")
     ostat.__init__(class_type = "canonical")
@@ -215,3 +213,5 @@ if "ideal_gas_canonical" in sets.flow:
     
     ostat.ZN  = Eq( ostat.ZN.lhs, ostat.subformulary.Z_Ideal_Gas)
     display(ostat.F)
+
+

@@ -3,7 +3,8 @@
 # ## test_methods.py
 
 """
-test_method.py
+test_method.py connected to test_method.ipynb 
+via "jupytext" light pairing.
 
 Example: ostat
 ============= 
@@ -37,16 +38,12 @@ from libsympy import *
 from methods import *
 # Execute jupyter-notebook related commands.
 #exec(open('libnotebook.py').read())
+print(sys.version); print(sys.path)
 
-# print(sys.version)
-# print(sys.path)
-
-global C
-C = CoordSys3D('C')
-[x, y, z] = [C.x, C.y, C.z] # x^, y^, z^ vectors.
 
 # ### Settings
 
+# +
 ### Settings
 class sets:
     """
@@ -70,12 +67,16 @@ class sets:
     
     # Execution settings.
     test_all = {0:False, 1:True}[1]
-    dictflow = dict(examples = {13:"e1.3",14:"e1.4",15:"e1.5",16:"e1.6"},
-                    problems = {13:"p1.3"})
-    flow = [dictflow["examples"][i] for i in [16]]
-#    flow = [flow["problems"][i] for i in [0]]
-    
-    if test_all: flow = [dictflow[i] for i in dictflow.keys()]
+    dictflow = dict(
+        examples = {13:"e1.3",14:"e1.4",15:"e1.5",16:"e1.6",17:"vector_products"},
+        problems = {13:"p1.3"})
+    flow = [dictflow["examples"][i] for i in [17]]
+    if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
+
+global C
+C = CoordSys3D('C')
+[x, y, z] = [C.x, C.y, C.z] # x^, y^, z^ vectors.    
+# -
 
 print("Test of the {0}.".format(sets.flow))
 
@@ -94,7 +95,7 @@ if "get_subformulary" in sets.flow:
     ometh.__init__()
     ometh.get_subformulary()    
 
-# ### TripleVectorProduct
+# ### Triple Vector Product
 
 if "vector_products" in sets.flow:
     """
@@ -156,8 +157,7 @@ if "e1.3" in sets.flow:
     
     display(r,
             var(r'\nabla{\bf{r}}='), gradr1,
-            var(r'\nabla{\bf{r}}='), gradr2,
-            )
+            var(r'\nabla{\bf{r}}='), gradr2)
 
 if "e1.4" in sets.flow:
     ometh.__init__()
@@ -199,7 +199,4 @@ if "e1.6" in sets.flow:
     display("e1.6",
             "v=", v,
             "path=", path,
-            var(r'\int{\bf{v}\cdot{d\bf{l}}}='), integral
-            )
-    
-#kaldik e1.8
+            var(r'\int{\bf{v}\cdot{d\bf{l}}}='), integral)
