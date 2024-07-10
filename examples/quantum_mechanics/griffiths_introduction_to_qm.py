@@ -4,14 +4,14 @@ Solutions of Selected Problems Related to Quantum Mechanics
 
 References:
 ===========
+Griffiths, David J. 2005. Introduction to Quantum Mechanics. 2nd ed. Upper Saddle River, Nj: Pearson Prentice Hall.
 
-    
 """
 import copy
 import os
 import sys
 # Import path for library functions.
-lstPaths = ["../../../libphysics/src", "../../../libpython/src"]
+# lstPaths = ["../../../libphysics/src", "../../../libpython/src"]
 lstPaths = ["../../src", "../../../libpython/src"]
 for ipath in lstPaths:
     if ipath not in sys.path:
@@ -66,7 +66,7 @@ class sets:
         ch5 = {1:"p5.1 todo"},
         ch6 = {61:"p6.1",62:"p6.2",6310:"ch6.3.1"},
         ch7 = {701:"e7.1",702:"e7.2"})
-    flow = [dictflow["ch4"][i] for i in [430]]
+    flow = [dictflow["ch2"][i] for i in [211]]
     if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
 
 print("Test of the {0}.".format(sets.flow))
@@ -401,7 +401,7 @@ if "p1.17" in sets.flow:
 
 # ### ----> p2.4
 
-#----> p2.4 todo
+#----> p2.4 todo kaldik
 if "p2.4" in sets.flow:
 
     if sets.use_libphysics:
@@ -796,21 +796,85 @@ if "ch2.6" in sets.flow:
 
 # ### ----> p2.11
 
-#----> p2.11 todo
+#----> p2.11
 if "p2.11" in sets.flow:
-    # kaldik solve with oqmec
+    oqmec.__init__("position_space")
+    oqmec.verbose = True
+    psi = lambda n=n:oqmec.qho.psix(n).rhs
+    V = S(1)/2*m*w**2*x**2
     
-    def psi(n):
-        ksi = sqrt(m*w/hbar)*x
-        res = Wavefunction((m*w/(pi*hbar))**(1/4)*(1/sqrt((2**n)*factorial(n)))*hermite(n, ksi)*exp(-ksi**2/2), (x,-oo, oo))
-        return res
+    # n=0
+    exp_x_psi0 = oqmec.exp_x.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    exp_x2_psi0 = oqmec.exp_x2.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    exp_px_psi0 = oqmec.exp_px.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    exp_px2_psi0 = oqmec.exp_px2.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    delta_x0 = oqmec.delta_x.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    delta_p0 = oqmec.delta_px.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    delta_xp0= oqmec.delta_xp.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    exp_T0 = oqmec.exp_T.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    exp_V0 = oqmec.exp_V.xreplace({oqmec.Psi:psi(0), oqmec.V:V, xmin:-oo, xmax:oo})
+    exp_H0 = oqmec.exp_H.xreplace({oqmec.Psi:psi(0), oqmec.V:V, xmin:-oo, xmax:oo})
     
-    pprints("p2.11: (Harmonic Oscillator)",
-            "psi(0)=", psi(0).expr if type(f) is Wavefunction else psi(0),
-            "psi(1)=", psi(1).expr if type(f) is Wavefunction else psi(1),
+    # n=1
+    exp_x_psi1 = oqmec.exp_x.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    exp_x2_psi1 = oqmec.exp_x2.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    exp_px_psi1 = oqmec.exp_px.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    exp_px2_psi1 = oqmec.exp_px2.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    delta_x1 = oqmec.delta_x.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    delta_p1 = oqmec.delta_px.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    delta_xp1= oqmec.delta_xp.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    exp_T1 = oqmec.exp_T.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    exp_V1 = oqmec.exp_V.xreplace({oqmec.Psi:psi(1), oqmec.V:V, xmin:-oo, xmax:oo})
+    exp_H1 = oqmec.exp_H.xreplace({oqmec.Psi:psi(1), oqmec.V:V, xmin:-oo, xmax:oo})
+    
+    # Similar methods.
+    exp_x  = oqmec.exp_xop.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    
+    pprints("1. Way: Using oqmec",
+            "p2.11: (Harmonic Oscillator)",
+            "psi(0)=", psi(0),
+            "psi(1)=", psi(1),
+            
+            "a)",
+            "For n = 0, psi(0):",
+            "<x>=",     exp_x_psi0,   exp_x_psi0.doit(),
+            "<x^2>=",   exp_x2_psi0,  exp_x2_psi0.doit(),
+            "<p>=",     exp_px_psi0,  exp_px_psi0.doit(),
+            "<p^2>=",   exp_px2_psi0, exp_px2_psi0.doit(),
+            
+            "For n = 1, psi(1):",
+            "<x>=",     exp_x_psi1,   exp_x_psi1.doit(),
+            "<x^2>=",   exp_x2_psi1,  exp_x2_psi1.doit(),
+            "<p>=",     exp_px_psi1,  exp_px_psi1.doit(),
+            "<p^2>=",   exp_px2_psi1, exp_px2_psi1.doit(),
+            
+            "b)",
+            "For n = 0, psi(0)",
+            Math("\sigma_x \sigma_p="), delta_xp0, delta_xp0.doit(),
+            "For n = 1, psi(1):",
+            Math("\sigma_x \sigma_p="), delta_xp1, delta_xp1.doit(),
+
+            "c)",
+            
+            "For n = 0, psi(0)",
+            "<T>=1/2m<p^2>=", exp_T0, exp_T0.doit(),
+            "<V>=1/2mw^2<x^2>=", exp_V0, exp_V0.doit(),
+            "<H>=<T>+<V>=", exp_H0, exp_H0.doit(),
+            
+            "For n = 1, psi(1)",
+            "<T>=1/2m<p^2>=", exp_T1, exp_T1.doit(),
+            "<V>=1/2mw^2<x^2>=", exp_V1, exp_V1.doit(),
+            "<H>=<T>+<V>=", exp_H1, exp_H1.doit(),            
+            output_style="display")
+    
+    """
+    pprints("2. Way: Using OLD libquantum",
+            "p2.11: (Harmonic Oscillator)",
+            "psi0=", psi(0),
+            "psi(1)=", psi(1),
             "a)",
             
-            "For n = 0, psi(0):",
+            "For n = 0, psi0:",
             "<x>=", libquantum.expX(psi(0)),
             "<x^2>=", libquantum.expX2(psi(0)),
             "<p>=", libquantum.expP(psi(0)),
@@ -823,14 +887,14 @@ if "p2.11" in sets.flow:
              
             "b)",
             
-            "For n = 0, psi(0):\n",
+            "For n = 0, psi0:\n",
             "\sigma_x \sigma_p=", "todo",
             "For n = 1, psi(1):",
             "\sigma_x \sigma_p=", "todo",
             
             "c)",
             
-            "For n = 0, psi(0):\n",
+            "For n = 0, psi0:\n",
             "<T>=1/2m<p^2>=", libquantum.expT(psi(0)),
             "<V>=1/2mw^2<x^2>=", (1/2*m*w**2)*libquantum.expX2(psi(0)),
             "<H>=<T>+<V>=", simplify(libquantum.expT(psi(0))+(1/2*m*w**2)*libquantum.expX2(psi(0))),
@@ -840,6 +904,7 @@ if "p2.11" in sets.flow:
             "<V>=1/2mw^2<x^2>=", (1/2*m*w**2)*libquantum.expX2(psi(1)),
             "<H>=<T>+<V>=", simplify(libquantum.expT(psi(1))+(1/2*m*w**2)*libquantum.expX2(psi(1))),
             output_style="display")
+    """
 
 # ### ----> p2.12
 
@@ -872,9 +937,9 @@ if "p2.12" in sets.flow:
             "<V>=<n|V|n>=qapply(nb*V*nk)=", qapply(nb*V*nk),
             "<H>=<n|H|n>=qapply(nb*H*nk)=", qapply(nb*H*nk),
             
-            "\sigma_x=", sigmaX,
-            "sigma_p=", sigmaP,
-            "\sigma_x \sigma_p=", simplify(sigmaX*sigmaP),
+            Math("\sigma_x="), sigmaX,
+            Math("\sigma_p="), sigmaP,
+            Math("\sigma_x \sigma_p="), simplify(sigmaX*sigmaP),
             output_style="display")
 
 # ### 2.4 The Free Particle

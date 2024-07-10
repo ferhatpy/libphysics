@@ -65,7 +65,7 @@ class quantum_mechanics(branch):
         global A,a,b
         A,a,b = symbols('A a b', real=True, positive=True)
         global m,r,w,t
-        m,w,t = symbols('m w t', real=True)
+        m,w,t = symbols('m w t', real=True, positive=True, nonzero=True)
         # Mass of electron, proton, neutron, nucleus.
         global m_e,m_p,m_n,m_N
         m_e,m_p,m_n,m_N = symbols('m_e m_p m_n m_N', real=True, positive=True)
@@ -178,13 +178,21 @@ class quantum_mechanics(branch):
             """
             # Generic expectation value calculation routine for a given operator fx.
             self.exp_fx    = lambda fx:Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx*self.Psi, (x,xmin,xmax)))
+            self.exp_fx2   = lambda fx:Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx**2*self.Psi, (x,xmin,xmax)))
             self.exp_fxSph = lambda fx:Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx*self.Psi*r**2*sin(theta), (r,0,oo), (phi,0,2*pi), (theta,0,pi)))
             self.exp_fxSphR= lambda fx:Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx*self.Psi*r**2*4*pi, (r,0,oo))) # 4*pi comes from solid angle.
+            self.delta_fx  = lambda fx:Eq(var(r'\Delta{'+str(fx)+'}='+str(fx)+'-\langle{'+str(fx)+'}\rangle'), sqrt(self.exp_fx2.rhs - self.exp_fx.rhs**2))
             
-            self.exp_x    = Eq(var(r'\langle{x}\rangle'),   Integral(conjugate(self.Psi)*x*self.Psi, (x,xmin,xmax)))
+            self.exp_x    = Eq(var(r'\langle{x}\rangle'),   integrate(conjugate(self.Psi)*x*self.Psi, (x,xmin,xmax)))
             self.exp_x2   = Eq(var(r'\langle{x^2}\rangle'), Integral(conjugate(self.Psi)*x**2*self.Psi, (x,xmin,xmax)))
             self.delta_x  = Eq(var(r'\Delta{x}=x-\langle{x}\rangle'), sqrt(self.exp_x2.rhs - self.exp_x.rhs**2))
             self.delta_x2 = Eq(var(r'(\Delta{x})^2=\langle{x^2}\rangle-\langle{x}\rangle^2'), self.exp_x2.rhs - self.exp_x.rhs**2)
+
+#### Operator Definitions via SymPy sympy.physics.quantum class todo ERROR in DifferantialOperator application
+            self.exp_xop   = Eq(var(r'\langle{x}\rangle'),   Integral(conjugate(self.Psi)*qapply(x*self.Psi), (x,xmin,xmax)))
+            self.exp_x2op  = Eq(var(r'\langle{x^2}\rangle'), Integral(conjugate(self.Psi)*qapply(x**2*self.Psi), (x,xmin,xmax)))
+            self.delta_xop = Eq(var(r'\Delta{x}'), sqrt(self.exp_x2op.rhs - self.exp_xop.rhs**2))
+            self.delta_x2op= Eq(var(r'(\Delta{x})^2'), self.exp_x2op.rhs - self.exp_xop.rhs**2)
             
 #### ----> Momentum related formulary.
             """
@@ -207,7 +215,15 @@ class quantum_mechanics(branch):
             self.exp_px2 = Eq(var(r'\langle{p_x^2}\rangle'), Integral(conjugate(self.Psi)*self.px2.rhs, (x,xmin,xmax)))
             self.delta_px  = Eq(var(r'\Delta{p_x}'), sqrt(self.exp_px2.rhs - self.exp_px.rhs**2))
             self.delta_px2 = Eq(var(r'(\Delta{p_x})^2'), self.exp_px2.rhs - self.exp_px.rhs**2)
-            self.delta_XP  = self.uncertainityXP  = Eq(var(r'\Delta{x}\Delta{p_x}'), self.delta_x.rhs*self.delta_px.rhs)
+            self.delta_xp  = self.uncertainity_xp = Eq(var(r'\Delta{x}\Delta{p_x}'), self.delta_x.rhs*self.delta_px.rhs)
+
+#### Operator Definitions via SymPy sympy.physics.quantum class todo ERROR in DifferantialOperator application
+            self.pxop     =  Eq(var(r'\hat{p}_x'), DifferentialOperator(-I*hbar*D(self.Psi, x), self.Psi))
+            self.exp_pxop  = Eq(var(r'\langle{\hat{p}_x}\rangle'),   Integral(conjugate(self.Psi)*qapply(self.pxop.rhs*self.Psi), (x,xmin,xmax)))
+            self.exp_px2op = Eq(var(r'\langle{\hat{p}_x^2}\rangle'), Integral(conjugate(self.Psi)*qapply(self.pxop.rhs*self.pxop.rhs*self.Psi), (x,xmin,xmax)))
+            self.delta_pxop  = Eq(var(r'\Delta{p_x}'), sqrt(self.exp_px2op.rhs - self.exp_pxop.rhs**2))
+            self.delta_px2op = Eq(var(r'(\Delta{p_x})^2'), self.exp_px2op.rhs - self.exp_pxop.rhs**2)
+            self.delta_xop_pxop = self.uncertainity_xop_pxop  = Eq(var(r'\Delta{x}\Delta{p_x}'), self.delta_xop.rhs*self.delta_px2op.rhs)
             
 #### ----> Orbital Angular Momentum in Cartesian Coordinates
             """
@@ -276,26 +292,12 @@ class quantum_mechanics(branch):
             self.sy_down  = Eq(var(r'|-y\rangle'), 1/sqrt(2)*UnevaluatedExpr(Matrix([[1],[-I]])))
             self.sz_up    = Eq(var(r'|+z\rangle'), UnevaluatedExpr(Matrix([[1],[0]])))
             self.sz_down  = Eq(var(r'|-z\rangle'), UnevaluatedExpr(Matrix([[0],[1]])))
-
-            
-#### Operator Definitions via SymPy sympy.physics.quantum class todo ERROR in DifferantialOperator application
-#### ----> Position expectation
-            self.exp_xop   = Eq(var(r'\langle{x}\rangle'),   Integral(conjugate(self.Psi)*qapply(x*self.Psi), (x,xmin,xmax)))
-            self.exp_x2op  = Eq(var(r'\langle{x^2}\rangle'), Integral(conjugate(self.Psi)*qapply(x**2*self.Psi), (x,xmin,xmax)))
-            self.delta_xop = Eq(var(r'\Delta{x}'), sqrt(self.exp_x2op.rhs - self.exp_xop.rhs**2))
-            self.delta_x2op= Eq(var(r'(\Delta{x})^2'), self.exp_x2op.rhs - self.exp_xop.rhs**2)
-            
-#### ----> Momentum expectation
-            self.pxop     =  Eq(var(r'\hat{p}_x'), DifferentialOperator(-I*hbar*D(self.Psi, x), self.Psi))
-            self.exp_pxop  = Eq(var(r'\langle{\hat{p}_x}\rangle'),   Integral(conjugate(self.Psi)*qapply(self.pxop.rhs*self.Psi), (x,xmin,xmax)))
-            self.exp_px2op = Eq(var(r'\langle{\hat{p}_x^2}\rangle'), Integral(conjugate(self.Psi)*qapply(self.pxop.rhs*self.pxop.rhs*self.Psi), (x,xmin,xmax)))
-            self.delta_pxop  = Eq(var(r'\Delta{p_x}'), sqrt(self.exp_px2op.rhs - self.exp_pxop.rhs**2))
-            self.delta_px2op = Eq(var(r'(\Delta{p_x})^2'), self.exp_px2op.rhs - self.exp_pxop.rhs**2)
-            self.delta_xop_pxop = self.uncertainityXP  = Eq(var(r'\Delta{x}\Delta{p_x}'), self.delta_xop.rhs*self.delta_px2op.rhs)
             
 #### ----> Schrödinger Equation
             # self.V = self.potential_energy = Function('V')(x) todo erase after tests
             self.H = Eq(S('H'), -(hbar**2)/(2*m)*diff(self.Psi, x, 2) + self.V*self.Psi)
+            self.exp_V = Eq(var(r'\langle{V}\rangle'), Integral(conjugate(self.Psi)*qapply(self.V*self.Psi), (x,xmin,xmax)))
+            self.exp_T = Eq(var(r'\langle{T}\rangle'), self.exp_px2.rhs/(2*m))
             self.exp_H = Eq(var(r'\langle{H}\rangle'), Integral(conjugate(self.Psi)*self.H.rhs, (x,xmin,xmax)))
             self.HOp = Eq(S('H'), hbar**2/(2*m)*(DifferentialOperator(diff(self.Psi, x), self.Psi))**2 + Operator(self.V*self.Psi))
             self.SchrodingerEq = Eq(-(hbar**2)/(2*m)*diff(self.Psi, x, 2) + self.V*self.Psi, I*hbar*diff(self.Psi, t, 1))
@@ -354,7 +356,7 @@ class quantum_mechanics(branch):
 #### Quantum Harmonic Oscillator
             class qho(branch):
                 """
-                Sub class for quantum simple harmonic oscillator.
+                Sub class for 1D quantum simple harmonic oscillator.
                 """
                 def __init__(self):
                     super().__init__()
@@ -371,11 +373,19 @@ class quantum_mechanics(branch):
                     self.pop = Eq(S('phat'), I*sqrt(hbar*m*w/2)*(self.ad-self.a))
                     self.x2op = Eq(S('xhat^2'), simplify(self.xop.rhs*self.xop.rhs))
                     self.p2op = Eq(S('phat^2'), simplify(self.pop.rhs*self.pop.rhs))
-                    self.V = Eq(V, S(1)/2*m*w**2*self.x2op.rhs)
+                    self.V  = Eq(V, S(1)/2*m*w**2*self.x2op.rhs)
+                    self.Vx = Eq(V, S(1)/2*m*w**2*x**2)
                     self.H = Eq(H, simplify(self.p2op.rhs/(2*m) + self.V.rhs))
                     self.Hx = Eq(H, DifferentialOperator(-hbar**2/(2*m)*Derivative(f(x),x,2) + S(1)/2*m*w**2*x**2, f(x)))
                     self.En = lambda n=n:Eq(S(f'E_{n}'), (n+S(1)/2)*hbar*w)
                     # todo 2.51
+                
+                """
+                def psi(self, n=n):
+                    # Same as self.psix
+                    xi = sqrt(m*w/hbar)*x
+                    return Eq(S(f'psi_{n}'), Wavefunction((m*w/(pi*hbar))**(1/4)*(1/sqrt((2**n)*factorial(n)))*hermite(n, xi)*exp(-xi**2/2), (x,-oo, oo)).expr)
+                """
             self.qho = qho()
             
 #### Delta Function Quantum Well
