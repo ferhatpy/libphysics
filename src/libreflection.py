@@ -46,6 +46,8 @@ globals()["solve"](omech.NewtonsLaw2, a)
 
 class branch:
     """
+    A branch of physics.
+    
     Example:
     ========
     omech = mechanics()
@@ -442,10 +444,17 @@ class branch:
             # Check omech.result (object.method) pattern in a command.
             if subject.find('.') != -1:
                 # 'obj.result' -> ['obj', 'result']
-                (classname, method) = subject.split('.')
-#                method = subject.split('.')[1] # 'obj.result' -> ['obj', 'result']
+                parts = subject.split('.')
+                if len(parts) == 2:
+                    classname, method = parts[0], parts[1]
+                    expr = vars(self)[method]
+                elif len(parts) == 3:
+                    classname, subclassname, method = parts[0], parts[1], parts[2]
+                    expr = vars(vars(self)[subclassname])[method]
+                else:
+                    raise ValueError("subject string must contain one or two dots.")
+                # method = subject.split('.')[1] # 'obj.result' -> ['obj', 'result']
                 # if self.reflection_type == "global": expr = getattr(globals()[classname], method)
-                expr = vars(self)[method]
             else:
                 # if self.reflection_type == "global":
                 # getattr(globals()['mechanics'](), 'NewtonsLaw2')

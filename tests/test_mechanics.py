@@ -3,8 +3,8 @@
 # ## test_mechanics.py
 
 """
-test_mechanics.py connected to test_mechanics.ipynb 
-via "jupytext" light pairing.
+test_mechanics.py connected to test_mechanics.ipynb via "jupytext".
+In ipynb notebook select File->Jupytext->Pair Notebook with Light Format.
 
 References:
 ===========    
@@ -18,6 +18,7 @@ References:
     ==============    
     Vladimir Pletser - Lagrangian and Hamiltonian Analytical Mechanics Forty Exercises Resolved and Explained-Springer Singapore (2018)
 """
+
 import copy
 import sys
 import os

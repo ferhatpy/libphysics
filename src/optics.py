@@ -60,17 +60,6 @@ class optics(branch):
         self.input_dir  = "input/optics"
         self.output_dir = "output/optics"
         
-        # Rayleigh_Sommerfeld_Diffraction Integral
-        self.Rayleigh_Sommerfeld_Diff_Int = Eq(_El, 1/(I*l)*Integral(Uapr*Eli*z*exp(I*k*sqrt((x-x0)**2+(y-y0)**2+z**2))/((x-x0)**2+(y-y0)**2+z**2), (y0, y0min, y0max), (x0,x0min,x0max)) )
-        # Rayleigh_Sommerfeld_Diffraction Integrand
-        self.Rayleigh_Sommerfeld_Diff_intgd = Uapr*Eli*z*exp(I*k*sqrt((x-x0)**2+(y-y0)**2+z**2))/((x-x0)**2+(y-y0)**2+z**2)
-        self.Fraunhofer_Diff_Int = Eq(_El, ( exp(I*k*z)/(I*l*z))*(exp(I*k/(2*z)*(x**2 + y**2)))*Integral(Uapr*Eli*exp(-I*2*pi/(l*z)*(x*x0+y*y0)), (y0, y0min, y0max), (x0,x0min,x0max)) )
-        # Fresnel Diffraction Expanded Integral
-        self.Fresnel_Diff_IntEx  = Eq(_El, ( exp(I*k*z)/(I*l*z))*(exp(I*k/(2*z)*(x**2 + y**2)))*Integral(Uapr*Eli*exp( I*k/(2*z)*(x0**2+y0**2))*exp(-I*2*pi/(l*z)*(x*x0+y*y0)), (y0, y0min, y0max), (x0,x0min,x0max)) )
-        # Fresnel Diffraction Integral
-        self.Fresnel_Diff_Int    = Eq(_El, ( exp(I*k*z)/(I*l*z))*Integral(Uapr*Eli*exp( I*k/(2*z)*((x-x0)**2+(y-y0)**2)), (y0, y0min, y0max), (x0,x0min,x0max)) )
-        # Fresnel Diffraction Integrand
-        self.Fresnel_Diff_intgd  = Uapr*Eli*exp( I*k/(2*z)*((x-x0)**2+(y-y0)**2))
         
         class subformulary:
             """
@@ -79,27 +68,64 @@ class optics(branch):
             Define global symbols in the outer class.
             """
             def __init__(self):
-                # List of Moment of Inertia
                 self.rect = Lambda(x, Piecewise( (1, abs(x)<=0.5), (0, True) ))
         self.subformulary = subformulary() 
         
-        if self.class_type == "Rayleigh_Sommerfeld":
-            self.El  = Eq(_El, self.Rayleigh_Sommerfeld_Diff_Int.rhs)
-            self.Int = Eq(_I, 1/(I*l)*conjugate(1/(I*l))* \
-                          (Integral(re(self.Rayleigh_Sommerfeld_Diff_intgd), (y0, y0min, y0max), (x0,x0min,x0max))**2+ \
-                           Integral(im(self.Rayleigh_Sommerfeld_Diff_intgd), (y0, y0min, y0max), (x0,x0min,x0max))**2 ))
         
-        if self.class_type == "Fraunhofer":
-            self.El  = Eq(_El, self.Fraunhofer_Diff_Int.rhs)
-            self.Int = Eq(_I, self.El.rhs*conjugate(self.El.rhs))
-#            self.Int = Eq(_I, abs(self.El.rhs)**2)
-            
-        if self.class_type == "Fresnel":
-            self.El  = Eq(_El, self.Fresnel_Diff_Int.rhs)
-            self.Int = Eq(_I, exp(I*k*z)/(I*l*z)*conjugate(exp(I*k*z)/(I*l*z))* \
-                          (Integral(re(self.Fresnel_Diff_intgd), (y0, y0min, y0max), (x0,x0min,x0max))**2+ \
-                           Integral(im(self.Fresnel_Diff_intgd), (y0, y0min, y0max), (x0,x0min,x0max))**2 ))
-            
+#### Rayleigh-Sommerfeld Diffraction Integral
+        class Rayleigh_Sommerfeld(branch):
+            """
+            Sub class for Rayleigh-Sommerfeld Diffraction Integral.
+            """
+            def __init__(self):
+                super().__init__()
+                self.class_type = "Rayleigh_Sommerfeld"
+                self.name = "Rayleigh-Sommerfeld Diffraction Integral"
+                self.integrand  = Uapr*Eli*z*exp(I*k*sqrt((x-x0)**2+(y-y0)**2+z**2))/((x-x0)**2+(y-y0)**2+z**2)
+                self.integral   = Eq(_El, 1/(I*l)*Integral(self.integrand, (y0, y0min, y0max), (x0,x0min,x0max)) )
+                self.EField     = Eq(_El, self.integral.rhs)
+                self.intensity  = Eq(_I, 1/(I*l)*conjugate(1/(I*l))* \
+                                    (Integral(re(self.integrand), (y0, y0min, y0max), (x0,x0min,x0max))**2+ \
+                                     Integral(im(self.integrand), (y0, y0min, y0max), (x0,x0min,x0max))**2 ))
+        self.Rayleigh_Sommerfeld = Rayleigh_Sommerfeld()
+
+
+#### Fraunhofer Diffraction
+        class Fraunhofer(branch):
+            """
+            Sub class for Fraunhofer Diffraction
+            """
+            def __init__(self):
+                super().__init__()
+                self.name = "Fraunhofer Diffraction"
+                self.class_type = "Fraunhofer"
+                self.integrand  = Uapr*Eli*exp(-I*2*pi/(l*z)*(x*x0+y*y0))
+                self.integral   = Eq(_El, ( exp(I*k*z)/(I*l*z))*(exp(I*k/(2*z)*(x**2 + y**2)))*Integral(self.integrand, (y0, y0min, y0max), (x0,x0min,x0max)) )
+                self.EField     = Eq(_El, self.integral.rhs)
+                self.intensity  = Eq(_I, self.EField.rhs*conjugate(self.EField.rhs))
+                # self.intensity= Eq(_I, abs(self.EField.rhs)**2)
+        self.Fraunhofer = Fraunhofer()
+
+
+#### Fresnel Diffraction
+        class Fresnel(branch):
+            """
+            Sub class for Fresnel Diffraction
+            """
+            def __init__(self):
+                super().__init__()
+                self.name = "Fresnel Diffraction"
+                self.class_type = "Fresnel"
+                self.integrand  = Uapr*Eli*exp( I*k/(2*z)*((x-x0)**2+(y-y0)**2) )
+                self.integral   = Eq(_El, (exp(I*k*z)/(I*l*z))*Integral(self.integrand, (y0, y0min, y0max), (x0,x0min,x0max)) )
+                # Fresnel Diffraction Expanded Integral
+                self.Fresnel_Diff_IntEx  = Eq(_El, ( exp(I*k*z)/(I*l*z))*(exp(I*k/(2*z)*(x**2 + y**2)))*Integral(Uapr*Eli*exp( I*k/(2*z)*(x0**2+y0**2))*exp(-I*2*pi/(l*z)*(x*x0+y*y0)), (y0, y0min, y0max), (x0,x0min,x0max)) )
+                self.EField     = Eq(_El, self.integral.rhs)
+                self.intensity  = Eq(_I, exp(I*k*z)/(I*l*z)*conjugate(exp(I*k*z)/(I*l*z))* \
+                                     (Integral(re(self.integrand), (y0, y0min, y0max), (x0,x0min,x0max))**2+ \
+                                      Integral(im(self.integrand), (y0, y0min, y0max), (x0,x0min,x0max))**2 ))
+        self.Fresnel = Fresnel()
+             
         
     @staticmethod
     def __doc__():

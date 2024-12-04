@@ -3,8 +3,8 @@
 # ## test_quantum_mechanics.py
 
 """
-test_quantum_mechanics.py connected to test_quantum_mechanics.ipynb 
-via "jupytext" light pairing.
+test_quantum_mechanics.py connected to test_quantum_mechanics.ipynb via "jupytext".
+In ipynb notebook select File->Jupytext->Pair Notebook with Light Format.
 
 References:
 ===========

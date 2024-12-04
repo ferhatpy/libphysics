@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # +
 """
-baumann_classical_mechanics.py connected to baumann_classical_mechanics.ipynb 
-via "jupytext" light pairing.
+baumann_classical_mechanics.py connected to baumann_classical_mechanics.ipynb via "jupytext".
+In ipynb notebook select File->Jupytext->Pair Notebook with Light Format.
 
 Installation:
 =============
@@ -47,6 +47,7 @@ Homeworks
     p156, 157 apply Laplace transform to driven oscillator ODE and obtain p157.
 
 """
+
 import copy
 import sys
 import os

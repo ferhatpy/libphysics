@@ -3,8 +3,8 @@
 # ## test_optics
 
 """
-test_optics.py connected to test_optics.ipynb 
-via "jupytext" light pairing.
+test_optics.py connected to test_optics.ipynb via "jupytext".
+In ipynb notebook select File->Jupytext->Pair Notebook with Light Format.
 
 omec.__init__()
 omec.verbose = True
@@ -16,6 +16,7 @@ References:
 Abedin, Islam, Haider, 2007, Computer simulation of Fresnel diffraction from rectangular apertures and obstacles using the Fresnel integral
 
 """
+
 import copy
 import sys
 import os
@@ -25,6 +26,7 @@ for ipath in lstPaths:
         sys.path.append(ipath)
 from libsympy import *
 from optics import *
+from numba import jit
 # Execute jupyter-notebook related commands.
 #exec(open('libnotebook.py').read())
 print(sys.version); print(sys.path)
@@ -53,11 +55,12 @@ class sets:
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]
     
     # Execution settings.
-    test_all = {0:False, 1:True}[1]
+    test_all = {0:False, 1:True}[0]
+    usejit = {0:False, 1:True}[0]
     dictflow = dict(
         ch1 = {100:"get_formulary", 150:"get_subformulary",
                 200:"", 300:"diffraction_rectangular", 400:"Fraunhofer_Diff_Int"})
-    flow = [dictflow["ch1"][i] for i in [100]]
+    flow = [dictflow["ch1"][i] for i in [300]]
     if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
 
 print("Test of the {0}.".format(sets.flow))
@@ -92,7 +95,8 @@ if "diffraction_rectangular" in sets.flow:
     """
     
     print("Diffraction from a Rectangular Aperture")
-    class_type = {1:"Rayleigh_Sommerfeld", 2:"Fraunhofer", 3:"Fresnel"}[2]
+    class_type = {1:"Rayleigh_Sommerfeld", 2:"Fraunhofer", 3:"Fresnel",
+                  4:"FresnelJit"}[3]
     oopti.__init__(class_type)
     oopti.verbose = False
     
@@ -113,7 +117,7 @@ if "diffraction_rectangular" in sets.flow:
     config = {0:0, 1:"LakshminarayananFig11_3",
               61:"Abedin2005Fig6a", 62:"Abedin2005Fig6b",
               63:"Abedin2005Fig6c", 64:"Abedin2005Fig6d", 
-              72:"Abedin2005Fig7b"}[61]
+              72:"Abedin2005Fig7b"}[62]
     [nLx, nLy] = {0:[1, 1],
                 "LakshminarayananFig11_3":[0.11, 0.11],
                 "Abedin2005Fig6a":[2,2], "Abedin2005Fig6b":[2,2],
@@ -140,17 +144,17 @@ if "diffraction_rectangular" in sets.flow:
     print(config, " ", oopti.class_type)
     
     # Symbolic Calculations
-    commands = ["xreplace", "oopti."+oopti.class_type+"_Diff_Int", xreplaces]
+    commands = ["xreplace", "oopti."+class_type+".integral", xreplaces]
     oopti.process(commands)
     diffr_form = oopti.result.doit()
     display(diffr_form)
     
-    commands = ["xreplace", "oopti.El", xreplaces]
+    commands = ["xreplace", "oopti."+class_type+".EField", xreplaces]
     oopti.process(commands)
     El = oopti.result.doit()
     display(El)
     
-    commands = ["xreplace", "oopti.Int", xreplaces]
+    commands = ["xreplace", "oopti."+class_type+".intensity", xreplaces]
     oopti.process(commands)
     Int = oopti.result
     if oopti.class_type == "Fraunhofer":
@@ -172,10 +176,14 @@ if "diffraction_rectangular" in sets.flow:
         fInt = lambdify([x,y], Int.rhs.xreplace({x:x, y:y}).doit().evalf(), "scipy")
         Z = np.vectorize(fInt)(X,Y)
         
-    if oopti.class_type in ["Rayleigh_Sommerfeld","Fresnel"]:
-#        fInt = lambda ix,iy: Int.rhs.xreplace({x:ix, y:ix}).doit().evalf() # it takes longer time.
-        fInt = lambdify([x,y], Int.rhs.xreplace({x:x, y:y}).doit().evalf(quad='osc'), "scipy")
-        Z = np.vectorize(fInt)(X,Y)
+    if oopti.class_type in ["Rayleigh_Sommerfeld", "Fresnel"]:
+        if not sets.usejit:    
+            # fInt = lambda ix,iy: Int.rhs.xreplace({x:ix, y:ix}).doit().evalf() # it takes longer time.
+            fInt = lambdify([x,y], Int.rhs.xreplace({x:x, y:y}).doit().evalf(quad='osc'), "scipy")
+            Z = np.vectorize(fInt)(X,Y)
+        else:
+            pass
+
 
     #----> Plotting 2D Diffraction Intensity
     fig = plt.figure(figsize=(5, 5))
@@ -200,5 +208,3 @@ if "Fraunhofer_Diff_Int" in sets.flow:
     intensity = simplify(res.rhs*conjugate(res.rhs))
     intensity = intensity.subs({z:0.2, l:1, Lx:1, Ly:1})
     plot3d(Int.rhs, (x,-1,1), (y,-1,1))
-
-

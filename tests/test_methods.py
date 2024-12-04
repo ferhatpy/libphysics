@@ -3,8 +3,8 @@
 # ## test_methods.py
 
 """
-test_method.py connected to test_method.ipynb 
-via "jupytext" light pairing.
+test_method.py connected to test_method.ipynb via "jupytext".
+In ipynb notebook select File->Jupytext->Pair Notebook with Light Format.
 
 Example: ostat
 ============= 

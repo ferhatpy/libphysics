@@ -2,6 +2,9 @@
 """
 Solutions of Selected Problems Related to Quantum Mechanics
 
+griffiths_introduction_to_qm.py connected to griffiths_introduction_to_qm.ipynb via "jupytext".
+In ipynb notebook select File->Jupytext->Pair Notebook with Light Format.
+
 References:
 ===========
 Griffiths, David J. 2005. Introduction to Quantum Mechanics. 2nd ed. Upper Saddle River, Nj: Pearson Prentice Hall.
@@ -24,8 +27,8 @@ from libsympy import *
 from sympy.abc import*
 from quantum_mechanics import *
 import libquantum
-import scienceplots
-plt.style.use(['science', 'notebook'])
+# import scienceplots
+# plt.style.use(['science', 'notebook'])
 
 # ### Settings
 
@@ -51,11 +54,11 @@ class sets:
     
     # Execution settings.
     use_libphysics = {0:False, 1:True}[1]
-    test_all = {0:False, 1:True}[1]
+    test_all = {0:False, 1:True}[0]
     dictflow = dict(
         ch1 = {13:"p1.3",15:"p1.5",19:"p1.9",17:"p1.17"},
         ch2 = {24:"p2.4",27:"p2.7",29:"p2.9",25:"e2.5",211:"p2.11",212:"p2.12",
-               232:"ch2.3.2",260:"e2.6",222:"p2.22",260:"ch2.6",233:"p2.33",241:"p2.41"},
+               232:"ch2.3.2",260:"e2.6",222:"p2.22",261:"ch2.6",233:"p2.33",241:"p2.41"},
         ch3 = {322:"p3.22", 330:"p3.30"},
         ch4 = {401:"p4.1",402:"e4.1",403:"e4.3",420:"ch4.2",421:"ch4.2.1",411:"p4.11",
                412:"p4.12",404:"fig4.4",
@@ -66,7 +69,7 @@ class sets:
         ch5 = {1:"p5.1 todo"},
         ch6 = {61:"p6.1",62:"p6.2",6310:"ch6.3.1"},
         ch7 = {701:"e7.1",702:"e7.2"})
-    flow = [dictflow["ch2"][i] for i in [211]]
+    flow = [dictflow["ch2"][i] for i in [260]]
     if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
 
 print("Test of the {0}.".format(sets.flow))
@@ -371,7 +374,7 @@ if "p1.17" in sets.flow:
                 "<p^2>=libquantum.expP2(npsi,(-a, a))=",libquantum.expP2(npsi,(-a, a)),
                 
                 "f)",
-                "\sigma_X=<x^2>-<x>^2=", sigmaX,
+                r"\sigma_X=<x^2>-<x>^2=", sigmaX,
                 "\sigma_X=<x^2>-<x>^2=", libquantum.sigmaX(npsi,(-a, a)),
                 
                 "g)",
@@ -401,7 +404,7 @@ if "p1.17" in sets.flow:
 
 # ### ----> p2.4
 
-#----> p2.4 todo kaldik
+#----> p2.4 
 if "p2.4" in sets.flow:
 
     if sets.use_libphysics:
@@ -412,30 +415,35 @@ if "p2.4" in sets.flow:
                2:oqmec.iqw.psix().rhs}[2]
         substitutions = {Psi:psi, xmin:0, xmax:a}
         
+        # 1. Way: SymPy derivative function used in operator definitions.
         exp_x  = oqmec.exp_x.xreplace(substitutions)
         exp_x2 = oqmec.exp_x2.xreplace(substitutions)
         exp_px = oqmec.exp_px.xreplace(substitutions)
         exp_px2= oqmec.exp_px2.xreplace(substitutions)
         delta_x = oqmec.delta_x.xreplace(substitutions)
         delta_px = oqmec.delta_px.xreplace(substitutions)
-        delta_XP = oqmec.delta_XP.xreplace(substitutions)
+        delta_XP = oqmec.delta_xp.xreplace(substitutions)
         min_deltaXP = simplify(delta_XP.doit()).subs({n:1})
         
         pprints(
             "p2.4",
+            "===============================================================",
             "1. Way: SymPy derivative function used in operator definitions.",
+            "===============================================================",
             "psi=", psi,
             "psi*=", conjugate(psi),
             "<x>=",     exp_x,  exp_x.doit(),  simplify(exp_x.doit()),
             "<x^2>=",   exp_x2, exp_x2.doit(), simplify(exp_x2.doit()),
             "<p_x>=",   exp_px, exp_px.doit(), simplify(exp_px.doit()),
             "<p_x^2>=", exp_px2, exp_px2.doit(), simplify(exp_px2.doit()),
-            "delta x=",  delta_x, delta_x.doit(), simplify(delta_x.doit()), 
-            "delta p_x=",delta_px, delta_px.doit(), simplify(delta_px.doit()), 
-            "deltaX*deltaP=", delta_XP, delta_XP.doit(), simplify(delta_XP.doit()),
+            Math("\sigma_x="), delta_x, delta_x.doit(), simplify(delta_x.doit()), 
+            Math("\sigma_p="), delta_px, delta_px.doit(), simplify(delta_px.doit()), 
+            Math("\sigma_x \sigma_p="), delta_XP, delta_XP.doit(), simplify(delta_XP.doit()),
             "At n=1, uncertaninty becomes minimum=", min_deltaXP, simplify(min_deltaXP),
             output_style="display")
         
+        
+        # 2. Way: DifferentialOperator used from sympy.physics.quantum.operator in operator definitions.
         exp_x  = oqmec.exp_xop.xreplace(substitutions)
         exp_x2 = oqmec.exp_x2op.xreplace(substitutions)
         exp_fx = oqmec.exp_fx(x**2).xreplace(substitutions) # Calculate by function call.
@@ -446,7 +454,6 @@ if "p2.4" in sets.flow:
         delta_XP = oqmec.delta_xop_pxop.xreplace(substitutions)
         min_deltaXP = delta_XP.doit().subs({n:1})
         
-        # todo check operator formalism
         pprints("==============================================================================================",
                 "2. Way: DifferentialOperator used from sympy.physics.quantum.operator in operator definitions.",
                 "==============================================================================================",
@@ -491,7 +498,6 @@ if "p2.7" in sets.flow:
     solA = solve(psi.norm-1, A)[0]
     
     # Time dependent normalized wavefunction.
-    # todo add c_n to libquantum
     cn = simplify(integrate( conjugate(sqrt(2/a)*sin(n*pi*x/a)) * npsi0.expr, (x,0,a) ))
     Psi = Sum(cn*sqrt(2/a)*sin(n*pi*x/a)*exp(-I*n**2*pi**2*hbar*t/(2*m*a**2)), (n, 1, oo))
     pn = conjugate(cn)*cn
@@ -508,20 +514,21 @@ if "p2.7" in sets.flow:
             "solve(Eq(psi.norm, 1), dic=True)",
             "solA = solve(psi.norm-1, A)[0]",
             "A=", solA,
-            "\psi(x,0)=", npsi0,
-            "Plot of \psi(x,0)(a=1)=", "todo",
+            "\psi(x,0)=", npsi0.expr,
+            "Plot of \psi(x,0)(a=1)=", "todo", "",
             
             "b)",
+            "Complex due to piecewise function, omitted"
             "c_n=", "c_n=integrate(psi_n(x)*f(x)dx=", cn,
-            "\Psi(x,t)=", Psi,
+            "\Psi(x,t)=", Psi, "",
             
-            "c) cannot find exact result"
+            "c) cannot find exact result",
             "P_1=|c_1|^2=", pn.subs({n:1}),
             
             "d)",
             "1. way <H>",
             "<H>=sum(|c_n|^2 E_n, (n,1,oo))=", expH1,
-            "2. way <H> todo check",
+            "2. way <H> todo WRONG!",
             "<H>=<psi|H|psi>=", "<npsi|p^2>/(2m)|npsi>=", expH2,
             output_style="display")
 
@@ -560,7 +567,7 @@ if "p2.9" in sets.flow:
         print("p2.9: 2. Way:")
         H = DifferentialOperator(-hbar**2/(2*m)*Derivative(f(x),x, 2), f(x))
         cnpsi_H_npsi = conjugate(npsi.expr)*(qapply(H*npsi)).expr
-        expH = integrate(cnpsi_H_npsi,(x, 0, a))
+        expH = integrate(cnpsi_H_npsi, (x, 0, a))
         pprints("p2.9",
                 "psi=", psi,
                 "npsi=", npsi,
@@ -585,19 +592,11 @@ if "e2.5" in sets.flow:
     pop = I*sqrt(hbar*m*w/2)*(ad-a)
     x2op = xop*xop
     p2op = pop*pop
-    V = 1/2*m*w**2*x2op
+    V = S(1)/2*m*w**2*x2op
     H = p2op/(2*m) + V
     
-    #===========================================================================
-    # # todo use in Fourier Transform
-    # x = XKet()
-    # pprints("|x>=",x,
-    #         "|x> in x-space=",rep_innerproduct(XKet(), basis = XOp()),
-    #         "|x> in p-space=",rep_innerproduct(XKet(), basis = PxOp()),
-    #         )
-    #===========================================================================
-    
     pprints("e2.5",
+            "1. Way: Using SymPy functions"
             "ad=", ad,
             "a=", a,
             "|n>=", nk,
@@ -614,13 +613,283 @@ if "e2.5" in sets.flow:
             "<p>=<n|p|n>=", qapply(nb*pop*nk),
             "<V>=<n|V|n>=", qapply(nb*qapply(V*nk)),
             "<H>=<n|H|n>=", qapply(nb*qapply(H*nk)),
-            output_style="display")                       
+            output_style="display")
+
+    pprints("e2.5",
+            "2. Way: Using oqmec.qho",
+            "<x>=<n|x|n>=", qapply(oqmec.qho.nb()*oqmec.qho.xop.rhs*oqmec.qho.nk()),
+            "<p>=<n|p|n>=", qapply(oqmec.qho.nb()*oqmec.qho.pop.rhs*oqmec.qho.nk()),
+            "<V>=<n|V|n>=", qapply(oqmec.qho.nb()*oqmec.qho.V.rhs*oqmec.qho.nk()),
+            "<H>=<n|H|n>=", qapply(oqmec.qho.nb()*oqmec.qho.H.rhs*oqmec.qho.nk()),
+            output_style="display")                        
+
+
+# ### ----> p2.11
+
+#----> p2.11
+if "p2.11" in sets.flow:
+    oqmec.__init__("position_space")
+    oqmec.verbose = True
+    psi = lambda n=n:oqmec.qho.psix(n).rhs
+    V = S(1)/2*m*w**2*x**2
+    
+    # n=0
+    exp_x_psi0 = oqmec.exp_x.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    exp_x2_psi0 = oqmec.exp_x2.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    exp_px_psi0 = oqmec.exp_px.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    exp_px2_psi0 = oqmec.exp_px2.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    delta_x0 = oqmec.delta_x.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    delta_p0 = oqmec.delta_px.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    delta_xp0= oqmec.delta_xp.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    exp_T0 = oqmec.exp_T.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    exp_V0 = oqmec.exp_V.xreplace({oqmec.Psi:psi(0), oqmec.V:V, xmin:-oo, xmax:oo})
+    exp_H0 = oqmec.exp_H.xreplace({oqmec.Psi:psi(0), oqmec.V:V, xmin:-oo, xmax:oo})
+    
+    # n=1
+    exp_x_psi1 = oqmec.exp_x.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    exp_x2_psi1 = oqmec.exp_x2.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    exp_px_psi1 = oqmec.exp_px.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    exp_px2_psi1 = oqmec.exp_px2.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    delta_x1 = oqmec.delta_x.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    delta_p1 = oqmec.delta_px.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    delta_xp1= oqmec.delta_xp.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    exp_T1 = oqmec.exp_T.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
+    exp_V1 = oqmec.exp_V.xreplace({oqmec.Psi:psi(1), oqmec.V:V, xmin:-oo, xmax:oo})
+    exp_H1 = oqmec.exp_H.xreplace({oqmec.Psi:psi(1), oqmec.V:V, xmin:-oo, xmax:oo})
+    
+    # Similar methods.
+    exp_x  = oqmec.exp_xop.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
+    
+    pprints("1. Way: Using oqmec",
+            "p2.11: (Harmonic Oscillator)",
+            "psi(0)=", psi(0),
+            "psi(1)=", psi(1),
+            
+            "a)",
+            "For n = 0, psi(0):",
+            "<x>=",     exp_x_psi0,   exp_x_psi0.doit(),
+            "<x^2>=",   exp_x2_psi0,  exp_x2_psi0.doit(),
+            "<p>=",     exp_px_psi0,  exp_px_psi0.doit(),
+            "<p^2>=",   exp_px2_psi0, exp_px2_psi0.doit(),
+            
+            "For n = 1, psi(1):",
+            "<x>=",     exp_x_psi1,   exp_x_psi1.doit(),
+            "<x^2>=",   exp_x2_psi1,  exp_x2_psi1.doit(),
+            "<p>=",     exp_px_psi1,  exp_px_psi1.doit(),
+            "<p^2>=",   exp_px2_psi1, exp_px2_psi1.doit(),
+            
+            "b)",
+            "For n = 0, psi(0)",
+            Math("\sigma_x \sigma_p="), delta_xp0, delta_xp0.doit(),
+            "For n = 1, psi(1):",
+            Math("\sigma_x \sigma_p="), delta_xp1, delta_xp1.doit(),
+
+            "c)",
+            
+            "For n = 0, psi(0)",
+            "<T>=1/2m<p^2>=", exp_T0, exp_T0.doit(),
+            "<V>=1/2mw^2<x^2>=", exp_V0, exp_V0.doit(),
+            "<H>=<T>+<V>=", exp_H0, exp_H0.doit(),
+            
+            "For n = 1, psi(1)",
+            "<T>=1/2m<p^2>=", exp_T1, exp_T1.doit(),
+            "<V>=1/2mw^2<x^2>=", exp_V1, exp_V1.doit(),
+            "<H>=<T>+<V>=", exp_H1, exp_H1.doit(),            
+            output_style="display")
+    
+    """
+    pprints("2. Way: Using OLD libquantum",
+            "p2.11: (Harmonic Oscillator)",
+            "psi0=", psi(0),
+            "psi(1)=", psi(1),
+            "a)",
+            
+            "For n = 0, psi0:",
+            "<x>=", libquantum.expX(psi(0)),
+            "<x^2>=", libquantum.expX2(psi(0)),
+            "<p>=", libquantum.expP(psi(0)),
+            "<p^2>=", libquantum.expP2(psi(0)),
+            "For n = 1, psi(1):",
+            "<x>=", libquantum.expX(psi(1)),
+            "<x^2>=", libquantum.expX2(psi(1)),
+            "<p>=", libquantum.expP(psi(1)),
+            "<p^2>=", libquantum.expP2(psi(1)),
+             
+            "b)",
+            
+            "For n = 0, psi0:\n",
+            "\sigma_x \sigma_p=", "",
+            "For n = 1, psi(1):",
+            "\sigma_x \sigma_p=", "",
+            
+            "c)",
+            
+            "For n = 0, psi0:\n",
+            "<T>=1/2m<p^2>=", libquantum.expT(psi(0)),
+            "<V>=1/2mw^2<x^2>=", (1/2*m*w**2)*libquantum.expX2(psi(0)),
+            "<H>=<T>+<V>=", simplify(libquantum.expT(psi(0))+(1/2*m*w**2)*libquantum.expX2(psi(0))),
+            
+            "For n = 1, psi(1):\n",
+            "<T>=1/2m<p^2>=", libquantum.expT(psi(1)),
+            "<V>=1/2mw^2<x^2>=", (1/2*m*w**2)*libquantum.expX2(psi(1)),
+            "<H>=<T>+<V>=", simplify(libquantum.expT(psi(1))+(1/2*m*w**2)*libquantum.expX2(psi(1))),
+            output_style="display")
+    """
+
+# ### ----> p2.12
+
+#----> p2.12
+if "p2.12" in sets.flow:
+    ad = RaisingOp('a')
+    a = LoweringOp('a')
+    nk = SHOKet('n')
+    nb = SHOBra('n')
+    xop = sqrt(hbar/(2*m*w))*(ad+a)
+    pop = I*sqrt(hbar*m*w/2)*(ad-a)
+    x2op = xop*xop
+    p2op = pop*pop
+    V = S(1)/2*m*w**2*x2op
+    H = p2op/(2*m) + V
+    
+    expX = qapply(nb*xop*nk)
+    expX2 = qapply(nb*qapply(x2op*nk))
+    expP = qapply(nb*qapply(pop*nk))
+    expP2 = qapply(nb*qapply(p2op*nk))
+    sigmaX = sqrt(expX2-expX**2)
+    sigmaP = sqrt(expP2-expP**2)
+    
+    pprints("p2.12: (Harmonic Oscillator)",
+            "Algebraic Method:",
+            "<x>=<n|x|n>=", expX,
+            "<p>=<n|p|n>=", expP,
+            "<x^2>=<n|x^2|n>=", expX2,
+            "<p^2>=<n|x^2|n>=", expP2,
+            "<V>=<n|V|n>=qapply(nb*V*nk)=", qapply(nb*V*nk),
+            "<H>=<n|H|n>=qapply(nb*H*nk)=", qapply(nb*H*nk),
+            
+            Math("\sigma_x="), sigmaX,
+            Math("\sigma_p="), sigmaP,
+            Math("\sigma_x \sigma_p="), simplify(sigmaX*sigmaP),
+            output_style="display")
+
+# ### 2.4 The Free Particle
+
+# ### ----> e2.6
+
+#----> e2.6 execute below in jupyter
+if "e2.6" in sets.flow:
+    print("""
+          ex2.6: Free Particle, Wavefunction as a piecewise step function
+                 Fourier transform, Inverse Fourier transform
+          """)
+    
+    facts = Q.nonzero(A), Q.nonzero(a)
+    [A,a] = symbols('A a', real=True, positive=True)
+    with assuming(*facts):
+        f = Piecewise((0, x < -a), (0, x > a), (A, True))
+        psi = Wavefunction(f, x)
+        npsi = psi.normalize()
+        solA = solve(psi.norm-1, A)[0]
+        # Eq. 2.103
+        # Multiply with 
+        psi_k1 = fourier_transform(1/sqrt(2*pi)*npsi.expr, x, k).subs({k:k/(2*pi)})
+        psi_k = psi_k1.args[0][0]
+        psixt_ = oqmec.time_evolution_psixt_from_phik.subs({phik:psi_k})
+    
+        pprints("psi=",psi,
+            "a)",
+            "npsi=", npsi,
+            "Norm of npsi = npsi.norm=", npsi.norm,
+            "A=", solA,
+            
+            "Use npsi->2.103->2.100",
+            "Fourier transform of the normalized wavefunction=", psi_k1,
+            "Fourier transform of the normalized wavefunction=", psi_k,
+            
+            "Time evolution of psi=","There is no exact symbolic solution!. Eq.2.104", psixt_,
+            output_style="display"
+            )
+    
+    # Eq. 2.100 There is no exact symbolic solution!
+    # psi_t = inverse_fourier_transform(1/sqrt(2*pi)*psi_k*exp(-I*hbar*(k**2)*t/(2*m)), k, x).subs({x:x/(2*pi)})
+
+# ### ----> p2.22
+
+#----> p2.22 The Gausssian Wave Packet todo
+if "p2.22" in sets.flow:
+    [A,a,k,m,t] = symbols('A a k m t', real=True, positive=True)
+    # a)
+    psi = A*exp(-a*x**2)
+    psi = Wavefunction(psi, x)
+    #psi = Wavefunction(psi,(x,-oo, oo))
+    npsi = psi.normalize()
+    
+    # b) todo check inverse fourier
+    # Eq. 2.103
+    """
+    .subs({k:k/(2*pi)} is necessary because sympy's Fourier transformation 
+    is formally different than the Fourier transformation given in the book.
+    """
+    psi_k  = fourier_transform(1/sqrt(2*pi)*npsi.expr, x, k).subs({k:k/(2*pi)})
+    psi_k2 = simplify(1/sqrt(2*pi)*integrate(npsi.expr*exp(-I*k*x),(x,-oo, oo)))
+    psi_k3 = oqmec.fourier_transform_psix.subs({psix:npsi.expr}).doit()
+    
+    # Eq. 2.100
+    psi_xt = inverse_fourier_transform(1/sqrt(2*pi)*psi_k*exp(-I*hbar*(k**2)*t/(2*m)), k, x).subs({x:x/(2*pi)})
+    psi_xt = simplify(psi_xt)
+    # psi_xt2 = simplify(1/sqrt(2*pi)*integrate(psi_k2*exp(I*(k*x-hbar*(k**2)*t/(2*m))),(k,-oo, oo)))
+    psi_xt3 = oqmec.inverse_fourier_transform_phik.subs({phik:psi_k}).doit()
+    
+    #c)
+    #psi_xt_sub1 = psi_xt.subs({2*hbar*a*t:theta*m})
+    norm2 = simplify(Wavefunction(psi_xt, x).prob())
+        
+    #d) Complicated. todo
+    substitutions = {oqmec.Psi:psi_xt, xmin:-Inf, xmax:Inf}
+    oqmec.exp_x.xreplace({Psi:psi_xt}).doit() # kaldik
+    
+    #e) Complicated. todo
+    pprints("p2.22: The Gausssian Wave Packet",
+            "psi=", psi,
+            "a)",
+            "Normalizede wavefunction npsi=", npsi.expr,
+            
+            "b) todo solve problems",
+            "Use npsi->2.103->2.100",
+            "npsi->2.103",
+            "psi_k = psi_k2",
+            "psi_k=",psi_k,
+            "psi_k2=",psi_k2,
+            "npsi->2.103->2.100",
+            "psi_xt=",psi_xt,
+            "psi_xt2=",psi_xt2,
+            
+            "c)",
+            #"psi_xt_sub1=",psi_xt_sub1,
+            "|psi_xt|^2=",norm2.expr,
+            "Plotting graphics: todo"
+            
+            "d) todo",
+            "<x>=", libquantum.expX(psi_xt),
+            "<p>=", libquantum.expP(psi_xt),
+            "<x^2>=", libquantum.expX2(psi_xt),
+            "<p^2>=", "libquantum.expP2(psi_xt) difficult",
+            "sigmaX=", "simplify(sigmaX(psi_xt))," # difficult
+            "sigmaP=", "sigmaP(psi_xt)," # difficult
+            
+            "e)","todo",
+            output_style="display")
+
+# ### 2.5 The Delta-Function Potential
+# ### 2.5.1 Bound States and Scattering States
+# ### 2.5.2 The Delta-Function Well
+# ### 2.6 The Finite Square Well
 
 # ### 2.6 The Finite Square Well
 
-# ### ----> ch2.6
+# ### ----> ch2.6 todo
 
-#----> ch2.6
+#----> ch2.6 todo
 if "ch2.6" in sets.flow:
     # --- ch2.6 todo not working 2.6 The Finite Square Well ---
     way_no = 1
@@ -794,261 +1063,9 @@ if "ch2.6" in sets.flow:
     print("Fig. 2.19, Transmissin, reflection coefficients as a function of energy.")
     plot_sympfunc([NT_vs_En, NR_vs_En], (0,5,301), plabels=["T","R"], xlabel="$E$", ylabel="$T,R$")
 
-# ### ----> p2.11
-
-#----> p2.11
-if "p2.11" in sets.flow:
-    oqmec.__init__("position_space")
-    oqmec.verbose = True
-    psi = lambda n=n:oqmec.qho.psix(n).rhs
-    V = S(1)/2*m*w**2*x**2
-    
-    # n=0
-    exp_x_psi0 = oqmec.exp_x.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
-    exp_x2_psi0 = oqmec.exp_x2.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
-    exp_px_psi0 = oqmec.exp_px.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
-    exp_px2_psi0 = oqmec.exp_px2.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
-    delta_x0 = oqmec.delta_x.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
-    delta_p0 = oqmec.delta_px.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
-    delta_xp0= oqmec.delta_xp.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
-    exp_T0 = oqmec.exp_T.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
-    exp_V0 = oqmec.exp_V.xreplace({oqmec.Psi:psi(0), oqmec.V:V, xmin:-oo, xmax:oo})
-    exp_H0 = oqmec.exp_H.xreplace({oqmec.Psi:psi(0), oqmec.V:V, xmin:-oo, xmax:oo})
-    
-    # n=1
-    exp_x_psi1 = oqmec.exp_x.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
-    exp_x2_psi1 = oqmec.exp_x2.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
-    exp_px_psi1 = oqmec.exp_px.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
-    exp_px2_psi1 = oqmec.exp_px2.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
-    delta_x1 = oqmec.delta_x.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
-    delta_p1 = oqmec.delta_px.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
-    delta_xp1= oqmec.delta_xp.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
-    exp_T1 = oqmec.exp_T.xreplace({oqmec.Psi:psi(1), xmin:-oo, xmax:oo})
-    exp_V1 = oqmec.exp_V.xreplace({oqmec.Psi:psi(1), oqmec.V:V, xmin:-oo, xmax:oo})
-    exp_H1 = oqmec.exp_H.xreplace({oqmec.Psi:psi(1), oqmec.V:V, xmin:-oo, xmax:oo})
-    
-    # Similar methods.
-    exp_x  = oqmec.exp_xop.xreplace({oqmec.Psi:psi(0), xmin:-oo, xmax:oo})
-    
-    pprints("1. Way: Using oqmec",
-            "p2.11: (Harmonic Oscillator)",
-            "psi(0)=", psi(0),
-            "psi(1)=", psi(1),
-            
-            "a)",
-            "For n = 0, psi(0):",
-            "<x>=",     exp_x_psi0,   exp_x_psi0.doit(),
-            "<x^2>=",   exp_x2_psi0,  exp_x2_psi0.doit(),
-            "<p>=",     exp_px_psi0,  exp_px_psi0.doit(),
-            "<p^2>=",   exp_px2_psi0, exp_px2_psi0.doit(),
-            
-            "For n = 1, psi(1):",
-            "<x>=",     exp_x_psi1,   exp_x_psi1.doit(),
-            "<x^2>=",   exp_x2_psi1,  exp_x2_psi1.doit(),
-            "<p>=",     exp_px_psi1,  exp_px_psi1.doit(),
-            "<p^2>=",   exp_px2_psi1, exp_px2_psi1.doit(),
-            
-            "b)",
-            "For n = 0, psi(0)",
-            Math("\sigma_x \sigma_p="), delta_xp0, delta_xp0.doit(),
-            "For n = 1, psi(1):",
-            Math("\sigma_x \sigma_p="), delta_xp1, delta_xp1.doit(),
-
-            "c)",
-            
-            "For n = 0, psi(0)",
-            "<T>=1/2m<p^2>=", exp_T0, exp_T0.doit(),
-            "<V>=1/2mw^2<x^2>=", exp_V0, exp_V0.doit(),
-            "<H>=<T>+<V>=", exp_H0, exp_H0.doit(),
-            
-            "For n = 1, psi(1)",
-            "<T>=1/2m<p^2>=", exp_T1, exp_T1.doit(),
-            "<V>=1/2mw^2<x^2>=", exp_V1, exp_V1.doit(),
-            "<H>=<T>+<V>=", exp_H1, exp_H1.doit(),            
-            output_style="display")
-    
-    """
-    pprints("2. Way: Using OLD libquantum",
-            "p2.11: (Harmonic Oscillator)",
-            "psi0=", psi(0),
-            "psi(1)=", psi(1),
-            "a)",
-            
-            "For n = 0, psi0:",
-            "<x>=", libquantum.expX(psi(0)),
-            "<x^2>=", libquantum.expX2(psi(0)),
-            "<p>=", libquantum.expP(psi(0)),
-            "<p^2>=", libquantum.expP2(psi(0)),
-            "For n = 1, psi(1):",
-            "<x>=", libquantum.expX(psi(1)),
-            "<x^2>=", libquantum.expX2(psi(1)),
-            "<p>=", libquantum.expP(psi(1)),
-            "<p^2>=", libquantum.expP2(psi(1)),
-             
-            "b)",
-            
-            "For n = 0, psi0:\n",
-            "\sigma_x \sigma_p=", "todo",
-            "For n = 1, psi(1):",
-            "\sigma_x \sigma_p=", "todo",
-            
-            "c)",
-            
-            "For n = 0, psi0:\n",
-            "<T>=1/2m<p^2>=", libquantum.expT(psi(0)),
-            "<V>=1/2mw^2<x^2>=", (1/2*m*w**2)*libquantum.expX2(psi(0)),
-            "<H>=<T>+<V>=", simplify(libquantum.expT(psi(0))+(1/2*m*w**2)*libquantum.expX2(psi(0))),
-            
-            "For n = 1, psi(1):\n",
-            "<T>=1/2m<p^2>=", libquantum.expT(psi(1)),
-            "<V>=1/2mw^2<x^2>=", (1/2*m*w**2)*libquantum.expX2(psi(1)),
-            "<H>=<T>+<V>=", simplify(libquantum.expT(psi(1))+(1/2*m*w**2)*libquantum.expX2(psi(1))),
-            output_style="display")
-    """
-
-# ### ----> p2.12
-
-#----> p2.12
-if "p2.12" in sets.flow:
-    ad = RaisingOp('a')
-    a = LoweringOp('a')
-    nk = SHOKet('n')
-    nb = SHOBra('n')
-    xop = sqrt(hbar/(2*m*w))*(ad+a)
-    pop = I*sqrt(hbar*m*w/2)*(ad-a)
-    x2op = xop*xop
-    p2op = pop*pop
-    V = S(1)/2*m*w**2*x2op
-    H = p2op/(2*m) + V
-    
-    expX = qapply(nb*xop*nk)
-    expX2 = qapply(nb*qapply(x2op*nk))
-    expP = qapply(nb*qapply(pop*nk))
-    expP2 = qapply(nb*qapply(p2op*nk))
-    sigmaX = sqrt(expX2-expX**2)
-    sigmaP = sqrt(expP2-expP**2)
-    
-    pprints("p2.12: (Harmonic Oscillator)",
-            "Algebraic Method:",
-            "<x>=<n|x|n>=", expX,
-            "<p>=<n|p|n>=", expP,
-            "<x^2>=<n|x^2|n>=", expX2,
-            "<p^2>=<n|x^2|n>=", expP2,
-            "<V>=<n|V|n>=qapply(nb*V*nk)=", qapply(nb*V*nk),
-            "<H>=<n|H|n>=qapply(nb*H*nk)=", qapply(nb*H*nk),
-            
-            Math("\sigma_x="), sigmaX,
-            Math("\sigma_p="), sigmaP,
-            Math("\sigma_x \sigma_p="), simplify(sigmaX*sigmaP),
-            output_style="display")
-
-# ### 2.4 The Free Particle
-
-# ### ----> e2.6
-
-#----> e2.6 todo
-if "e2.6" in sets.flow:
-    # --- e2.6 todo check
-    print("""
-          ex2.6: Free Particle, Wavefunction as a piecewise step function
-                 Fourier transform, Inverse Fourier transform
-          """)
-    
-    facts = Q.nonzero(A), Q.nonzero(a)
-    [A,a] = symbols('A a', real=True, positive=True)
-    with assuming(*facts):
-        f = Piecewise((0, x < -a), (0, x > a), (A, True))
-        psi = Wavefunction(f, x)
-        npsi = psi.normalize()
-        # Eq. 2.103
-        psi_k1 = fourier_transform(1/sqrt(2*pi)*npsi.expr, x, k).subs({k:k/(2*pi)})
-        psi_k = psi_k1.args[0][0]
-    
-        pprints("psi=",psi,
-            "a)",
-            "npsi=",npsi,
-            "Norm of npsi = npsi.norm=", npsi.norm,
-            "Use npsi->2.103->2.100",
-            "Fourier transform of the normalized wavefunction=", psi_k1,
-            "Fourier transform of the normalized wavefunction=", psi_k,
-            "Time evolution of psi=","There is no exact symbolic solution!. Eq.2.104",
-            output_style="display"
-            )
-    
-    # Eq. 2.100 There is no exact symbolic solution!
-    psi_t = inverse_fourier_transform(1/sqrt(2*pi)*psi_k*exp(-I*hbar*(k**2)*t/(2*m)), k, x).subs({x:x/(2*pi)})
-
-# ### ----> p2.22
-
-#----> p2.22 todo
-if "p2.22" in sets.flow:
-    # --- p2.22 todo The Gausssian Wave Packet todo
-    [A,a,k] = symbols('A a k', real=True, positive=True)    # --- p2.11
-    # a)
-    psi = A*exp(-a*x**2)
-    psi = Wavefunction(psi, x)
-    #psi = Wavefunction(psi,(x,-oo, oo))
-    npsi = psi.normalize()
-    
-    # b) todo check inverse fourier
-    # Eq. 2.103
-    """
-    .subs({k:k/(2*pi)} is necessary because sympy's Fourier transformation 
-    is formally different than the Fourier transformation given in the book.
-    """
-    psi_k = fourier_transform(1/sqrt(2*pi)*npsi.expr, x, k).subs({k:k/(2*pi)})
-    # Eq. 2.100
-    psi_xt = inverse_fourier_transform(1/sqrt(2*pi)*psi_k*exp(-I*hbar*(k**2)*t/(2*m)), k, x).subs({x:x/(2*pi)})
-    psi_xt = simplify(psi_xt)
-    
-    psi_k2 = simplify(1/sqrt(2*pi)*integrate(npsi.expr*exp(-I*k*x),(x,-oo, oo)))
-    psi_xt2 = simplify(1/sqrt(2*pi)*integrate(psi_k2*exp(I*(k*x-hbar*(k**2)*t/(2*m))),(k,-oo, oo)))
-    
-    #c)
-    #psi_xt_sub1 = psi_xt.subs({2*hbar*a*t:theta*m})
-    norm2 = simplify(Wavefunction(psi_xt, x).prob())
-        
-    #d) Complicated. todo
-    #e) Complicated. todo
-    pprints("p2.22: The Gausssian Wave Packet",
-            "psi=",psi,
-            "a)",
-            "npsi=",npsi,
-            
-            "b) todo solve problems",
-            "Use npsi->2.103->2.100",
-            "npsi->2.103",
-            "psi_k = psi_k2",
-            "psi_k=",psi_k,
-            "psi_k2=",psi_k2,
-            "npsi->2.103->2.100",
-            "psi_xt2=",psi_xt2,
-            "psi_xt=",psi_xt,
-            
-            "c)",
-            #"psi_xt_sub1=",psi_xt_sub1,
-            "|psi_xt|^2=",norm2.expr,
-            "Plotting graphics: todo"
-            
-            "d) todo",
-            "<x>=", libquantum.expX(psi_xt),
-            "<p>=", libquantum.expP(psi_xt),
-            "<x^2>=", libquantum.expX2(psi_xt),
-            "<p^2>=", "libquantum.expP2(psi_xt) difficult",
-            "sigmaX=", "simplify(sigmaX(psi_xt))," # difficult
-            "sigmaP=", "sigmaP(psi_xt)," # difficult
-            
-            "e)","todo",
-            output_style="display")
-
-# ### 2.5 The Delta-Function Potential
-# ### 2.5.1 Bound States and Scattering States
-# ### 2.5.2 The Delta-Function Well
-# ### 2.6 The Finite Square Well
-
 # ### ----> p2.33
 
-#----> p2.23
+#----> p2.23 todo
 if "p2.33" in sets.flow:
     # --- p2.33 todo not working The Finite Barrier ---
     way_no = 1
@@ -1228,7 +1245,7 @@ if "p2.33" in sets.flow:
 
 # ### ----> p2.41
 
-#----> p2.41
+#----> p2.41 todo
 if "p2.41" in sets.flow:
     # --- 2.41 todo check 
     # a)
@@ -1314,10 +1331,11 @@ if "p2.41" in sets.flow:
 if "ch2.3.2" in sets.flow:
     # --- ch2.3.2 todo solve diff eq.
     [En,m,w] = symbols('En m w', real=True, positive=True)
-    fV = S(1)/2*m*w**2*x**2 # or    # --- p2.11
+    fV = S(1)/2*m*w**2*x**2 # or 
     fV = Rational(1,2)*m*w**2*x**2
-    schEq = libquantum.schrodingerEq(psi, fV, En, ptype="plus")
-    solschEq = dsolve(schEq, psi) 
+    schEq = oqmec.SchrodingerEq_Time_Independent.xreplace({Psi:psix,V:fV})
+    # schEq = libquantum.schrodingerEq(psi, fV, En, ptype="plus")
+    solschEq = dsolve(schEq, psix) 
     pprints(
         "p2.3.2: Analytic Method (Harmonic Oscillator)",
         "Schrödinger Equation=", schEq,

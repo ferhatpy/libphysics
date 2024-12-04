@@ -7,6 +7,7 @@ Created on Fri Mar 11 12:53:36 2022
 """
 from sympy import*
 from libreflection import *
+from sympy.physics.quantum.constants import * # hbar etc.
 import libphyscon as pc
 
 class statistical_mechanics(branch):

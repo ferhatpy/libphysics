@@ -3,8 +3,8 @@
 # ## test_nuclear_physics.py
 
 """
-test_nuclear_physics.py connected to test_nuclear_physics.ipynb 
-via "jupytext" light pairing.
+test_nuclear_physics.py connected to test_nuclear_physics.ipynb via "jupytext".
+In ipynb notebook select File->Jupytext->Pair Notebook with Light Format.
 
 References:
 ===========    

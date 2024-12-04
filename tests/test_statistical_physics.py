@@ -3,10 +3,11 @@
 # ## test_statistical_physics.py
 
 """
-test_statistical_physics.py connected to test_statistical_physics.ipynb 
-via "jupytext" light pairing.
+test_statistical_physics.py connected to test_statistical_physics.ipynb via "jupytext".
+In ipynb notebook select File->Jupytext->Pair Notebook with Light Format.
 
 """
+
 import copy
 import sys
 import os
@@ -46,14 +47,14 @@ class sets:
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]
     
     # Execution settings.
-    test_all = {0:False, 1:True}[1]
+    test_all = {0:False, 1:True}[0]
     dictflow = dict(
         ch1 = {100:"get_formulary", 
                 310:"1D_1/2_paramagnet_way1", 311:"1D_1/2_paramagnet_way2", 
                 331:"1D_simple_harmonic_oscillator", 332:"",
                 430:"monoatomic_ideal_gas",
                 710:"ideal_gas_canonical"})
-    flow = [dictflow["ch1"][i] for i in [710]]
+    flow = [dictflow["ch1"][i] for i in [311]]
     #if test_all: flow = [dictflow[i] for i in dictflow.keys()]
     if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])   
 
