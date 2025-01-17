@@ -5,16 +5,19 @@ statistical_physics.py
 Created on Fri Mar 11 12:53:36 2022
 
 """
+import mpmath as mp
+import numpy as np
+import scipy.constants as pc
 from sympy import*
 from libreflection import *
 from sympy.physics.quantum.constants import * # hbar etc.
-import libphyscon as pc
 
 class statistical_mechanics(branch):
     """
 
     """
     _name = "statistical_mechanics"
+    global numeric
     
     def define_symbols(self):
         """
@@ -36,7 +39,7 @@ class statistical_mechanics(branch):
         h,kB,m,M,N,T = symbols('h k_B m M N T', real=True, positive=True)
         
         # Global Functions
-        global g,engF
+        global g, engF
         if self.class_type in ["micro_canonical_discrete_distinguihable",
                                "micro_canonical_discrete_indistinguihable",
                                "micro_canonical_continuous_indistinguihable"]:
@@ -47,7 +50,7 @@ class statistical_mechanics(branch):
             g   = Function('g')(i)           # Degeneracy function.
             engF= Function('varepsilon')(i)  # Energy function.
 
-    def __init__(self, class_type='micro_canonical_discrete_indistinguihable'):
+    def __init__(self, class_type='micro_canonical_discrete_indistinguihable', numeric=False):
         """
         class_type = \
         {1:"micro_canonical_discrete_distinguihable",
@@ -58,6 +61,7 @@ class statistical_mechanics(branch):
         """
         super().__init__()
         self.class_type = class_type
+        self.numeric = numeric
         self.define_symbols()
         
         # File settings
@@ -73,17 +77,65 @@ class statistical_mechanics(branch):
             def __init__(self):
                 self.Z_Ideal_Gas = V**N/factorial(N)*(2*pi*m*kB*T/h**2)**(3*N/2)
                 self.Z_Ideal_Gas_beta = V**N/(factorial(N)*h**(3*N))*(2*m*pi/beta)**(3*N/2)
-                
         self.subformulary = subformulary()
+
 
 #### 1) micro_canonical_discrete_distinguihable
         if self.class_type == "micro_canonical_discrete_distinguihable":
-            self.Zsp = Eq(symbols('Z_sp'), Sum(g*exp(-engF/(kB*T)), (i,j,n)))
-            self.U   = Eq(symbols('U'),   N*kB*T**2*diff(log(self.Zsp.rhs), T, evaluate=False))
-            self.S   = Eq(symbols('S'),   N*kB*log(self.Zsp.rhs) + N*kB*T*diff(log(self.Zsp.rhs), T, evaluate=False))
-            self.F   = Eq(symbols('F'),  -N*kB*T*log(self.Zsp.rhs))
-            self.Cv  = Eq(symbols('C_v'), diff(self.U.rhs, T, evaluate=False))
-            self.M   = Eq(symbols('M'),  -diff(self.F.rhs, B, evaluate=False))
+            if self.numeric:
+                """
+                Numeric Formulary
+                =================                
+                def nZsp(self, engF=lambda _:_, g=lambda _:1, T=1, j=1, n=mp.inf):
+                    Usage:
+                        Zsp(lambda i:i**2)             # g(i)=1
+                        Zsp(lambda i:i**2, lambda i:1) # g(i)=1
+                        
+                    Zsp() === Zsp(engF=i, g=1, T=1, j=1, n=mp.inf)
+                    Zsp(lambda _:_**2) === Zsp(lambda i:i**2)
+                    
+                    Equivalent single-line function:
+                    Zsp = lambda engF=lambda _:_, g=lambda _:1, T=1, j=1, n=mp.inf: mp.nsum(lambda i: g(i)*mp.exp(-engF(i)/(T)), [1, n])
+                    return mp.nsum(lambda i: g(i)*mp.exp(-engF(i)/(pc.k*T)), [j, n])
+                """
+                # mp.dps = 15 # Set numerical precission
+                print("mpmath library is being used !")
+                
+                self.Zsp = lambda engF=lambda _:_, g=lambda _:1, T=1, j=1, n=mp.inf, kB=1: (
+                    mp.nsum(lambda i: g(i)*mp.exp(-engF(i)/(kB*T)), [j, n]) )
+                
+                self.ZN  = lambda engF=lambda _:_, g=lambda _:1, T=1, j=1, n=mp.inf, kB=1, N=2: (
+                    self.Zsp(engF, g, T, j, n, kB)**N )
+                
+                self.U   = lambda engF=lambda _:_, g=lambda _:1, T=1, j=1, n=mp.inf, kB=1, N=1, point=1.0: (
+                    N*kB*T**2*mp.diff(lambda T: mp.log(self.Zsp(engF, g, T, j, n, kB)), point) )
+                
+                self.S   = lambda engF=lambda _:_, g=lambda _:1, T=1, j=1, n=mp.inf, kB=1, N=1, point=1.0: (
+                    N*kB*mp.log(self.Zsp(engF, g, T, j, n, kB)) + N*kB*T*mp.diff(lambda T: mp.log(self.Zsp(engF, g, T, j, n, kB)), point) )
+                
+                self.F   = lambda engF=lambda _:_, g=lambda _:1, T=1, j=1, n=mp.inf, kB=1, N=1: (
+                    -N*kB*T*mp.log(self.Zsp(engF, g, T, j, n, kB)))
+                
+                self.Cv  = lambda engF=lambda _:_, g=lambda _:1, T=1, j=1, n=mp.inf, kB=1, N=1, point=1.0: (
+                    mp.diff(lambda T: self.U(engF, g, T, j, n, kB, N, point), point))
+                
+                # kaldik todo check whether B must be an argument of the lambda function
+                self.M   = lambda engF=lambda _:_, g=lambda _:1, T=1, j=1, n=mp.inf, kB=1, N=1, point=1.0: (
+                    -mp.diff(lambda B: self.F(engF, g, T, j, n, kB, N), point))
+
+            else:
+                """
+                Analytic Formulary
+                ==================  
+                """
+                self.Zsp = Eq(symbols('Z_sp'), Sum(g*exp(-engF/(kB*T)), (i, j, n)))
+                self.ZN  = Eq(symbols('Z_N'),  self.Zsp.rhs**N)
+                self.U   = Eq(symbols('U'),   N*kB*T**2*diff(log(self.Zsp.rhs), T, evaluate=False))
+                self.S   = Eq(symbols('S'),   N*kB*log(self.Zsp.rhs) + N*kB*T*diff(log(self.Zsp.rhs), T, evaluate=False))
+                self.F   = Eq(symbols('F'),  -N*kB*T*log(self.Zsp.rhs))
+                self.Cv  = Eq(symbols('C_v'), diff(self.U.rhs, T, evaluate=False))
+                self.M   = Eq(symbols('M'),  -diff(self.F.rhs, B, evaluate=False))
+            
 
 #### 2) micro_canonical_discrete_indistinguihable
         if self.class_type == "micro_canonical_discrete_indistinguihable":
@@ -94,6 +146,7 @@ class statistical_mechanics(branch):
             self.F   = Eq(symbols('F'),   -N*kB*T*log(self.Zsp.rhs) + kB*T*log(factorial(N)))
             self.Cv  = Eq(symbols('C_v'),  diff(self.U.rhs, T, evaluate=False))
 
+
 #### 3) micro_canonical_continuous_indistinguihable
         if self.class_type == "micro_canonical_continuous_indistinguihable":
             self.Zsp = Eq(symbols('Z_sp'), Integral(g*exp(-engF/(kB*T)), (eng,0,oo)))
@@ -103,20 +156,22 @@ class statistical_mechanics(branch):
             self.F   = Eq(symbols('F'), -N*kB*T*log(self.Zsp.rhs) + kB*T*log(factorial(N)))
             self.Cv  = Eq(symbols('C_v'), diff(self.U.rhs, T, evaluate=False))
 
+
 #### 4) canonical            
         if self.class_type == "canonical":
             self.ZN_ideal_gas  = Eq(symbols('Z_N(Ideal gas)'), (1/(factorial(N)*h**(3*N)))*Integral(exp(-engF/(kB*T)), (p_i,-oo,oo), (q_i,-oo,oo)) )
             self.ZN  = Eq(symbols('Z_N'), self.subformulary.Z_Ideal_Gas) # todo sil
             self.F   = Eq(symbols('F'), -kB*T*log(self.ZN.rhs))
 
+
 #### 5) grand_canonical        
         if self.class_type == "grand_canonical":
             pass
 
         # Common text definitions.
-        self.internal_energy = self.U
-        self.entropy = self.S
-        self.Helmholtz_free_energy = self.F
+        # self.internal_energy = self.U
+        # self.entropy = self.S
+        # self.Helmholtz_free_energy = self.F
         if hasattr(self, "Zsp"): self.partition_function_sp = self.Zsp
         if hasattr(self, "ZN"):  self.partition_function_Np = self.ZN
         if hasattr(self, "M"):   self.magnetization = self.M

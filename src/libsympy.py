@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LightSource
 import mpmath as mp
 import numpy as np
+import scipy.constants as pc
 from pylab import *
 from sympy import *
 from sympy.abc import x,y,z,t

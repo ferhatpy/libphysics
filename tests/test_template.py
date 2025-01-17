@@ -153,3 +153,5 @@ if "topic1" in sets.flow:
     pprints("Z_{sp}1=", Zsp1, 
             "U=", U,
             output_style = otemp.output_style )
+    
+    list(map(display, [Zsp1, U]))

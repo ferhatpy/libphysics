@@ -445,14 +445,14 @@ class branch:
             if subject.find('.') != -1:
                 # 'obj.result' -> ['obj', 'result']
                 parts = subject.split('.')
-                if len(parts) == 2:
+                if len(parts) == 2:     # Check classname.method pattern.
                     classname, method = parts[0], parts[1]
                     expr = vars(self)[method]
-                elif len(parts) == 3:
+                elif len(parts) == 3:   # Check classname.subclassname.method pattern.
                     classname, subclassname, method = parts[0], parts[1], parts[2]
                     expr = vars(vars(self)[subclassname])[method]
                 else:
-                    raise ValueError("subject string must contain one or two dots.")
+                    raise ValueError("[subject] string must contain one or two dots.")
                 # method = subject.split('.')[1] # 'obj.result' -> ['obj', 'result']
                 # if self.reflection_type == "global": expr = getattr(globals()[classname], method)
             else:

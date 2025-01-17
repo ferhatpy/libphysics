@@ -129,6 +129,7 @@ if "1D_1/2_paramagnet_way2" in sets.flow:
     print("A Spin-1/2 Paramagnet Way2")
     ostat.__init__(class_type = "micro_canonical_discrete_distinguihable")
     ostat.verbose = True
+    ostat.numeric = True
     [mu,B] = symbols('mu B', real=True)
     xreplaces = {g:1, engF:mu*B*(2*i-3), j:1, n:2}
     display("Single particle partition function:", ostat.Zsp)
