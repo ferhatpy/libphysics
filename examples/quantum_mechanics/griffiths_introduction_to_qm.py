@@ -2,7 +2,7 @@
 """
 Solutions of Selected Problems Related to Quantum Mechanics
 
-griffiths_introduction_to_qm.py connected to griffiths_introduction_to_qm.ipynb via "jupytext".
+griffiths_introduction_to_qm.py connected to griffiths_introduction_to_qm.ipynb via "jupytext" extensition.
 In ipynb notebook select File->Jupytext->Pair Notebook with Light Format.
 
 References:
@@ -69,7 +69,7 @@ class sets:
         ch5 = {1:"p5.1 todo"},
         ch6 = {61:"p6.1",62:"p6.2",6310:"ch6.3.1"},
         ch7 = {701:"e7.1",702:"e7.2"})
-    flow = [dictflow["ch2"][i] for i in [260]]
+    flow = [dictflow["ch4"][i] for i in [449]]
     if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
 
 print("Test of the {0}.".format(sets.flow))
@@ -844,7 +844,7 @@ if "p2.22" in sets.flow:
     #psi_xt_sub1 = psi_xt.subs({2*hbar*a*t:theta*m})
     norm2 = simplify(Wavefunction(psi_xt, x).prob())
         
-    #d) Complicated. todo
+    #d) Complicated. todo yapilacak
     substitutions = {oqmec.Psi:psi_xt, xmin:-Inf, xmax:Inf}
     oqmec.exp_x.xreplace({Psi:psi_xt}).doit() # kaldik
     

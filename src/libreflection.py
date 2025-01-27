@@ -338,9 +338,9 @@ class branch:
 #                expr = getattr(globals()[classname], method)
                 expr = vars(self)[method]
             else:
-                #                getattr(globals()['mechanics'](), 'NewtonsLaw2')
-                #                expr = getattr(globals()[self](), subject)
-                #         expr = getattr(globals()[classname](), subject)
+                # getattr(globals()['mechanics'](), 'NewtonsLaw2')
+                # expr = getattr(globals()[self](), subject)
+                # expr = getattr(globals()[classname](), subject)
                 expr = vars(self)[subject]
             cmd = globals()[verb]  # dsolve, etc.
             params = obj
