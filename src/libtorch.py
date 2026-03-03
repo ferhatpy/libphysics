@@ -39,41 +39,20 @@ def setup_logging(enable: bool = False, level: str = "INFO"):
     """
     By default, we remove all handlers (silence).
     If enable=True, we add a standard output handler.
+    ------
+    Example:
+        # Disable logging (default)
+        setup_logging()
+        # Enable logging to stderr at INFO level
+        setup_logging(enable=True, level="INFO")
+        # Enable logging to stderr at DEBUG level
+        setup_logging(enable=True, level="DEBUG")
     """
     logger.remove() 
     if enable:
         logger.add(sys.stderr, level=level)
 
 setup_logging(enable=False) 
-
-# ---------------------------------------------------------------------------
-# Default torch module mapping for lambdify
-# ---------------------------------------------------------------------------
-def _default_torch_modules():
-    return {
-        # Trigonometric
-        "sin": torch.sin, "cos": torch.cos, "tan": torch.tan,
-        "asin": torch.asin, "acos": torch.acos, "atan": torch.atan,
-        "atan2": torch.atan2,
-        # Hyperbolic
-        "sinh": torch.sinh, "cosh": torch.cosh, "tanh": torch.tanh,
-        "asinh": torch.asinh, "acosh": torch.acosh, "atanh": torch.atanh,
-        # Exponentials / logs
-        "exp": torch.exp, "log": torch.log, "ln": torch.log,
-        "log10": torch.log10, "log2": torch.log2,
-        # Roots / powers
-        "sqrt": torch.sqrt, "Pow": torch.pow,
-        # Misc
-        "Abs": torch.abs, "sign": torch.sign,
-        "floor": torch.floor, "ceiling": torch.ceil,
-        "Min": torch.minimum, "Max": torch.maximum,
-        # Piecewise / heaviside
-        "Heaviside": lambda x: torch.heaviside(x, torch.zeros_like(x)),
-        # Constants
-        "pi": getattr(torch, "pi", float(np.pi)),
-        "E": float(np.e),
-    }
-
 
 # ---------------------------------------------------------------------------
 # TorchExpr — container returned by torchify when limits are provided
@@ -121,9 +100,66 @@ def torchify(expr, variables, limits=None, params=None, modules=None):
     -------
     TorchExpr   if *limits* were given  (use with ``torchquad_integrate``)
     callable    if *limits* were ``None`` (plain torch function)
+    -------
+    Usage: 
+        x, k = sp.symbols("x k", real=True)
+        integrand = sp.exp(-x**2) * sp.exp(sp.I * k * x)
+
+        texpr = torchify(
+            integrand,
+            variables=[x],
+            limits=[(x, -sp.oo, sp.oo)],
+            params=[k],
+            )
+
+        # if the expr is given as an sp integral:
+        inntegrand = integral_expression.function
+        limits = list(integral_expression.limits)
+
+        texpr = torchify(
+            inntegrand,
+            variables=[x],
+            limits=limits,
+            params=[k],
+            )
+
+        # if the expr is given as an sp equation integral:
+        inntegrand = integral_equation.rhs.function
+        limits = list(integral_equation.rhs.limits)
+
+        texpr = torchify(
+            inntegrand,
+            variables=[x],
+            limits=limits,
+            params=[k],
+            )
     """
+    def safe_sqrt(x):
+        return torch.sqrt(torch.as_tensor(x, dtype=torch.float64))
     if modules is None:
-        modules = [_default_torch_modules()]
+        modules = [{
+            # Trigonometric
+            "sin": torch.sin, "cos": torch.cos, "tan": torch.tan,
+            "asin": torch.asin, "acos": torch.acos, "atan": torch.atan,
+            "atan2": torch.atan2,
+            # Hyperbolic
+            "sinh": torch.sinh, "cosh": torch.cosh, "tanh": torch.tanh,
+            "asinh": torch.asinh, "acosh": torch.acosh, "atanh": torch.atanh,
+            # Exponentials / logs
+            "exp": torch.exp, "log": torch.log, "ln": torch.log,
+            "log10": torch.log10, "log2": torch.log2,
+            # Roots / powers
+            "sqrt": safe_sqrt, "Pow": torch.pow,
+            # Misc
+            "Abs": torch.abs, "sign": torch.sign,
+            "floor": torch.floor, "ceiling": torch.ceil,
+            "Min": torch.minimum, "Max": torch.maximum,
+            # Piecewise / heaviside
+            "Heaviside": lambda x: torch.heaviside(x, torch.zeros_like(x)),
+            # Constants
+            "pi": getattr(torch, "pi", float(np.pi)),
+            "E": float(np.e),
+        }]
 
     variables = list(variables)
 
@@ -147,7 +183,6 @@ def torchify(expr, variables, limits=None, params=None, modules=None):
         lower, upper = limit_map[v]
 
         if lower == -oo and upper == oo:
-            # (-∞, ∞) → v = tan(t),  dv = sec²(t) dt
             t_v = Symbol(f"t_{v.name}", real=True)
             subs_map[v] = tan(t_v)
             jacobian *= 1 / cos(t_v) ** 2
@@ -155,7 +190,6 @@ def torchify(expr, variables, limits=None, params=None, modules=None):
             domain.append([float(-pi / 2), float(pi / 2)])
 
         elif lower != -oo and upper == oo:
-            # (a, ∞) → v = a + tan²(t),  dv = 2 tan(t) sec²(t) dt
             t_v = Symbol(f"t_{v.name}", real=True)
             subs_map[v] = lower + tan(t_v) ** 2
             jacobian *= 2 * tan(t_v) / cos(t_v) ** 2
@@ -163,7 +197,6 @@ def torchify(expr, variables, limits=None, params=None, modules=None):
             domain.append([0.0, float(pi / 2)])
 
         elif lower == -oo and upper != oo:
-            # (-∞, b) → v = b - tan²(t),  dv = -2 tan(t) sec²(t) dt
             t_v = Symbol(f"t_{v.name}", real=True)
             subs_map[v] = upper - tan(t_v) ** 2
             jacobian *= -2 * tan(t_v) / cos(t_v) ** 2
@@ -175,10 +208,8 @@ def torchify(expr, variables, limits=None, params=None, modules=None):
             new_vars.append(v)
             domain.append([float(lower), float(upper)])
 
-    # Substitute + bake in the Jacobian — all symbolic, done ONCE
     expr_work = expr.subs(subs_map) * jacobian
 
-    # Infer params from remaining free symbols
     if params is None:
         params = sorted(
             list(expr_work.free_symbols - set(new_vars)),
@@ -216,6 +247,9 @@ def torchquad_integrate(texpr, params_values=None, method=None, N=21):
     -------
     re, im : torch.Tensor
         Real and imaginary parts of the integral.
+    -------
+    Usage:
+        re, im = torchquad_integrate(texpr, params_values=[1, 1, 1, 1], N=121)
     """
     from torchquad import Simpson
 
@@ -224,28 +258,25 @@ def torchquad_integrate(texpr, params_values=None, method=None, N=21):
 
     param_vals = list(params_values) if params_values else []
 
-    def f_re(d):
-        vals = texpr.func(*[d[:, i] for i in range(d.shape[1])], *param_vals)
-        vals = torch.as_tensor(vals, device=d.device)
-        return vals.real if torch.is_complex(vals) else vals
 
-    def f_im(d):
+    def f(d):
         vals = texpr.func(*[d[:, i] for i in range(d.shape[1])], *param_vals)
-        vals = torch.as_tensor(vals, device=d.device)
-        return vals.imag if torch.is_complex(vals) else torch.zeros_like(vals)
+        return torch.as_tensor(vals, device=d.device)
+            
+    res = method.integrate(f, dim=texpr.dim, N=N, integration_domain= texpr.domain)
+    return (res.real if torch.is_complex(res) else res), (res.imag if torch.is_complex(res) else torch.zeros_like(res))
 
-    re = method.integrate(f_re, dim=texpr.dim, N=N, integration_domain=texpr.domain)
-    im = method.integrate(f_im, dim=texpr.dim, N=N, integration_domain=texpr.domain)
-    return re, im
 
 
 def _simpson_weights_1d(a: float, b: float, N: int, *, device=None, dtype=None) -> torch.Tensor:
-    """Return Simpson weights including the dx/3 scaling (shape: [N])."""
+    """Return Simpson weights including the dx/3 scaling (shape: [N]).
+     this is used to build the full tensor-product weights for torchquad_integrate.
+    """
     if N < 3 or (N % 2) == 0:
         raise ValueError(f"Simpson rule requires odd N>=3; got N={N}")
     dx = (b - a) / (N - 1)
     w = torch.ones(N, device=device, dtype=dtype)
-    # 1, 4, 2, 4, ..., 2, 4, 1
+    # 1, 4, 2, 4, ..., 2, 4, 1 this is the simppson pattern
     w[1:-1:2] = 4
     w[2:-1:2] = 2
     w = w * (dx / 3.0)
@@ -369,6 +400,14 @@ def torch_integrate_batched_simpson(
     -------
     re, im : torch.Tensor
         Shapes match the parameter batch shape (e.g. 250x250).
+    -------
+    Usage:
+        >>> re, im = torch_integrate_batched_simpson(
+        ...     texpr,
+        ...     params_values=params_grid,  # shape (250, 250, n_params)
+        ...     N=21,
+        ...     chunk_size_params=256,
+        ...      chunk_size_points=10000)
     """
     if texpr.dim <= 0:
         raise ValueError(f"texpr.dim must be positive; got dim={texpr.dim}")
