@@ -61,9 +61,9 @@ class sets:
     usecupy = {0:False, 1:True}[0]
     dictflow = dict(
         ch1 = {100:"get_formulary", 150:"get_subformulary",
-               200:"", 300:"diffraction_rectangular", 400:"Fraunhofer_Diff_Int",
-               500:"FBG_Reflection"})
-    flow = [dictflow["ch1"][i] for i in [300]]
+               200:"ABCD", 250:"diffraction_rectangular", 300:"Fraunhofer_Diff_Int",
+               350:"FBG_Reflection"})
+    flow = [dictflow["ch1"][i] for i in [200]]
     if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
 
 print("Test of the {0}.".format(sets.flow))
@@ -82,6 +82,15 @@ if "get_formulary" in sets.flow:
 if "get_subformulary" in sets.flow:
     oopti.__init__()
     oopti.get_subformulary() 
+    
+    
+#### ABCD
+if "ABCD" in sets.flow:
+    print("ABCD")
+    print("")
+    oopti.__init__()
+    oopti.verbose = False
+    
 
 # ### diffration_rectangular
 
@@ -100,7 +109,7 @@ if "diffraction_rectangular" in sets.flow:
     
     print("Diffraction from a Rectangular Aperture")
     class_type = {1:"Rayleigh_Sommerfeld", 2:"Fraunhofer", 3:"Fresnel",
-                  4:"FresnelJit"}[2]
+                  4:"FresnelJit"}[3]
     oopti.__init__(class_type)
     oopti.verbose = False
     
@@ -196,7 +205,6 @@ if "diffraction_rectangular" in sets.flow:
             
         else:
             import cupy as cp
-
             
             """
             # Assuming Int.rhs.xreplace({x:x, y:y}).doit().evalf(quad='osc') is the symbolic expression:
@@ -280,7 +288,7 @@ if "FBG_Reflection" in sets.flow:
                     pi: np.pi
                     }
     
-    # 1. Way takes long time for completing.
+    # 1. Way takes long time for computing.
     """
     R_num = lambda ilambda0: R.xreplace(num_replaces).rhs.evalf(subs={lambda_0:ilambda0})
     llist = np.linspace(0.75, 2, 400) # 9e-9, 40e-9, 40

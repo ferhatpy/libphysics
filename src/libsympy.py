@@ -540,6 +540,7 @@ def plot_sympfunc(pfuncs, prange=(-1,1,500), plabels=[1,2,3],
     [xmin, xmax, points] = prange
     xs = np.linspace(xmin, xmax, points)
     linestyles = ['-',':','-.','--']
+    colors = ["black", "red", "blue", "green"]    
     
     for i, ifunc in enumerate(pfuncs):
         # Lambdify sympy function and obtain f(x) for processing with numpy.
@@ -547,7 +548,7 @@ def plot_sympfunc(pfuncs, prange=(-1,1,500), plabels=[1,2,3],
         f = lambdify(x, ifunc, 'numpy') # 'mpmath'
         ys=[f(ix) for ix in xs]
 #        ys=[lambdify(x,ifunc,'numpy')(ix) for ix in xs]
-        ax.plot(xs, ys, color='black', linestyle=linestyles[i % 4], linewidth=2, label=plabels[i].__str__())
+        ax.plot(xs, ys, color=colors[i % 4], linestyle=linestyles[i % 4], linewidth=2, label=plabels[i].__str__())
     ax.set_xlabel(xlabel, fontsize=18)
     ax.set_ylabel(ylabel, fontsize=18)
     ax.set_xscale(pxscale)

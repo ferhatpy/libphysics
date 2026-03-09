@@ -82,6 +82,8 @@ class quantum_mechanics(branch):
         global x,y,z, xmin, xmax
         x,y,z = symbols('x y z', real=True)
         xmin,xmax = symbols('x_{min} x_{max}', real=True)
+        global pmin, pmax
+        pmin,pmax = symbols('p_{min} p_{max}', real=True)
         global B0,V0
         B0,V0 = symbols('B_0 V_0', real=True)
         global vA,vB,vC,vD
@@ -180,7 +182,8 @@ class quantum_mechanics(branch):
             self.psi = psi
             self.psix = psix
             self.V = V
-            self.normalization = Eq(Integral(conjugate(self.Psi)*self.Psi, (x,xmin,xmax)), 1)
+            self.normalization   = Eq(Integral(conjugate(self.Psi)*self.Psi, (x,xmin,xmax)), 1)
+            self.normalizationXP = Eq(Integral(conjugate(self.Psi)*self.Psi, (x,xmin,xmax), (p,pmin,pmax)), 1)
             self.cn = Eq(var(r'c_n'), Integral(conjugate(self.psix)*f(x), (x,xmin,xmax)))
             self.psicn = Eq(S(r'psi(x,t)'), Sum(self.cn.rhs*f(x)*exp(-I*En()*t), (n,1,oo)))
             
@@ -406,14 +409,7 @@ class quantum_mechanics(branch):
             self.Wigner2D = lambda psi = psi(xA,xB): \
                 Eq( S(r'W(x_A,p_A,x_B,p_B)'),
                    1/(2*pi*hbar)**2*Integral( conjugate(psi.subs({xA:xA+yA/2, xB:xB+yB/2}))*psi.subs({xA:xA-yA/2, xB:xB-yB/2})*exp(I*(pA*yA+pB*yB)/hbar), (yA,-oo,oo), (yB,-oo,oo) ) ) # Bhatt2008, Eq.7
-            # self.Wigner2D_num = lambda psi, xA, pA, xB, pB, hbar=1: (
-            #     (1 / (2 * mp.pi * hbar)**2) * 
-            #     mp.quad(lambda yA, yB: (
-            #         mp.conj(psi(xA + yA / 2, xB + yB / 2)) * 
-            #         psi(xA - yA / 2, xB - yB / 2) * 
-            #         mp.exp(mp.j * (pA * yA + pB * yB) / hbar) ), # todo mp.expj maybe.
-            #         [-mp.inf, mp.inf], 
-            #         [-mp.inf, mp.inf])) # Bhatt2008, Eq.7
+
             
 #### --- CLASSES ---
 
@@ -485,11 +481,11 @@ class quantum_mechanics(branch):
                 Sub class for 1D q-deformed quantum harmonic oscillator.
 
                 oqmec.qdefho.__init__(numeric=False)
-                plot_sympfunc([abs(1/sqrt(2)*oqmec.qdefho.psix(x,2,0.001,1).doit().n().rhs + 1/sqrt(2)*oqmec.qdefho.psix(x,6,0.001,1).doit().n().rhs),], (-4,4,2000) )
-                plot_sympfunc([re(oqmec.qdefho.psix(x,6,0.001,1).doit().n().rhs),], (-4,4,2000) )
+                plot_sympfunc([abs(1/sqrt(2)*oqmec.qdefho.psix(x,2,0.001,1/2).doit().n().rhs + 1/sqrt(2)*oqmec.qdefho.psix(x,6,0.001,1/2).doit().n().rhs),], (-4,4,2000) )
+                plot_sympfunc([re(oqmec.qdefho.psix(x,6,0.001,1/2).doit().n().rhs),], (-4,4,400) )
                 
                 oqmec.qdefho.__init__(numeric=True)
-                mp.plot(lambda x: mp.re(oqmec.qdefho.psix(x,6,0.001,1)), [-4, 4], points=2000)
+                mp.plot(lambda x: mp.re(oqmec.qdefho.psix(x,6,0.001,1/2)), [-4, 4], points=400)
                 
                 References:
                     Jafarov2010 todoefe
@@ -697,6 +693,15 @@ class quantum_mechanics(branch):
         """
         Numerical 2D Wigner function:
         W(xA,pA,xB,pB)
+        
+        self.Wigner2D_num = lambda psi, xA, pA, xB, pB, hbar=1: (
+            (1 / (2 * mp.pi * hbar)**2) * 
+            mp.quad(lambda yA, yB: (
+                mp.conj(psi(xA + yA / 2, xB + yB / 2)) * 
+                psi(xA - yA / 2, xB - yB / 2) * 
+                mp.exp(mp.j * (pA * yA + pB * yB) / hbar) ), # todo mp.expj maybe.
+                [-mp.inf, mp.inf], 
+                [-mp.inf, mp.inf])) # Bhatt2008, Eq.7
         """
     
         prefactor = 1 / (2 * mp.pi * hbar)**2
@@ -717,8 +722,6 @@ class quantum_mechanics(branch):
         )
     
         return prefactor * integral
-
-
 
 
 #### Nondegenerate Perturbation Theory
