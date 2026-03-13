@@ -47,8 +47,8 @@ from IPython.display import display, HTML, Latex, Math
 from sympy.parsing.latex import parse_latex
 from sympy.parsing.sympy_parser import parse_expr
 from sympy.interactive import printing
-printing.init_printing()
 
+printing.init_printing()
 
 # Sets global defaults for all plots
 plt.rcParams.update({
@@ -297,7 +297,7 @@ def get_iterated_functions(f, fixed_vals={C1:0, C2:0}, prm=alpha,
     funcs = list(map(ifunc, param_vals))
     return(funcs)
         
-def get_piecewise():
+def get_piecewise(fV, xs):
     """
     todo 
     Returns a piecewise function of the function.
@@ -318,7 +318,6 @@ def get_piecewise():
         return(res)
     """
     xintervals = []
-    [fV, xs] = [self.V, self.xs]
     for i in range(len(xs)):
         if i == 0:
             xintervals.append((fV[i], x < xs[i]))
@@ -406,13 +405,12 @@ def tensor_to_product(expr):
     expr = TensorProduct(a, b) + TensorProduct(a, b, c)
     converted = tensor_to_product(expr)
     """
+    from sympy.physics.quantum import TensorProduct as _TensorProduct
     return expr.replace(
-        lambda x: isinstance(x, TensorProduct),
+        lambda x: isinstance(x, _TensorProduct),
         lambda x: Mul(*x.args)
     )
-
-
-#----Plotting
+    #----Plotting
 def plot_energy_levels(data, constYs=None, title="", line_width=0.025):
     """
     Plots horizontal lines at y-points grouped by x-coordinates.
