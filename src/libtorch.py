@@ -42,6 +42,7 @@ from sympy import (
     Function,
     Integral,
     Integer,
+    Mul,
     Symbol,
     atan,
     atanh,
@@ -182,10 +183,26 @@ class TorchExpr:
 
     @staticmethod
     def _is_scalar_like(x) -> bool:
-        """Return ``True`` for Python scalars or 0-dim tensors."""
+        """Return ``True`` for scalar-like values.
+
+        This is intentionally permissive: besides builtin numeric types,
+        it treats SymPy/mpmath numeric scalars as scalar-like if they can
+        be coerced to ``float`` or ``complex``.
+        """
         if torch.is_tensor(x):
             return x.ndim == 0
-        return isinstance(x, (int, float, complex, np.number))
+        if isinstance(x, (int, float, complex, np.number)):
+            return True
+        try:
+            float(x)
+            return True
+        except Exception:
+            pass
+        try:
+            complex(x)
+            return True
+        except Exception:
+            return False
 
     @staticmethod
     def _normalize_params_values(params_values, n_params: int, *, device, dtype):
@@ -220,13 +237,51 @@ class TorchExpr:
         if len(params_values) != n_params:
             raise ValueError(f"Expected {n_params} params; got {len(params_values)}")
 
+        def _to_tensor(value):
+            """Best-effort conversion of scalars / numpy arrays (incl. object dtype) to torch tensors."""
+            if torch.is_tensor(value):
+                return value.to(device=device)
+
+            # First try the fast path.
+            try:
+                return torch.as_tensor(value, device=device)
+            except Exception:
+                pass
+
+            # Numpy arrays with dtype=object frequently come from SymPy objects.
+            if isinstance(value, np.ndarray):
+                arr = value
+            else:
+                try:
+                    arr = np.asarray(value)
+                except Exception:
+                    arr = None
+
+            if isinstance(arr, np.ndarray):
+                if arr.dtype == object:
+                    # Try float first (most common), fall back to complex.
+                    try:
+                        arr = arr.astype(np.float64)
+                    except Exception:
+                        try:
+                            arr = np.vectorize(float, otypes=[np.float64])(arr)
+                        except Exception:
+                            arr = np.vectorize(complex, otypes=[np.complex128])(arr)
+                return torch.as_tensor(arr, device=device)
+
+            # Scalar fallback: coerce to builtin numeric types.
+            try:
+                return torch.as_tensor(complex(value), device=device)
+            except Exception:
+                return torch.as_tensor(float(value), device=device)
+
         batch_shape = None
         for param_value in params_values:
             if torch.is_tensor(param_value) and param_value.ndim > 0:
                 batch_shape = tuple(param_value.shape)
                 break
             if not TorchExpr._is_scalar_like(param_value):
-                param_tensor = torch.as_tensor(param_value)
+                param_tensor = _to_tensor(param_value)
                 if param_tensor.ndim > 0:
                     batch_shape = tuple(param_tensor.shape)
                     break
@@ -235,7 +290,7 @@ class TorchExpr:
 
         params_list = []
         for param_value in params_values:
-            param_tensor = torch.as_tensor(param_value, device=device)
+            param_tensor = _to_tensor(param_value)
             if param_tensor.ndim == 0:
                 if batch_shape:
                     param_tensor = param_tensor.expand(batch_shape)
@@ -246,7 +301,9 @@ class TorchExpr:
                     )
             params_list.append(param_tensor)
 
-        params_tensor = torch.stack(params_list, dim=-1).to(dtype=dtype)
+        params_tensor = torch.stack(params_list, dim=-1)
+        if dtype is not None:
+            params_tensor = params_tensor.to(dtype=dtype)
         batch_size = int(np.prod(batch_shape)) if batch_shape else 1
         params_flat = params_tensor.reshape(batch_size, n_params)
         return params_flat, batch_shape
@@ -255,7 +312,7 @@ class TorchExpr:
     # Convenience methods: numeric integration on this TorchExpr
     # ------------------------------------------------------------------
 
-    def torchquad_integrate(self, params_values=None, method=None, N: int = 21):
+    def torchquad_integrate(self, params_values=None, method=None, N: int = 21, dtype=None):
         """Integrate this ``TorchExpr`` using the torchquad-based integrator.
 
         This is the simplest integration entry point.  It is intended for
@@ -277,6 +334,10 @@ class TorchExpr:
         N : int, optional
             Resolution parameter passed through to torchquad.  Larger values
             increase accuracy but also the number of function evaluations.
+        dtype : torch.dtype or None, optional
+            Floating dtype used for internal computations. This controls
+            how ``domain_points`` and parameter values are coerced before
+            evaluation. If ``None``, torchquad's defaults are used.
 
         Returns
         -------
@@ -324,10 +385,40 @@ class TorchExpr:
 
         param_vals = list(params_values) if params_values else []
 
+        def _as_torch_scalar(value, *, device, dtype):
+            """Best-effort conversion of Python/numpy/mpmath/sympy scalars to torch tensors.
+
+            torch.as_tensor() cannot infer dtype for some scalar-like types
+            (e.g. mpmath.mpf). We coerce those to built-in complex/float.
+            """
+            if torch.is_tensor(value):
+                return value.to(device=device, dtype=dtype) if dtype is not None else value.to(device=device)
+
+            try:
+                return torch.as_tensor(value, device=device, dtype=dtype) if dtype is not None else torch.as_tensor(value, device=device)
+            except Exception:
+                # Fallback for types like mpmath.mpf/mpc, sympy Float, etc.
+                try:
+                    # Avoid forcing a real dtype on complex values.
+                    return torch.as_tensor(complex(value), device=device)
+                except Exception:
+                    return (
+                        torch.as_tensor(float(value), device=device, dtype=dtype)
+                        if dtype is not None
+                        else torch.as_tensor(float(value), device=device)
+                    )
+
         def integrand(domain_points):
-            param_vals_local = [torch.as_tensor(param_value, device=domain_points.device) for param_value in param_vals]
-            values = self.func(*[domain_points[:, i] for i in range(domain_points.shape[1])], *param_vals_local)
-            return torch.as_tensor(values, device=domain_points.device)
+            points = domain_points.to(dtype=dtype) if dtype is not None else domain_points
+            param_vals_local = [
+                _as_torch_scalar(param_value, device=points.device, dtype=dtype)
+                for param_value in param_vals
+            ]
+            values = self.func(*[points[:, i] for i in range(points.shape[1])], *param_vals_local)
+            out = torch.as_tensor(values, device=points.device)
+            if dtype is not None and out.is_floating_point():
+                out = out.to(dtype=dtype)
+            return out
 
         result = method.integrate(
             integrand,
@@ -935,12 +1026,47 @@ class libtorch:
             ````
         """
 
+        def _absorb_scalar_mul_into_integral(expr_candidate):
+            """Rewrite `prefactor * Integral(...)` as `Integral(prefactor*integrand, ...)`.
+
+            This is a convenience for common patterns like `Integral(f, ...)/(2*pi)`
+            which SymPy stores as `Mul(Integral(...), 1/(2*pi))`.
+
+            The rewrite is conservative: the prefactor is only absorbed when
+            it is independent of the integral's dummy variables.
+            """
+
+            if not isinstance(expr_candidate, Mul):
+                return expr_candidate
+
+            integral_factors = [arg for arg in expr_candidate.args if isinstance(arg, Integral)]
+            if len(integral_factors) != 1:
+                return expr_candidate
+
+            integral_factor = integral_factors[0]
+            prefactor = Mul(*[arg for arg in expr_candidate.args if arg is not integral_factor])
+
+            dummy_vars = [lim[0] for lim in integral_factor.limits]
+            if not prefactor.free_symbols.isdisjoint(set(dummy_vars)):
+                return expr_candidate
+
+            return Integral(prefactor * integral_factor.function, *integral_factor.limits)
+
         # Detect integral / equation-with-integral and extract base expr/limits.
         integral = None
         if isinstance(expr, Integral):
             integral = expr
-        elif isinstance(expr, Eq) and isinstance(expr.rhs, Integral):
-            integral = expr.rhs
+        elif isinstance(expr, Eq):
+            if isinstance(expr.rhs, Integral):
+                integral = expr.rhs
+            else:
+                rhs2 = _absorb_scalar_mul_into_integral(expr.rhs)
+                if isinstance(rhs2, Integral):
+                    integral = rhs2
+        else:
+            expr2 = _absorb_scalar_mul_into_integral(expr)
+            if isinstance(expr2, Integral):
+                integral = expr2
 
         if integral is not None:
             base_expr = integral.function
@@ -1085,7 +1211,7 @@ def torchify(
     )
 
 
-def torchquad_integrate(texpr: TorchExpr, params_values=None, method=None, N: int = 21):
+def torchquad_integrate(texpr: TorchExpr, params_values=None, method=None, N: int = 21, dtype=None):
     """Numerically integrate a ``TorchExpr`` using torchquad.
 
     This functional wrapper is kept for backward compatibility with the
@@ -1103,6 +1229,9 @@ def torchquad_integrate(texpr: TorchExpr, params_values=None, method=None, N: in
         If ``None``, a default ``Simpson`` integrator is created.
     N : int, optional
         Resolution parameter passed to torchquad.
+    dtype : torch.dtype or None, optional
+        Floating dtype used for internal computations. Passed through to
+        :meth:`TorchExpr.torchquad_integrate`.
 
     Returns
     -------
@@ -1125,7 +1254,7 @@ def torchquad_integrate(texpr: TorchExpr, params_values=None, method=None, N: in
         re, im = torchquad_integrate(texpr, N=121)
         ````
     """
-    return texpr.torchquad_integrate(params_values=params_values, method=method, N=N)
+    return texpr.torchquad_integrate(params_values=params_values, method=method, N=N, dtype=dtype)
 
 
 def _simpson_weights_1d(a: float, b: float, N: int, *, device=None, dtype=None) -> torch.Tensor:
