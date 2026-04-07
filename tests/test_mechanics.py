@@ -26,6 +26,7 @@ lstPaths = ["../src"]
 for ipath in lstPaths:
     if ipath not in sys.path:
         sys.path.append(ipath)
+        
 from libsympy import *
 from mechanics import *
 from sympy.physics import mechanics as mech
@@ -94,8 +95,7 @@ if "get_subformulary" in sets.flow:
     omech.__init__()
     omech.get_subformulary()
 
-# ### simple_harmonic_oscillator_scalar
-
+#### simple_harmonic_oscillator_scalar
 if "simple_harmonic_oscillator_scalar" in sets.flow:
     """       
     Example: Solve a from F = ma
@@ -154,8 +154,7 @@ if "simple_harmonic_oscillator_scalar" in sets.flow:
     plot_sympfunc([x.subs({t:var('x')}),], (0, float(4*pi), 200), 
                    xlabel="$t$", ylabel="$x(t)$")
 
-# ### simple_harmonic_oscillator_vectorial     
-
+#### simple_harmonic_oscillator_vectorial     
 if "simple_harmonic_oscillator_vectorial" in sets.flow:
     # Vectorial Way.
     omech.__init__(class_type = "vectorial")

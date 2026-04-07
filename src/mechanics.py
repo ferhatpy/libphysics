@@ -139,15 +139,6 @@ class mechanics(branch):
             Define global symbols in the outer class.
             """
             def __init__(self):
-                
-                # Harmonic oscillator substitutions.
-                self.A = self.reduced_amplitude = F0/m
-                self.beta = self.damping_parameter = gamma/(2*m)
-                self.w0 = self.natural_frequency = sqrt(k/m)
-                self.underdamping_criteria = {w0:sqrt(beta**2+w1**2)}
-                self.critical_damping_criteria = {w0:beta}
-                self.overdamping_criteria = {w0:sqrt(beta**2-w2**2)}
-                
                 # Transformations from Polar to Cartesian Coordinates.
                 self.pol_to_cart_x = r*cos(theta)
                 self.pol_to_cart_y = r*sin(theta)
@@ -209,9 +200,7 @@ class mechanics(branch):
             self.IFT_Dirac_delta = Eq(DiracDelta(t-tau), 1/(2*pi)*Integral(exp(I*w*(t-tau)), (w)))
             self.inverse_Fourier_transform_Gw = self.IFT_Gw
             self.inverse_Fourier_transform_Dirac_delta = self.IFT_Dirac_delta
-            self.G_driven_oscillator_weak_damping = 1/(m*sqrt(w0**2-gamma**2))*exp(-gamma*(t-tau))*sin(sqrt(w0**2-gamma**2)*(t-tau))
-            self.G_driven_oscillator_strong_damping = 1/(m*sqrt(gamma**2-w0**2))*exp(-gamma*(t-tau))*sinh(sqrt(gamma**2-w0**2)*(t-tau))
-            self.G_driven_oscillator_critical_damping = (t-tau)/m*exp(-gamma*(t-tau))
+
             
             #----> Mechanics Methods
             self.x = self.position = x
@@ -224,12 +213,7 @@ class mechanics(branch):
             self.U = self.potential_energy = Eq(S('U'), Integral(k*self.x, (x,0,self.x)))
             self.H = self.energy = Eq(S('H'), self.T.rhs + self.U.rhs)
             self.HookesLaw = Eq(S('F'), -k*self.x)
-            self.damped_harmonic_oscillator1 = Eq(m*diff(self.x, t, 2, evaluate=False) + gamma*diff(self.x, t, evaluate=False) + k*self.x, 0)
-            self.damped_harmonic_oscillator2 = Eq(diff(self.x, t, 2, evaluate=False) + 2*beta*diff(self.x, t, evaluate=False) + w0**2*self.x, 0)
-            self.driven_oscillator1 = Eq(m*diff(self.x, t, 2, evaluate=False) + gamma*diff(self.x, t, evaluate=False) + k*self.x, F0*cos(w*t))
-            self.driven_oscillator2 = Eq(diff(self.x, t, 2, evaluate=False) + 2*beta*diff(self.x, t, evaluate=False) + w0**2*self.x, A*cos(w*t))
-            self.driven_oscillator3 = Eq(m*D(self.x, t, 2) + 2*gamma*m*D(self.x, t,1) + m*w0**2*self.x, F0*cos(w*t))
-            # self.driven_oscillator_GreenF = Eq( m*(1/sqrt(2*pi))*diff(ometh.IFT_Gw,t,2), DiracDelta(t-tau)) #todo
+            
             self.amplitude = None
             self.phase = None
             self.scaled_amplitude = None
@@ -300,6 +284,53 @@ class mechanics(branch):
             
         # Common text definitions.
         self.Hamiltonian = self.H
+        
+        
+        
+#### --- CLASSES ---
+
+
+
+#### Harmonic Oscillator
+        class oscillator(branch):
+            """
+            Sub Class for Harmonic, Damped, Driven Oscillator.
+            """
+            global Gamma, lambda_B, lambda_0, lambda_, n0, Delta_n
+            Gamma, lambda_B, lambda_0, lambda_, n0, Delta_n = symbols('Gamma lambda_B lambda_0 Lambda n_0 Delta_n')           
+            
+            def __init__(self):
+                super().__init__()
+                self.name = "oscillator"
+                
+                # Harmonic oscillator substitutions.
+                self.A = self.reduced_amplitude = F0/m
+                self.beta = self.damping_parameter = gamma/(2*m)
+                self.w0 = self.natural_frequency = sqrt(k/m)
+                self.underdamping_criteria = {w0:sqrt(beta**2+w1**2)}
+                self.critical_damping_criteria = {w0:beta}
+                self.overdamping_criteria = {w0:sqrt(beta**2-w2**2)}
+
+                # Damped Oscillator
+                self.damped_harmonic_oscillator1 = Eq(m*diff(x, t, 2, evaluate=False) + gamma*diff(x, t, evaluate=False) + k*x, 0)
+                self.damped_harmonic_oscillator2 = Eq(diff(x, t, 2, evaluate=False) + 2*beta*diff(x, t, evaluate=False) + w0**2*x, 0)
+                
+                # Driven Oscillator
+                self.driven_oscillator1 = Eq(m*diff(x, t, 2, evaluate=False) + gamma*diff(x, t, evaluate=False) + k*x, F0*cos(w*t))
+                self.driven_oscillator2 = Eq(diff(x, t, 2, evaluate=False) + 2*beta*diff(x, t, evaluate=False) + w0**2*x, A*cos(w*t))
+                self.driven_oscillator3 = Eq(m*D(x, t, 2) + 2*gamma*m*D(x, t,1) + m*w0**2*x, F0*cos(w*t))
+                # self.driven_oscillator_GreenF = Eq( m*(1/sqrt(2*pi))*diff(ometh.IFT_Gw,t,2), DiracDelta(t-tau)) #todo
+                    
+                # Green Function for Driven Oscillator
+                self.G_driven_oscillator_weak_damping = 1/(m*sqrt(w0**2-gamma**2))*exp(-gamma*(t-tau))*sin(sqrt(w0**2-gamma**2)*(t-tau))
+                self.G_driven_oscillator_strong_damping = 1/(m*sqrt(gamma**2-w0**2))*exp(-gamma*(t-tau))*sinh(sqrt(gamma**2-w0**2)*(t-tau))
+                self.G_driven_oscillator_critical_damping = (t-tau)/m*exp(-gamma*(t-tau))
+            
+            @staticmethod
+            def __doc__():
+                return "Sub Class for Harmonic, Damped, Driven Oscillator."
+        self.oscillator = self.osc = oscillator()
+        
     
 #### Global Methods
 #----> Eulers_equation_sympy

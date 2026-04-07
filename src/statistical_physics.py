@@ -101,7 +101,7 @@ class statistical_mechanics(branch):
                 ================= 
                 Numeric Formulary
                 =================                
-                def nZsp(self, engF=lambda _:_, g=lambda _:1, T=1, j=1, n=mp.inf):
+                def Zsp(self, engF=lambda _:_, g=lambda _:1, T=1, j=1, n=mp.inf):
                     Usage:
                         Zsp(lambda i:i**2)             # g(i)=1
                         Zsp(lambda i:i**2, lambda i:1) # g(i)=1

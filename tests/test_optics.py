@@ -61,7 +61,7 @@ class sets:
     usecupy = {0:False, 1:True}[0]
     dictflow = dict(
         ch1 = {100:"get_formulary", 150:"get_subformulary",
-               200:"ABCD", 250:"diffraction_rectangular", 300:"Fraunhofer_Diff_Int",
+               200:"ABCD_2_thin_lens", 250:"diffraction_rectangular", 300:"Fraunhofer_Diff_Int",
                350:"FBG_Reflection"})
     flow = [dictflow["ch1"][i] for i in [200]]
     if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
@@ -85,12 +85,17 @@ if "get_subformulary" in sets.flow:
     
     
 #### ABCD
-if "ABCD" in sets.flow:
-    print("ABCD")
+if "ABCD_2_thin_lens" in sets.flow:
+    print("ABCD_2_thin_lens")
     print("")
     oopti.__init__()
     oopti.verbose = False
     
+    oopti1 = optics()
+    oopti2 = optics()
+    
+    oopti.system_matrix = oopti1.ABCD.thin_lens.system_matrix.xreplace({f:S('f_2')}).rhs * oopti.ABCD.T(t,1).rhs * oopti2.ABCD.thin_lens.system_matrix.xreplace({f:S('f_1')}).rhs
+    # kaldik
 
 # ### diffration_rectangular
 

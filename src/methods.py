@@ -21,7 +21,7 @@ import libphyscon as pc
 
 class methods(branch):
     """
-    Displaying Tables: display(*ometh.cYnm.Table())
+    Displaying Tables: display(*ometh.Ynm.Table())
     """
     _name = "methods"
     
@@ -59,7 +59,7 @@ class methods(branch):
         self.input_dir  = "input/methods"
         self.output_dir = "output/methods"
 
-        class cderivatives:
+        class derivatives:
             """
             Sub Formulary Class for Derivatives.
             
@@ -87,7 +87,8 @@ class methods(branch):
                 self.sech  = Eq(Derivative(sech(u),x), sech(u).diff(x))
                 self.csch  = Eq(Derivative(csch(u),x), csch(u).diff(x))
         
-        class cintegrals:
+        
+        class integrals:
             """
             Sub Formulary Class for Integrals.
             """
@@ -109,11 +110,44 @@ class methods(branch):
                 self.sech  = Eq(Integral(sech(x),x), integrate(sech(x),x))
                 self.csch  = Eq(Integral(csch(x),x), integrate(sinh(x),x))
                 
-        class cYnm:
+                # Exponential Functions.
+                self.exp   = Eq(Integral(exp(x),x), integrate(exp(x),x))
+
+
+        class defintegrals:
+            """
+            Sub Formulary Class for Definite Integrals.
+            
+            print_latex(ometh.defintegrals.xexp)
+            """
+            def __init__(self):
+                self.name   = "Definite Integrals"
+                # Trigonometric Functions.
+                self.sin   = Eq(Integral(sin(x),x), integrate(sin(x),x))
+                self.cos   = Eq(Integral(cos(x),x), integrate(cos(x),x))
+                self.tan   = Eq(Integral(tan(x),x), integrate(tan(x),x))
+                self.cot   = Eq(Integral(cot(x),x), integrate(cot(x),x))
+                self.sec   = Eq(Integral(sec(x),x), integrate(sec(x),x))
+                self.csc   = Eq(Integral(csc(x),x), integrate(sin(x),x))
+                
+                # Hyperbolic Functions.
+                self.sinh  = Eq(Integral(sinh(x),x), integrate(sinh(x),x))
+                self.cosh  = Eq(Integral(cosh(x),x), integrate(cosh(x),x))
+                self.tanh  = Eq(Integral(tanh(x),x), integrate(tanh(x),x))
+                self.coth  = Eq(Integral(coth(x),x), integrate(coth(x),x))
+                self.sech  = Eq(Integral(sech(x),x), integrate(sech(x),x))
+                self.csch  = Eq(Integral(csch(x),x), integrate(sinh(x),x))
+                
+                # Exponential Functions.
+                self.xexp   = Eq(Integral(x*exp(-x), (x,0,oo)), 
+                                 UnevaluatedExpr(integrate(x*exp(-x), (x,0,oo))))
+        
+                
+        class Ynms:
             """
             Sub Formulary Class for Spherical Harmonics.
             
-            display(*ometh.cYnm.Table())
+            display(*ometh.Ynms.Table())
             """
             def __init__(self):
                 self.name   = "Spherical Harmonics"
@@ -125,9 +159,10 @@ class methods(branch):
                         if j>=i:self.table.append( Eq(Ynm(j,i,theta,phi), simplify(Ynm(j,i,theta,phi).expand(func=True))) )
                 return self.table                               
                 
-        self.cderivatives = cderivatives()        
-        self.cintegrals   = cintegrals()
-        self.cYnm = self.spherical_harmonics = cYnm()
+        self.derivatives    = derivatives()        
+        self.integrals      = integrals()
+        self.defintegrals   = defintegrals()
+        self.Ynms = self.spherical_harmonics = Ynms()
         
         class subformulary:
             """

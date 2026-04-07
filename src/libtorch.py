@@ -1231,6 +1231,4 @@ def torch_integrate_batched_simpson(
         dtype=dtype,
     )
 
-
-
 lt = libtorch()

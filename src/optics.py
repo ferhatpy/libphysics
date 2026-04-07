@@ -116,6 +116,8 @@ class optics(branch):
                 self.SM = Eq(S('SM'), 
                             UnevaluatedExpr(Matrix((( b, -a),
                                                     (-d,  c)))))
+                self.focal_length = self.f = Eq(1/f, a)
+                
 #### --- SUBCLASSES ---
 
 
@@ -187,6 +189,42 @@ class optics(branch):
                         return "Sub class for Coaxial Optical System."
                 self.coaxial_optical_system = coaxial_optical_system(self)
 
+
+#### ----> Thick Lens
+                class thick_lens(branch):
+                    """
+                    Thick Lens formulas.
+                    Transverse Matrix = Refraction2 * Translation * Refraction1
+                    """
+                    def __init__(self, parent):
+                        super().__init__()
+                        self.name = "Thick Lens"
+                        self.a = parent.P1.rhs + parent.P2.rhs*(1-t*parent.P1.rhs/n)
+                        self.b = 1 - parent.P2.rhs*t/n
+                        self.c = 1 - t/n
+                        self.d = -t/n
+                        
+                        self.transverse_matrix = \
+                            Eq(Matrix(((lambda2),
+                                       (x2))),
+                               MatMul(parent.R(1,n,R2).rhs.doit(), parent.T(t,n).rhs.doit(), parent.R(n,1,R1).rhs.doit(),
+                               Matrix(((lambda1),
+                                       (x1))))
+                               ) # (49)
+                        
+                        self.system_matrixP1P2 = Eq(S('SM'),
+                            MatMul(parent.R(1,n,R2).rhs.doit(), parent.T(t,n).rhs.doit(), parent.R(n,1,R1).rhs.doit())
+                            ) # (51)
+                        
+                        self.focal_lengthP1P2 = Eq(f, parent.P1.rhs + parent.P2.rhs*(1-t*parent.P1.rhs/n) )        # (73)
+                        self.focal_length = Eq(f, ((n-1)*(1/R1-1/R2) + (n-1)**2*t/(n*R1*R2))**(-1) ) # (74)
+                        self.f = self.focal_length
+                        
+                    @staticmethod
+                    def __doc__():
+                        return "Sub class for Thick Lens."
+                self.thick_lens = thick_lens(self)
+
                 
 #### ----> Thin Lens
                 class thin_lens(branch):
@@ -197,6 +235,10 @@ class optics(branch):
                     def __init__(self, parent):
                         super().__init__()
                         self.name = "Thin Lens"
+                        self.a = parent.P1.rhs + parent.P2.rhs
+                        self.b = 1
+                        self.c = 1
+                        self.d = 0
                         
                         self.transverse_matrix = \
                             Eq(Matrix(((lambda2),
@@ -204,13 +246,16 @@ class optics(branch):
                                MatMul(parent.R(1,n,R2).rhs.doit(), parent.T(t,n).rhs.doit(), parent.R(n,1,R1).rhs.doit(),
                                Matrix(((lambda1),
                                        (x1))))
-                               ) # (41)
+                               ) # (49)
                         
                         self.system_matrixP1P2 = Eq(S('SM'),
                             UnevaluatedExpr(Matrix(((1, -parent.P1.rhs-parent.P2.rhs), (0, 1))))
-                            )
+                            ) # (52)
                         
                         self.focal_length = Eq(f, 1/((n-1)*(1/R1 - 1/R2))) # (56)
+                        self.f = self.focal_length
+                        self.system_matrix = Eq(S('SM'),
+                            UnevaluatedExpr(Matrix(((1, -1/f), (0, 1))))) # (57)
                         
                     @staticmethod
                     def __doc__():
