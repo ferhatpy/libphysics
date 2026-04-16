@@ -19,13 +19,8 @@ Abedin, Islam, Haider, 2007, Computer simulation of Fresnel diffraction from rec
 
 import copy
 import sys
-import os
-lstPaths = ["../src"]
-for ipath in lstPaths:
-    if ipath not in sys.path:
-        sys.path.append(ipath)
-from libsympy import *
-from optics import *
+from libphysics.libsympy import *
+from libphysics.optics import *
 # from numba import jit
 
 # Execute jupyter-notebook related commands.

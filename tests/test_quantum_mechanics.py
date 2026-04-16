@@ -36,21 +36,15 @@ ostat2 = copy.deepcopy(ostat)
 
 import copy
 import os
-import sys
-# Import path for library functions.
-lstPaths = ["../src"]
-for ipath in lstPaths:
-    if ipath not in sys.path:
-        sys.path.append(ipath)
-# The following is not compatible with jupyter-notebook.
-# for ipath in lstPaths:
-#    if os.path.join(os.path.dirname(__file__), ipath) not in sys.path:
-#        sys.path.append(os.path.join(os.path.dirname(__file__), ipath))
-from libsympy import *
+from libphysics.libsympy import *
 from sympy.abc import*
-from quantum_mechanics import *
+from libphysics.quantum_mechanics import *
 # import scienceplots
 # plt.style.use(['science', 'notebook'])
+
+test_all = False
+dictflow = {}
+oqmec = quantum_mechanics() # Default instance for IDE resolution if needed
 
 # Execute jupyter-notebook related commands.
 # exec(open('libnotebook.py').read())
@@ -60,43 +54,31 @@ from quantum_mechanics import *
 # ### Settings
 
 ### Settings
+# Execution settings.
+test_all = False
+dictflow = dict(
+    ch1 = {1:"p1.3",3:"p1.5",4:"p1.9",5:"p1.17"},
+    ch2 = {24:"p2.4",27:"p2.7",29:"p2.9",25:"e2.5",211:"p2.11",212:"p2.12",
+           232:"ch2.3.2",26:"e2.6",222:"p2.22",26:"ch2.6",233:"p2.33",241:"p2.41"},
+    ch3 = {322:"p3.22", 330:"p3.30"},
+    ch4 = {401:"p4.1",402:"e4.1",421:"ch4.2.1",411:"p4.11",4:"p4.12",404:"fig4.4",
+           413:"p4.13",7:"p4.14",8:"p4.15",9:"ch4.3.1",10:"ch4.4.1",
+           11:"e4.2",12:"p4.27",449:"p4.49",16:"p4.55"},
+    ch5 = {1:"p5.1"},
+    ch6 = {61:"p6.1", 62:"p6.2", 611:"p6.11", 614:"p6.14", 615:"p6.15", 
+           253:"c25.3"},
+    ch7 = {701:"e7.1"})
+flow = [dictflow["ch6"][i] for i in [253]]
+if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
+
 class sets:
     """
     Setttings class.
-        
-    Instead of settings class, settings nametuple might be used.
-    Settings = namedtuple("Settings", "type dropinf delta")
-    sets = Settings(type="symbolic", dropinf=True, delta=0.1)
-    print(set.type)
     """
-    global dictflow, test_all
-    
-    def __init__(self):
-        pass
-
-    # File settings
     input_dir  = "input/quantum_mechanics"
     output_dir = "output/quantum_mechanics"
-    
-    # Plotting settings
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]
-    
-    # Execution settings.
-    test_all = {0:False, 1:True}[0]
-    dictflow = dict(
-        ch1 = {1:"p1.3",3:"p1.5",4:"p1.9",5:"p1.17"},
-        ch2 = {24:"p2.4",27:"p2.7",29:"p2.9",25:"e2.5",211:"p2.11",212:"p2.12",
-               232:"ch2.3.2",26:"e2.6",222:"p2.22",26:"ch2.6",233:"p2.33",241:"p2.41"},
-        ch3 = {322:"p3.22", 330:"p3.30"},
-        ch4 = {401:"p4.1",402:"e4.1",421:"ch4.2.1",411:"p4.11",4:"p4.12",404:"fig4.4",
-               413:"p4.13",7:"p4.14",8:"p4.15",9:"ch4.3.1",10:"ch4.4.1",
-               11:"e4.2",12:"p4.27",449:"p4.49",16:"p4.55"},
-        ch5 = {1:"p5.1"},
-        ch6 = {61:"p6.1", 62:"p6.2", 611:"p6.11", 614:"p6.14", 615:"p6.15", 
-               253:"c25.3"},
-        ch7 = {701:"e7.1"})
-    flow = [dictflow["ch6"][i] for i in [253]]
-    if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
+    flow = flow
 
 print("Test of the {0}.".format(sets.flow))
 
@@ -104,17 +86,17 @@ print("Test of the {0}.".format(sets.flow))
 
 #### get_formulary
 if "get_formulary" in sets.flow:
-    omec.__init__()
-    omec.get_formulary()
-    omec.get_formulary(style="eq")
+    oqmec.__init__()
+    oqmec.get_formulary()
+    oqmec.get_formulary(style="eq")
 
 # ### get_subformulary
 
 #### get_subformulary    
 if "get_subformulary" in sets.flow:
-    omec.class_type = ""
-    omec.__init__()
-    omec.get_subformulary()
+    oqmec.class_type = ""
+    oqmec.__init__()
+    oqmec.get_subformulary()
 
 # ## Chapter 6 Time-Independent Perturbation Theory
 
@@ -156,8 +138,17 @@ if "c25.3" in sets.flow:
     # Simplify results.
     En1,En2,En3 = simplify(En1_s1), simplify(En2_s1), simplify(En3_s1)
     En = En0().rhs + l*En1.rhs + l**2*En2.rhs + l**3*En3.rhs
-    psi1n = simplify(psi1n_s1)
-    psi2n = simplify(psi2n_s1)
+    # NOTE: simplify() on quantum ket/bra expressions can raise TypeError
+    # in SymPy >= 1.13 due to the _postprocess_state_pow check.
+    # Fall back to unsimplified expressions if that happens.
+    try:
+        psi1n = simplify(psi1n_s1)
+    except TypeError:
+        psi1n = psi1n_s1
+    try:
+        psi2n = simplify(psi2n_s1)
+    except TypeError:
+        psi2n = psi2n_s1
     # psi3n = simplify(psi3n_s1)
     psin = psi0() + l*psi1n.rhs + l**2*psi2n.rhs #+ l**3*psi3n.rhs
     

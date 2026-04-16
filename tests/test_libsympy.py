@@ -4,15 +4,9 @@
 test_libsympy.py
 
 """
-# Import path for library functions.
-import sys
-lstPaths = ["../src"]
-for ipath in lstPaths:
-    if ipath not in sys.path:
-        sys.path.append(ipath)
 import scipy.constants as pc
-from libsympy import *
-from quantum_mechanics import *
+from libphysics.libsympy import *
+from libphysics.quantum_mechanics import *
 
 func_names = [{100:"plot_sympfunc", 200:"plot_list", 350:"read_latex_file",
               300:"pprints", 500:"substitute", 600:"table_function",
@@ -102,7 +96,7 @@ if "plot_sympfunc" in func_names:
     ms=[1,2,3]
     psi = m*(exp(x) - exp(-x))
     psis = [psi.subs({m:im})*conjugate(psi.subs({m:im})) for im in ms]
-    plot_sympfunc(psis, (-5.5,5.5,101), plabels = ms, xlabel="$x$", ylabel="$|\psi|^2$", paxis = True)
+    plot_sympfunc(psis, (-5.5,5.5,101), plabels = ms, xlabel="$x$", ylabel=r"$|\psi|^2$", paxis = True)
     plt.show()
 
     f = x**2

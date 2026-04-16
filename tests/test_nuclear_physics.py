@@ -37,20 +37,10 @@ ostat2 = copy.deepcopy(ostat)
 
 import copy
 import os
-import sys
-# Import path for library functions.
-lstPaths = ["../src"]
-for ipath in lstPaths:
-    if ipath not in sys.path:
-        sys.path.append(ipath)
-# The following is not compatible with jupyter-notebook.
-# for ipath in lstPaths:
-#    if os.path.join(os.path.dirname(__file__), ipath) not in sys.path:
-#        sys.path.append(os.path.join(os.path.dirname(__file__), ipath))
-from libsympy import *
+from libphysics.libsympy import *
 from sympy.abc import*
-from quantum_mechanics import *
-from nuclear_physics import *
+from libphysics.quantum_mechanics import *
+from libphysics.nuclear_physics import *
 
 import scipy.constants as pc
 import scienceplots

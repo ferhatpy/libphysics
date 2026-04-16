@@ -1,0 +1,14 @@
+{
+  "include": [
+    "libphysics",
+    "tests",
+    "examples"
+  ],
+  "extraPaths": [
+    "libphysics"
+  ],
+  "pythonVersion": "3.10",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "warning",
+  "reportMissingModuleSource": "none"
+}

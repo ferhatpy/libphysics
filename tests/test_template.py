@@ -44,18 +44,8 @@ otemp2 = copy.deepcopy(otemp)
 assert euler_equations(D(x, t)**2/2, {x}) == [Eq(-D(x, t, t), 0)]
 """
 import copy
-import sys
-import os
-lstPaths = ["../src"]
-for ipath in lstPaths:
-    if ipath not in sys.path:
-        sys.path.append(ipath)
-# The following is not compatible with jupyter-notebook.
-# for ipath in lstPaths:
-#    if os.path.join(os.path.dirname(__file__), ipath) not in sys.path:
-#        sys.path.append(os.path.join(os.path.dirname(__file__), ipath))
-from libsympy import *
-from template import *
+from libphysics.libsympy import *
+from libphysics.template import *
 # Execute jupyter-notebook related commands.
 #exec(open('libnotebook.py').read())
 # print(sys.version)
@@ -100,19 +90,18 @@ print("Test of the {0}.".format(sets.flow))
 #### get_formulary
 if "get_formulary" in sets.flow:
 #    omech = mechanics() # DO NOT create any instance.
-    omec.class_type = ""
-#   omech.__init__('EulerLagrange')
-    omec.__init__()
-    omec.get_formulary()
-    omec.get_formulary(style="eq")
+    otemp.class_type = ""
+    otemp.__init__()
+    otemp.get_formulary()
+    otemp.get_formulary(style="eq")
 
 # ### get_subformulary
 
 #### get_subformulary    
 if "get_subformulary" in sets.flow:
-    omec.class_type = ""
-    omec.__init__()
-    omec.get_subformulary()    
+    otemp.class_type = ""
+    otemp.__init__()
+    otemp.get_subformulary()    
 
 # ### A Spin-1/2 Paramagnet
 
