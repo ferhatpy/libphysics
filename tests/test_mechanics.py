@@ -20,15 +20,8 @@ References:
 """
 
 import copy
-import sys
-import os
-lstPaths = ["../src"]
-for ipath in lstPaths:
-    if ipath not in sys.path:
-        sys.path.append(ipath)
-        
-from libsympy import *
-from mechanics import *
+from libphysics.libsympy import *
+from libphysics.mechanics import *
 from sympy.physics import mechanics as mech
 mech.mechanics_printing() # for xdot printing etc.
 #print(sys.version)
@@ -39,36 +32,23 @@ mech.mechanics_printing() # for xdot printing etc.
 # ### Settings
 
 ### Settings
+# Execution settings.
+test_all = False
+dictflow = {100:"get_formulary", 150:"get_subformulary",
+            200:"simple_harmonic_oscillator_scalar", 201:"simple_harmonic_oscillator_vectorial", 
+            2321:"coordinate_systems",
+            400:"double_pendulum1"}
+flow = [dictflow[i] for i in [400]]
+if test_all: flow = [dictflow[i] for i in dictflow.keys()]
+
 class sets:
     """
     Setttings class.
-        
-    Instead of settings class, settings nametuple might be used.
-    Settings = namedtuple("Settings", "type dropinf delta")
-    sets = Settings(type="symbolic", dropinf=True, delta=0.1)
-    print(set.type)
     """
-    global dictflow, test_all
-    
-    def __init__(self):
-        pass
-    
-    # File settings
     input_dir  = "input/mechanics"
     output_dir = "output/mechanics"
-    
-    # Plotting settings
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]
-    
-    # Execution settings.
-    test_all = {0:False, 1:True}[0]
-    dictflow = {100:"get_formulary", 150:"get_subformulary",
-                200:"simple_harmonic_oscillator_scalar", 201:"simple_harmonic_oscillator_vectorial", 
-                2321:"coordinate_systems",
-                400:"double_pendulum1"}
-    flow = [dictflow[i] for i in [400]]
-    if test_all: flow = [dictflow[i] for i in dictflow.keys()]    
-    #if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
+    flow = flow # For backward compatibility in the script
 
 print("Test of the {0}.".format(sets.flow))
 

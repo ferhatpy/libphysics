@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "libphysics"
+version = "0.1.0"
+description = "A physics formulary library for solving problems symbolically and numerically"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Ferhat Nutku", email = "ferhatpy@gmail.com"}
+]
+keywords = ["physics", "sympy", "quantum-mechanics", "mechanics", "numerical-analysis"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+
+dependencies = [
+    "numpy>=1.23.3",
+    "scipy>=1.9.0",
+    "sympy>=1.11.1",
+    "mpmath>=1.2.1",
+    "matplotlib>=3.6.1",
+    "numba>=0.56.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0",
+    "sphinx>=7.0",
+    "jupytext>=1.16.2",
+]
+
+[project.urls]
+Homepage = "https://github.com/ferhatpy/libphysics"
+Repository = "https://github.com/ferhatpy/libphysics"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["libphysics*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "PT"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false

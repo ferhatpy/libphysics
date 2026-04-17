@@ -1,0 +1,72 @@
+Metadata-Version: 2.4
+Name: libphysics
+Version: 0.1.0
+Summary: A physics formulary library for solving problems symbolically and numerically
+Author-email: Ferhat Nutku <ferhatpy@gmail.com>
+License: MIT
+Project-URL: Homepage, https://github.com/ferhatpy/libphysics
+Project-URL: Repository, https://github.com/ferhatpy/libphysics
+Keywords: physics,sympy,quantum-mechanics,mechanics,numerical-analysis
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Physics
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy>=1.23.3
+Requires-Dist: scipy>=1.9.0
+Requires-Dist: sympy>=1.11.1
+Requires-Dist: mpmath>=1.2.1
+Requires-Dist: matplotlib>=3.6.1
+Requires-Dist: numba>=0.56.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0; extra == "dev"
+Requires-Dist: ruff>=0.1.0; extra == "dev"
+Requires-Dist: mypy>=1.0; extra == "dev"
+Requires-Dist: sphinx>=7.0; extra == "dev"
+Requires-Dist: jupytext>=1.16.2; extra == "dev"
+Dynamic: license-file
+
+# libphysics
+
+A physics formulary library written in Python for solving problems in symbolic and numerical ways.
+
+## Setting up coding environment
+
+### Create virtual environment
+
+``` sh
+conda create -n libphysics python=3.10
+conda activate libphysics
+```
+
+### Install requirements
+
+``` sh
+pip install -r requirements.txt
+```
+
+## Running a Jupyter Notebook without Installation
+
+With [https://mybinder.org/](https://mybinder.org/), you can run a Jupyter notebook without installing anything on your computer.
+
+### Steps
+
+1. Open the link: Click on the provided mybinder link to launch the notebook environment.
+
+[https://mybinder.org/v2/gh/ferhatpy/libphysics/HEAD](https://mybinder.org/v2/gh/ferhatpy/libphysics/HEAD)
+
+2. Access the notebook: In the window that opens, click on `<###>.ipynb` on the left-hand side.
+3. Run the cells: Execute the cells in the notebook by pressing `SHIFT+ENTER`.
+
+## Additional Helps
+
+``` sh
+sudo apt install pandoc # Converts a *.ipynb file to a *.pdf file via latex.
+```

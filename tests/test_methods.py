@@ -26,16 +26,8 @@ ostat2 = copy.deepcopy(ostat)
 """
 import copy
 import sys
-import os
-lstPaths = ["../src"]
-for ipath in lstPaths:
-    if ipath not in sys.path:
-        sys.path.append(ipath) 
-from sympy import *
-from sympy.abc import *
-from sympy.vector import CoordSys3D
-from libsympy import *
-from methods import *
+from libphysics.libsympy import *
+from libphysics.methods import *
 # Execute jupyter-notebook related commands.
 #exec(open('libnotebook.py').read())
 print(sys.version); print(sys.path)

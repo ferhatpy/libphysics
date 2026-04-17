@@ -16,14 +16,8 @@ In ipynb notebook select File->Jupytext->Pair Notebook with Light Format.
 """
 
 import copy
-import sys
-import os
-lstPaths = ["../src"]
-for ipath in lstPaths:
-    if ipath not in sys.path:
-        sys.path.append(ipath)
-from libsympy import *
-from statistical_physics import *
+from libphysics.libsympy import *
+from libphysics.statistical_physics import *
 # print(sys.version)
 # print(sys.path)
 # Execute jupyter-notebook related commands.
