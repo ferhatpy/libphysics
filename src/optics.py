@@ -75,7 +75,7 @@ class optics(branch):
 
 #### --- CLASSES ---
 
-#### ABCD Ghatak
+#### ABCD
         class ABCD(branch):
             """
             
@@ -106,12 +106,47 @@ class optics(branch):
                 self.R = lambda n1=n1, n2=n2, R=R: Eq(S('R'), 
                             UnevaluatedExpr(Matrix(((1,               0),
                                                     ((n1-n2)/(n2*R),  n1/n2)))))     # (1.17)
-                self.SM = Eq(S('SM'), 
-                            UnevaluatedExpr(Matrix((( b, -a),
-                                                    (-d,  c)))))
-                self.focal_length = self.f = Eq(1/f, a)
+                # self.SM = Eq(S('SM'), 
+                #             UnevaluatedExpr(Matrix((( b, -a),
+                #                                     (-d,  c))))) # cop
+                # self.focal_length = self.f = Eq(1/f, a) #cop
                 
-                # kaldik continue from thick lens
+                #### ----> Thick Lens
+                class thick_lens(branch):
+                    """
+                    Thick Lens formulas.
+                    Transverse Matrix = Refraction2 * Translation * Refraction1
+                    """
+                    def __init__(self, parent, inair=True):
+                        """
+                        oopti.ABCD.thick_lens.__init__(_, inair=False) # kaldik
+                        oopti.ABCD.thick_lens.system_matrix.rhs
+                        """
+                        super().__init__()
+                        self.name = "Thick Lens"
+                        self.inair = inair
+                        if not self.inair:
+                            self.system_matrix = Eq(S('SM'),
+                                UnevaluatedExpr(MatMul(parent.R(n2,n3,R2).rhs.doit(), parent.T(t).rhs.doit(), parent.R(n1,n2,R1).rhs.doit())
+                                ))
+                        else:
+                            self.system_matrix = Eq(S('SM'),
+                                UnevaluatedExpr(MatMul(parent.R(n2,n3,R2).rhs.doit(), parent.T(t).rhs.doit(), parent.R(n1,n2,R1).rhs.doit())
+                                ).xreplace({n1:1, n2:n, n3:1}))
+                        
+                        
+                        # self.focal_lengthP1P2 = Eq(f, parent.P1.rhs + parent.P2.rhs*(1-t*parent.P1.rhs/n) )        # (73)
+                        # self.focal_length = Eq(f, ((n-1)*(1/R1-1/R2) + (n-1)**2*t/(n*R1*R2))**(-1) ) # (74)
+                        # self.f = self.focal_length
+                        
+                    @staticmethod
+                    def __doc__():
+                        return "Sub class for Thick Lens."
+                self.thick_lens = thick_lens(self)
+                
+                self.refraction_matrix  = self.R
+                self.translation_matrix = self.T
+                # self.system_matrix      = self.SM
 
             @staticmethod
             def __doc__():
@@ -252,7 +287,7 @@ class optics(branch):
                             Eq(Matrix(((lambda2),
                                        (x2))),
                                MatMul(parent.R(1,n,R2).rhs.doit(), parent.T(t,n).rhs.doit(), parent.R(n,1,R1).rhs.doit(),
-                               Matrix(((lambda1),
+                               Matrix(((lambda1),   
                                        (x1))))
                                ) # (49)
                         
