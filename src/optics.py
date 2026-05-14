@@ -75,6 +75,50 @@ class optics(branch):
 
 #### --- CLASSES ---
 
+#### ABCD Ghatak
+        class ABCD(branch):
+            """
+            
+            
+            Usage:
+            ======    
+                det(oopti.ABCD.T().rhs.doit()) = 1
+            """
+            # Material specific parameters.
+            global n1, n2, n3, n4, n5
+            global R1, R2, R3, R4, R5
+            # Optic configuration parameters                 
+            global x1, x2, beta1, beta2
+            n1, n2, n3, n4, n5 = symbols('n_1, n_2, n_3, n_4, n_5')
+            R1, R2, R3, R4, R5 = symbols('R_1, R_2, R_3, R_4, R_5')
+            x1, x2, beta1, beta2 = symbols('x_1, x_2, beta_1, beta_2')
+            lambda1, lambda2 = symbols('lambda_1, lambda_2')
+            
+            def __init__(self):
+                super().__init__()
+                self.name = "ABCD Matrix Method"
+                self.P1      = Eq(S('P_1'), (n-1)/R1)             # (1.24)
+                self.P2      = Eq(S('P_2'), (1-n)/R2)             # (1.25)
+                
+                self.T = lambda t=t: Eq(S('T'), 
+                            UnevaluatedExpr(Matrix(((1, t),
+                                                    (0, 1))))) # (1.7)
+                self.R = lambda n1=n1, n2=n2, R=R: Eq(S('R'), 
+                            UnevaluatedExpr(Matrix(((1,               0),
+                                                    ((n1-n2)/(n2*R),  n1/n2)))))     # (1.17)
+                self.SM = Eq(S('SM'), 
+                            UnevaluatedExpr(Matrix((( b, -a),
+                                                    (-d,  c)))))
+                self.focal_length = self.f = Eq(1/f, a)
+                
+                # kaldik continue from thick lens
+
+            @staticmethod
+            def __doc__():
+                return "Sub class with ABCD  matrix method in paraxial optics formulas from todo."
+        self.ABCD = ABCD()
+        
+        
 
 #### ABCD Ghatak
         class ABCD_Ghatak(branch):
