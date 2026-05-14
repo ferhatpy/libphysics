@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# +
 """
+_1_classical_mechanics.py
 baumann_classical_mechanics.py connected to baumann_classical_mechanics.ipynb via "jupytext".
 In ipynb notebook select File->Jupytext->Pair Notebook with Light Format.
 
-Installation:
-=============
-sudo pip3 install wolframclient
-sudo pip3 install nbextensions
+Installation in a Local Computer
+==============================
+sudo apt install sagemath
+sudo pip3 install nbextensions, wolframclient
+
+Intallation in a Cloud
+======================
+!pip install scipy, wolframclient
 
 Functions:
 ========== 
@@ -35,6 +39,15 @@ References:
     Problem Books:
     ==============    
     Vladimir Pletser - Lagrangian and Hamiltonian Analytical Mechanics Forty Exercises Resolved and Explained-Springer Singapore (2018)
+    
+    Web Sites:
+    ==========
+    1. The Full Python Tutorial, Luke Polson
+       https://www.youtube.com/playlist?list=PLkdGijFCNuVnGxo-1fSNcdHh5gZc17oRM
+       https://github.com/lukepolson/youtube_channel/tree/main/Python%20Tutorial%20Series
+    2. Physics Problems, Luke Polson
+       https://www.youtube.com/playlist?list=PLkdGijFCNuVnMsuC4uFncWusSA9aUzzIp
+       https://github.com/lukepolson/youtube_channel/tree/main/Python%20Metaphysics%20Series
 
 Homeworks
 =========
@@ -47,7 +60,6 @@ Homeworks
     p156, 157 apply Laplace transform to driven oscillator ODE and obtain p157.
 
 """
-
 import copy
 import sys
 import os
@@ -60,18 +72,17 @@ from libsympy import *
 from mechanics import *
 from sympy.physics import mechanics
 mechanics.mechanics_printing()
+
 # Mathematica Client
-from wolframclient.evaluation import WolframLanguageSession
-from wolframclient.language import wl, wlexpr
-
-print(sys.version); print(sys.path)
+# from wolframclient.evaluation import WolframLanguageSession
+# from wolframclient.language import wl, wlexpr
 
 
-# -
+# print(sys.version); print(sys.path)
 
 # ### Settings
 
-### Settings Ferhat
+### Settings
 #----Settings
 class sets:
     """
@@ -94,7 +105,7 @@ class sets:
     plot_time_scale = {1:"xy", 2:"xz", 3:"yz"}[3]
 
     # Execution settings.
-    test_all = {0:False, 1:True}[1]
+    test_all = {0:False, 1:True}[0]
     dictflow = {100:"get_formulary", 150:"get_subformulary",
                200:"simple_harmonic_oscillator_scalar", 201:"simple_harmonic_oscillator_vectorial", 
                2321:"Coordinate_Systems", 2322:"Moving_Particle",
@@ -111,11 +122,13 @@ class sets:
                272:"2.7.2 Hamiltons Principle Historical Remarks",
                2731:"2.7.3.1 Example 1: Harmonic Oscillator",
                2732:"2.7.3.2 Example 2: Rolling Wheel on an Inclined Plane",
-               2733:"2.7.3.3 Example 2: Sliding Mass Connected to a Pendulum",
+               2733:"2.7.3.3 Example 3: Sliding Mass Connected to a Pendulum",
                2820:"2.8.2.0 Motion in a uniform gravitational field",
                2821:"2.8.2.1 Example 1: Moving Beat on a String",
-               2841:"2.8.4.1 Example 1: Motion on a Cylinder"}
-    flow = [dictflow[i] for i in [24861]]
+               2841:"2.8.4.1 Example 1: Motion on a Cylinder",
+               
+               91:"9.1 Double Springed Pendulum"}
+    flow = [dictflow[i] for i in [2484]]
     if test_all: flow = [dictflow[i] for i in dictflow.keys()]
 print(sets.flow)
 
@@ -327,7 +340,7 @@ if "Damped_Harmonic_Oscillator" in sets.flow:
         omech.verbose = True
         pprints("Underdamped Motion, p134.",
                 omech.subformulary.underdamping_criteria)
-        commands = ["dsolve", "damped_harmonic_oscillator1", omech.x]
+        commands = ["dsolve", "damped_harmonic_oscillator1", omech.x] # todo omech.oscillator.damped_harmonic_oscillator1
         omech.process(commands)
         commands = ["dsolve", "damped_harmonic_oscillator2", omech.x]
         omech.x = omech.process(commands).rhs
@@ -370,8 +383,8 @@ if "Damped_Harmonic_Oscillator" in sets.flow:
         omech.__init__()
         omech.verbose = True
         pprints("Critical Damped Motion",
-               omech.subformulary.critical_damping_criteria)
-        omech.x = dsolve(omech.damped_harmonic_oscillator2.subs(omech.subformulary.critical_damping_criteria), 
+                omech.oscillator.critical_damping_criteria)
+        omech.x = dsolve(omech.osc.damped_harmonic_oscillator2.subs(omech.osc.critical_damping_criteria), 
                          omech.x, 
                          ics={omech.x.subs({t:0}):x0, 
                               diff(omech.x, t).subs({t:0}):v0}) 
@@ -381,7 +394,7 @@ if "Damped_Harmonic_Oscillator" in sets.flow:
         numvals = {beta:S(1)/5, x0:1, v0:0}
         x_t = omech.x.evalf(subs=numvals).rhs
         # Plot x(t).
-        plot(x_t, (t,0,25,200), xlabel="$t$", ylabel="$x(t)$")
+        plot(x_t, (t,0,25), points=200, xlabel="$t$", ylabel="$x(t)$")
         
     if case == "overdamped":
         """
@@ -394,8 +407,8 @@ if "Damped_Harmonic_Oscillator" in sets.flow:
         omech.__init__()
         omech.verbose = True
         pprints("Overdamped Motion",
-               omech.subformulary.overdamping_criteria)
-        omech.x = dsolve(omech.damped_harmonic_oscillator2.subs(omech.subformulary.overdamping_criteria), omech.x, ics={omech.x.subs({t:0}):x0, diff(omech.x, t).subs({t:0}):v0}) 
+               omech.osc.overdamping_criteria)
+        omech.x = dsolve(omech.osc.damped_harmonic_oscillator2.subs(omech.osc.overdamping_criteria), omech.x, ics={omech.x.subs({t:0}):x0, diff(omech.x, t).subs({t:0}):v0}) 
         v = diff(omech.x, t)
         display(omech.x,v)
         
@@ -403,7 +416,7 @@ if "Damped_Harmonic_Oscillator" in sets.flow:
         # Plot x(t).
         numvals = {beta:S(1)/5, w2:S(1)/10, x0:1, v0:0}
         x_t = omech.x.evalf(subs=numvals).rhs
-        plot(x_t, (t,0,25,200), xlabel="$t$", ylabel="$x(t)$", ylim=(-1,1))        
+        plot(x_t, (t,0,25), points=200, xlabel="$t$", ylabel="$x(t)$", ylim=(-1,1))        
 
         # Plot x(t) for various v0.
         fvals = {beta:S(1)/5, w2:S(1)/10, x0:1}
@@ -412,7 +425,7 @@ if "Damped_Harmonic_Oscillator" in sets.flow:
         fx = lambda i:x_t.subs(v0,i) # Lambda function
         fv = lambda i:v_t.subs(v0,i)
         x_funcs = list(map(fx, np.arange(-1,1,.25)))
-        p = plot(*x_funcs, (t,0,25,200), xlabel="$t$", ylabel="$x(t)$", legend=True)
+        p = plot(*x_funcs, (t,0,25), points=200, xlabel="$t$", ylabel="$x(t)$", legend=True)
         for i,ival in enumerate(np.arange(-1,1,.25)): p[i].label = "v0="+str(ival) # Prepare legend texts.
         p.show()
         
@@ -513,7 +526,7 @@ if "Driven_Oscillations" in sets.flow:
 
 # ## Driven_Oscillations_The_Laplace_Transform_Method
 
-#----> Driven_Oscillations_The_Laplace_Transform_Method todo problem at lap_trans
+#----> Driven_Oscillations_The_Laplace_Transform_Method
 if "Driven_Oscillations_The_Laplace_Transform_Method" in sets.flow:
     pprints("2.4.8.6a Solution Procedures of Linear Differential Equations, p154",
            "The Laplace Transform Method")
@@ -880,56 +893,53 @@ if "2.6.7 Euler Operator for q + p Dimensions" in sets.flow:
             "res=", res1)
 
 
-# +
-# Example 1: Quadratic Density
-x1,x2,x3 = symbols('x_1,x_2,x_3', real=True)
-u = Function('u')(x1, x2, x3)
-f = S(1)/2*(u.diff(x1)**2 - u.diff(x2)**2 - u.diff(x3)**2)
-eu_eqs, steps = simplify(omech.Eulers_equation_1D(f, [u,u.diff(x1),u.diff(x2)], x1))
-pprints("Example 1: Quadratic Density, todo last sign is wrong",
-        "f=", f,
-        "eu_eqs=", eu_eqs)
-
-# Correct Way.
-eu_eqs = euler_equations(f, [u], [x1,x2,x3])
-pprints("Example 1: Quadratic Density",
-        "f=", f,
-        "The corresponding system of second-order equations follows by",
-        *eu_eqs)
-
-
-# +
-# Example 2: Diffusion of Two Components
-t,x = symbols('t x', real=True)
-u,v = [Function('u')(x,t), Function('v')(x,t)]
-l = v*u.diff(t) + u.diff(x)*v.diff(x) + u**2*v**2
-eu_eq_ux = simplify(omech.Eulers_equation_1D(l, [u,u.diff(x)], x)[0])
-eu_eq_ut = simplify(omech.Eulers_equation_1D(l, [u,u.diff(t)], t)[0])
-eu_eq_vx = simplify(omech.Eulers_equation_1D(l, [v,v.diff(x)], x)[0])
-eu_eq_vt = simplify(omech.Eulers_equation_1D(l, [v,v.diff(t)], t)[0])
-res_u = eu_eq_ux.lhs + eu_eq_ut.lhs
-res_v = eu_eq_vx.lhs + eu_eq_vt.lhs
-pprints("Example 2: Diffusion of Two Components",
-    "Lagrangian density = l=", l,
-    "eu_eq_ux=", eu_eq_ux,
-    "eu_eq_ut=", eu_eq_ut,
-    "eu_eq_vx=", eu_eq_vx,
-    "eu_eq_vt=", eu_eq_vt,
-    "res_u=", res_u,
-    "res_v=", res_v,
-    "Baumann found  = 2*u(x, t)*v(x, t)**2 - Derivative(v(x, t), t) - Derivative(v(x, t), (x, 2))",
-    "We found WRONG = 4*u(x, t)*v(x, t)**2 - Derivative(v(x, t), t) - Derivative(v(x, t), (x, 2))"
-    )
-
-# Correct Way.
-#    eu_eqs = euler_equations(l, [u,v], [x,t])
-eu_eqs,steps = omech.Eulers_equation_sympy(l, [u,v], [x,t])
-pprints("Example 2: Diffusion of Two Components",
+    # Example 1: Quadratic Density
+    x1,x2,x3 = symbols('x_1,x_2,x_3', real=True)
+    u = Function('u')(x1, x2, x3)
+    f = S(1)/2*(u.diff(x1)**2 - u.diff(x2)**2 - u.diff(x3)**2)
+    eu_eqs, steps = simplify(omech.Eulers_equation_1D(f, [u,u.diff(x1),u.diff(x2)], x1))
+    pprints("Example 1: Quadratic Density, todo last sign is wrong",
+            "f=", f,
+            "eu_eqs=", eu_eqs)
+    
+    # Correct Way.
+    eu_eqs = euler_equations(f, [u], [x1,x2,x3])
+    pprints("Example 1: Quadratic Density",
+            "f=", f,
+            "The corresponding system of second-order equations follows by",
+            *eu_eqs)
+    
+    
+    # Example 2: Diffusion of Two Components
+    t,x = symbols('t x', real=True)
+    u,v = [Function('u')(x,t), Function('v')(x,t)]
+    l = v*u.diff(t) + u.diff(x)*v.diff(x) + u**2*v**2
+    eu_eq_ux = simplify(omech.Eulers_equation_1D(l, [u,u.diff(x)], x)[0])
+    eu_eq_ut = simplify(omech.Eulers_equation_1D(l, [u,u.diff(t)], t)[0])
+    eu_eq_vx = simplify(omech.Eulers_equation_1D(l, [v,v.diff(x)], x)[0])
+    eu_eq_vt = simplify(omech.Eulers_equation_1D(l, [v,v.diff(t)], t)[0])
+    res_u = eu_eq_ux.lhs + eu_eq_ut.lhs
+    res_v = eu_eq_vx.lhs + eu_eq_vt.lhs
+    pprints("Example 2: Diffusion of Two Components",
         "Lagrangian density = l=", l,
-        "Steps=", *steps,
-        "The corresponding system of differential equations follows by",
-        *eu_eqs)
-# -
+        "eu_eq_ux=", eu_eq_ux,
+        "eu_eq_ut=", eu_eq_ut,
+        "eu_eq_vx=", eu_eq_vx,
+        "eu_eq_vt=", eu_eq_vt,
+        "res_u=", res_u,
+        "res_v=", res_v,
+        "Baumann found  = 2*u(x, t)*v(x, t)**2 - Derivative(v(x, t), t) - Derivative(v(x, t), (x, 2))",
+        "We found WRONG = 4*u(x, t)*v(x, t)**2 - Derivative(v(x, t), t) - Derivative(v(x, t), (x, 2))"
+        )
+    
+    # Correct Way.
+    #    eu_eqs = euler_equations(l, [u,v], [x,t])
+    eu_eqs,steps = omech.Eulers_equation_sympy(l, [u,v], [x,t])
+    pprints("Example 2: Diffusion of Two Components",
+            "Lagrangian density = l=", l,
+            "Steps=", *steps,
+            "The corresponding system of differential equations follows by",
+            *eu_eqs)
 
 # ### 2.7.2 Hamiltons Principle Historical Remarks
 
@@ -986,7 +996,7 @@ if "2.7.3.2 Example 2: Rolling Wheel on an Inclined Plane" in sets.flow:
     calc_type = {1:"1. Way: Eulers_equation_1D",
                  2:"2. Way: Eulers_equation_sympy",
                  3:"3. Way: euler_equations",
-                 4:"4. Way: Lagrange_equations_I"}[1]
+                 4:"4. Way: Lagrange_equations_I"}[1] # 4) todo solve bug
     
     l,R = symbols('l R', real=True, positive=True)
     # fg  = Function('g')(t)
@@ -1012,16 +1022,15 @@ if "2.7.3.2 Example 2: Rolling Wheel on an Inclined Plane" in sets.flow:
 # ### 2.7.3.3 Example 3: Sliding Mass Connected to a Pendulum
 
 #----> 2.7.3.3 Example 3: Sliding Mass Connected to a Pendulum
-if "2.7.3.3 Example 2: Sliding Mass Connected to a Pendulum" in sets.flow:
+if "2.7.3.3 Example 3: Sliding Mass Connected to a Pendulum" in sets.flow:
     # Prepare Lagrangian
     pprints("Example 3: Sliding Mass Connected to a Pendulum")
-    pprints("1. Way: Eulers_equation_1D")
     omech.__init__("EulerLagrange")
     omech.verbose = True
-    calc_type = {1:"1. Way: Eulers_equation_1D", # todo solve bug
+    calc_type = {1:"1. Way: Eulers_equation_1D",
                  2:"2. Way: Eulers_equation_sympy",
                  3:"3. Way: euler_equations",
-                 4:"4. Way: Lagrange_equations_I"}[2]
+                 4:"4. Way: Lagrange_equations_I"}[3]
     
     l = symbols('l')
     T1 = Eq(symbols('T1'), S(1)/2*m1*(D(x1)**2 + D(z1)**2))
@@ -1044,9 +1053,10 @@ if "2.7.3.3 Example 2: Sliding Mass Connected to a Pendulum" in sets.flow:
     # Apply Euler-Lagrange operator
     if calc_type == "1. Way: Eulers_equation_1D":
         eu_eq_x, steps = omech.Eulers_equation_1D(Lag.rhs, [x,D(x)], t)
-        sim_eu_eq_x = expand(simplify(eu_eq_x))
         eu_eq_phi, steps = omech.Eulers_equation_1D(Lag.rhs, [phi,D(phi)], t)
+        sim_eu_eq_x = expand(simplify(eu_eq_x))
         sim_eu_eq_phi = expand(simplify(eu_eq_phi))
+        eu_eq_x, eu_eq_phi = [sim_eu_eq_x, sim_eu_eq_phi] # simplification is necessary in order to prevent error.
         pprints("1. Way: Eulers_equation_1D",
                 "generalized_coordinates=", generalized_coordinates,
                 T, T.doit(), V, V.doit(), L, L.doit(),
@@ -1055,6 +1065,7 @@ if "2.7.3.3 Example 2: Sliding Mass Connected to a Pendulum" in sets.flow:
                 "Differential equation for x(t)", eu_eq_x, sim_eu_eq_x,
                 "Differential equation for phi(t)", eu_eq_phi, sim_eu_eq_phi
                 )
+        
     if calc_type == "2. Way: Eulers_equation_sympy":   
         eu_eqs,steps = omech.Eulers_equation_sympy(Lag.rhs, [x,phi], t)
         eu_eq_x, eu_eq_phi = [eu_eqs[0], eu_eqs[1]]
@@ -1063,6 +1074,7 @@ if "2.7.3.3 Example 2: Sliding Mass Connected to a Pendulum" in sets.flow:
                 "Differential equation for x(t)", expand(simplify(eu_eqs[0])),
                 "Differential equation for phi(t)", expand(simplify(eu_eqs[1]))
                 )
+        
     if calc_type == "3. Way: euler_equations":   
         eu_eqs = euler_equations(Lag.rhs, [x,phi], t)
         eu_eq_x, eu_eq_phi = [eu_eqs[0], eu_eqs[1]]
@@ -1070,6 +1082,7 @@ if "2.7.3.3 Example 2: Sliding Mass Connected to a Pendulum" in sets.flow:
                 "Differential equation for x(t)", expand(simplify(eu_eqs[0])),
                 "Differential equation for phi(t)", expand(simplify(eu_eqs[1]))
                 )
+        
     if calc_type == "4. Way: Lagrange_equations_I":   
         substitutions  = {q_i:x, q_idot:D(x,t), omech.L.lhs:Lag.rhs}
         eu_eq_x = expand(simplify(omech.Lagrange_equations_I.xreplace(substitutions).doit()))
@@ -1147,6 +1160,56 @@ if "2.7.3.3 Example 2: Sliding Mass Connected to a Pendulum" in sets.flow:
                 "New ODEs:", eq_S,
                 "Jacobian Matrix of the System:", jac)
 
+#----> 9.1 Double Springed Pendulum
+if "9.1 Double Springed Pendulum" in sets.flow:
+    # Prepare Lagrangian
+    pprints("9.1 Double Springed Pendulum")
+    omech.class_type = "EulerLagrange"
+    omech.__init__()
+    omech.verbose = True
+    
+    theta1, theta2= [Function('theta1')(t), Function('theta2')(t)]
+    r1, r2, w1, w2, v1, v2 = [Function('r1')(t), Function('r2')(t),
+                              Function('w1')(t), Function('w2')(t),
+                              Function('v1')(t), Function('v2')(t)]
+    T = S(1)/2*m*(D(x1)**2 + D(y1)**2 + D(x2)**2 + D(y2)**2)
+    V = m*g*y1 + m*g*y2 + S(1)/2*k*r1**2 + S(1)/2*k*r2**2
+    omech.T = Eq(symbols('T'), T)
+    omech.V = Eq(symbols('V'), V)
+    L = omech.L = Eq(symbols('L'), omech.T.rhs - omech.V.rhs)
+    display(omech.T, omech.V, omech.L)
+    
+    # Transform to generalized coordinates
+    generalized_coordinates = {x1:(1+r1)*cos(theta1),
+                               y1:-(1+r1)*sin(theta1),
+                               x2:(1+r1)*cos(theta1) + (1+r2)*cos(theta2),
+                               y2:-(1+r1)*sin(theta1)-(1+r2)*sin(theta2)}
+    T = omech.T = omech.T.xreplace(generalized_coordinates)
+    V = omech.V = omech.V.xreplace(generalized_coordinates)
+    L = omech.L = Eq(symbols('L'), omech.T.rhs - omech.V.rhs)
+    Lag = simplify(omech.L.doit())
+    
+    # Apply Euler-Lagrange operator
+    eu_eqs, steps = omech.Eulers_equation_sympy(Lag.rhs, [theta1,theta2,r1,r2], t)
+    
+    pprints("generalized_coordinates=", generalized_coordinates,
+            T, T.doit(), V, V.doit(), L, L.doit(),
+            "Lagrangian= L=", Lag,
+            "Differential equation for theta1(t)", eu_eqs[0],
+            "Differential equation for theta2(t)", eu_eqs[1],
+            "Differential equation for r1(t)", eu_eqs[2],
+            "Differential equation for r2(t)", eu_eqs[3]
+            )
+    
+    # Solve Euler-Lagrange equations for obtaining 2nd derivatives of variables.
+    theta1_d2 = solve(simplify(eu_eqs[0]), theta1.diff(t,2))[0]
+    theta2_d2 = solve(simplify(eu_eqs[1]), theta2.diff(t,2))[0]
+    r1_d2     = solve(simplify(eu_eqs[2]), r1.diff(t,2))[0]
+    r2_d2     = solve(simplify(eu_eqs[3]), r2.diff(t,2))[0]
+        
+    # Numerical Part Taken from Luke Polson
+
+
 # ### 2.8 Hamiltonian Dynamics
 
 #----> 2.8.2.0 Motion in a uniform gravitational field
@@ -1195,6 +1258,7 @@ if "2.8.2.0 Motion in a uniform gravitational field" in sets.flow:
         pxdot = omech.p_idot.xreplace({H:omech.H.rhs, q_i:x, p_idot:pxdot})
         pydot = omech.p_idot.xreplace({H:omech.H.rhs, q_i:y, p_idot:pydot})
         pzdot = omech.p_idot.xreplace({H:omech.H.rhs, q_i:z, p_idot:pzdot})
+    
     elif calc_type == "2. Way":
         # 2. Way: Implementation step by step.
         lst_qi    = [x,y,z]
@@ -1236,8 +1300,7 @@ if "2.8.2.1 Example 1: Moving Beat on a String" in sets.flow:
 #----> 2.8.4.1 Example 1: Motion on a Cylinder
 if "2.8.4.1 Example 1: Motion on a Cylinder" in sets.flow:
     pprints("2.8.4.1 Example 1: Motion on a Cylinder")
-    omech.class_type = "EulerLagrange"
-    omech.__init__()
+    omech.__init__("EulerLagrange")
     omech.verbose = True
     omech.output_style = {1:"latex", 2:"display"}[2]
     R,kappa = symbols('R kappa', real=True)

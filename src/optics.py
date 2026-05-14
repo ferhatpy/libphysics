@@ -76,8 +76,8 @@ class optics(branch):
 #### --- CLASSES ---
 
 
-#### ABCD
-        class ABCD(branch):
+#### ABCD Ghatak
+        class ABCD_Ghatak(branch):
             """
             Ghatak2009 Chapter5. The Matrix Method in Paraxial Optics.
             
@@ -270,9 +270,8 @@ class optics(branch):
             @staticmethod
             def __doc__():
                 return "Sub class with ABCD  matrix method in paraxial optics formulas from Ajoy Ghatak's Optics."
-        self.MatrixMethod = self.ABCD = ABCD() 
+        self.ABCD_Ghatak = ABCD_Ghatak() 
                 
-            
             
 #### Fiber Bragg Grating
         class Fiber_Bragg_Grating(branch):
@@ -363,6 +362,8 @@ class optics(branch):
         
     @staticmethod
     def __doc__():
+        references = ["Gerhard2007, Kloos Gerhard Matrix methods for optical layout SPIE, 2007.",
+                      ""]
         return("Document of optics class.")
         
 oopti = optics()

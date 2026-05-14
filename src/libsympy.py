@@ -574,13 +574,13 @@ def plot_save(pfilepath="output", ppad_inches=0.05, pformats=("png","pdf","svg")
     plot_save(pfilepath="output/libdiscretemath_DFT_"+seq_name, pformats="pdf")
     """
     if "eps" in pformats:
-        plt.savefig(pfilepath+".eps",format='eps',dpi=1200,bbox_inches='tight',pad_inches=ppad_inches)
+        plt.savefig(pfilepath+".eps", format='eps', dpi=1200,bbox_inches='tight', pad_inches=ppad_inches)
     elif "png" in pformats:
-        plt.savefig(pfilepath+".png",format='png',dpi=200, bbox_inches='tight',pad_inches=ppad_inches)
+        plt.savefig(pfilepath+".png", format='png', dpi=200, bbox_inches='tight', pad_inches=ppad_inches)
     elif "pdf" in pformats:
-        plt.savefig(pfilepath+".pdf",format='pdf',dpi=1200,bbox_inches='tight',pad_inches=ppad_inches)
+        plt.savefig(pfilepath+".pdf", format='pdf', dpi=1200,bbox_inches='tight', pad_inches=ppad_inches)
     elif "svg" in pformats:
-        plt.savefig(pfilepath+".svg",format="svg")
+        plt.savefig(pfilepath+".svg", format="svg")
 
 
 #----Printing

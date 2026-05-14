@@ -69,7 +69,7 @@ class sets:
         ch5 = {1:"p5.1 todo"},
         ch6 = {61:"p6.1",62:"p6.2",6310:"ch6.3.1"},
         ch7 = {701:"e7.1",702:"e7.2"})
-    flow = [dictflow["ch4"][i] for i in [449]]
+    flow = [dictflow["ch4"][i] for i in [430]]
     if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
 
 print("Test of the {0}.".format(sets.flow))
@@ -624,6 +624,14 @@ if "e2.5" in sets.flow:
             output_style="display")                        
 
 
+#----> p2.10
+if "p2.10" in sets.flow:
+    oqmec.__init__("position_space")
+    oqmec.verbose = True
+    n = 0
+    psi_0 = oqmec.qho.psix(0).rhs
+    # kaldik1 find psi2
+
 # ### ----> p2.11
 
 #----> p2.11
@@ -813,6 +821,66 @@ if "e2.6" in sets.flow:
     # Eq. 2.100 There is no exact symbolic solution!
     # psi_t = inverse_fourier_transform(1/sqrt(2*pi)*psi_k*exp(-I*hbar*(k**2)*t/(2*m)), k, x).subs({x:x/(2*pi)})
 
+
+#----> p2.14
+if "p2.14" in sets.flow:
+    # Salih Yeşil
+    [m,w,x] = symbols('m omega x', real=True, positive=True)
+    
+    w_new = 2*w
+    ad = RaisingOp('a')
+    a = LoweringOp('a')
+    nk = SHOKet('n')
+    nb = SHOBra('n')
+    xop = sqrt(hbar/(2*m*w))*(ad+a)
+    x2op = xop*xop
+    xop_new = sqrt(hbar/(2*m*w_new))*(ad+a)
+    x2op_new = xop_new*xop_new
+    pop = I*sqrt(hbar*m*w/2)*(ad-a)
+    p2op = pop*pop
+    pop_new = I*sqrt(hbar*m*w_new/2)*(ad-a)
+    p2op_new = pop_new*pop_new
+    V = S(1)/2*m*w**2*x2op
+    V_new = S(1)/2*m*w_new**2*x2op_new
+    H = p2op/(2*m) + V
+    H_new = p2op_new/(2*m) + V_new
+    
+    psi0 = (((m*w)/(pi*hbar))**Rational(1,4)) * exp(-m*w*x**2/(2*hbar))
+    psi0_new = (((m*w_new)/(pi*hbar))**Rational(1,4)) * exp(-m*w_new*x**2/(2*hbar))
+    
+    c0 = integrate(psi0*psi0_new, (x, -oo, oo))
+    p0 = c0**2
+    
+    pprints("p2.14",
+            "<E> = <H>",
+            "<E> = <n|E|n> = ", qapply(nb*H*nk).simplify(),
+            "<E_new> = <n|E_new|n> =", qapply(nb*H_new*nk).simplify(),
+            "Since n starts from 0 the probability of getting hw/2 is impossible P=0, at n=0 E=hw",
+            "But getting the energy of E=hw is possible and it is new ground state and we can calculate it with using P_0 = |C_0|^2",
+            "C_0 = ", c0,
+            "P_0 = |C_0|^2 = ", p0, 
+            "P_0 = {}".format(p0.evalf()),
+            output_style="display")
+
+
+#----> p2.19
+if "p2.19" in sets.flow:
+    # Salih Yeşil
+    [A,m,w,x,k,t] = symbols('A m omega x k t', real=True, positive=True)
+    
+    psi = A * exp(I * (k*x - ((hbar*t*k**2)/(2*m))))
+    psic = conjugate(psi)
+    
+    J = (I*hbar/(2*m)) * (psi*diff(psic,x) - psic*diff(psi,x))
+    
+    pprints("p2.19",
+           "Equation 2.94 says PSI = ", psi,
+            "so PSI* = ", psic,
+            "AND J = ", J,
+            "it flows in the +x direction",
+            output_style="display")
+
+
 # ### ----> p2.22
 
 #----> p2.22 The Gausssian Wave Packet todo
@@ -846,7 +914,7 @@ if "p2.22" in sets.flow:
         
     #d) Complicated. todo yapilacak
     substitutions = {oqmec.Psi:psi_xt, xmin:-Inf, xmax:Inf}
-    oqmec.exp_x.xreplace({Psi:psi_xt}).doit() # kaldik
+    oqmec.exp_x.xreplace({Psi:psi_xt}).doit() # kaldik2
     
     #e) Complicated. todo
     pprints("p2.22: The Gausssian Wave Packet",
@@ -1242,6 +1310,40 @@ if "p2.33" in sets.flow:
     print("Fig. 2.19, Transmission, reflection coefficients as a function of energy.")
     plot_sympfunc([NT_vs_En, NR_vs_En], (0.01,0.99,301), plabels=["T","R"], 
                   xlabel="$E$", ylabel="$T,R$")
+
+
+#----> p2.38
+if "p2.38" in sets.flow:
+    # Salih Yeşil
+    [n,m,w,x,a] = symbols('n m omega x a', real=True, positive=True)
+    pm = Symbol(u'±')
+    
+    a_new = 2*a
+    E_n = lambda n: (n**2 * pi**2 * hbar**2)/(2*m*a_new**2)
+    Psi = lambda n: sqrt(2/a) * sin(n*pi*x/a)
+    Psi_n = lambda n: sqrt(2/a_new) * sin(n*pi*x/a_new)
+    C_n = lambda n: (sqrt(2)/a) * integrate((sin(pi*x/a) * sin(n*pi*x/a_new)), (x, 0, a))
+    codd = pm*(4*sqrt(2)/(pi*(n**2-4)))
+    integral = sin(pi*x/a) * (-hbar**2 / (2*m)) * diff((sin(pi*x/a)),x,2)
+    H = (2/a) * integrate(integral, (x,0,a))
+    
+    pprints("p2.38",
+            "a)",
+            "C_n = ",
+            "if n is even except 2 ---> C_n = 0",
+            "if n is odd:", codd, 
+            "if n is 2:", C_n(2), 
+            "And probability of getting E_n is P_n = (C_n)^2",
+            "Most probable is E_2 = ", E_n(2),
+            "Probability is P_2 = ", C_n(2)**2,
+            "b)"
+            "The next most probable is E_1 = ", E_n(1),
+            "Probability is P_1 = ", C_n(1)**2, (C_n(1)**2).evalf(),
+            "c)",
+            "<H> = ", H,
+            "Same as before",
+            output_style="display")
+    
 
 # ### ----> p2.41
 
@@ -2075,6 +2177,8 @@ if "p4.27" in sets.flow:
 #----> e4.3
 if "e4.3" in sets.flow:
     B0 = symbols('B_0', real=True)
+    alpha = symbols('alpha', real=True)
+    
     B  = B0*C.k
     Sp = oqmec.Hamiltonians.Sp
     H1 = oqmec.Hamiltonians.e_in_B(B)
@@ -2299,6 +2403,7 @@ if "e7.1" in sets.flow:
     print("Griffiths2005 e7.1")
     oqmec.__init__("position_space")
     oqmec.verbose = True
+    
     varfx = Wavefunction(A*exp(-b*x**2), x)
     nvarfx = varfx.normalize().simplify()
     Vx = S(1)/2*m*w**2*x**2
@@ -2323,6 +2428,7 @@ if "e7.2" in sets.flow:
     print("Griffiths2005 e7.2")
     oqmec.__init__("position_space")
     oqmec.verbose = True
+    
     varfx = Wavefunction(A*exp(-b*x**2), x)
     nvarfx = varfx.normalize().simplify()
     Vx = -alpha*DiracDelta(x)
