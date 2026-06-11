@@ -86,22 +86,50 @@ class optics(branch):
                 det(oopti.ABCD.T().rhs.doit()) = 1
             """
             # Material specific parameters.
-            global h1, h2, h3, h4, h5
             global n1, n2, n3, n4, n5
             global R1, R2, R3, R4, R5
+            global f1, f2, f3, f4, f5
+            f1, f2, f3, f4, f5 = symbols('f1, f2, f3, f4, f5')
+            n1, n2, n3, n4, n5 = symbols('n1, n2, n3, n4, n5')
+            R1, R2, R3, R4, R5 = symbols('R1, R2, R3, R4, R5')
+            
             # Optic configuration parameters                 
+            global a11, a12, a21, a22
+            global s11, s12, s21, s22
+            global h1, h2, h3, h4, h5
+            global yin, yout, betain, betaout
             global x1, x2, beta1, beta2
-            h1, h2, h3, h4, h5 = symbols('h_1, h_2, h_3, h_4, h_5')
-            n1, n2, n3, n4, n5 = symbols('n_1, n_2, n_3, n_4, n_5')
-            R1, R2, R3, R4, R5 = symbols('R_1, R_2, R_3, R_4, R_5')
-            x1, x2, beta1, beta2 = symbols('x_1, x_2, beta_1, beta_2')
-            lambda1, lambda2 = symbols('lambda_1, lambda_2')
+            a11, a12, a21, a22, = symbols('a11 a12 a21 a22')
+            s11, s12, s21, s22, = symbols('s11 s12 s21 s22')
+            h1, h2, h3, h4, h5 = symbols('h1, h2, h3, h4, h5')
+            x1, x2, y1, y2, beta1, beta2 = symbols('x1, x2, y1, y2, beta1, beta2')
+            yin, yout, betain, betaout = symbols('y_in y_out beta_in beta_out')
+            lambda1, lambda2 = symbols('lambda1, lambda2')
             
             def __init__(self):
                 super().__init__()
                 self.name = "ABCD Matrix Method"
-                self.P1      = Eq(S('P_1'), (n-1)/R1)             # (1.24)
-                self.P2      = Eq(S('P_2'), (1-n)/R2)             # (1.25)
+                self.P1   = Eq(S('P1'), (n-1)/R1)             # (1.24)
+                self.P2   = Eq(S('P2'), (1-n)/R2)             # (1.25)
+                
+                
+                self.abcd = self.A = Eq(A, UnevaluatedExpr(Matrix(((a11, a12),
+                                                                   (a21, a22))))) # Kloos2007 1.28
+                self.B = Eq(B, UnevaluatedExpr(Matrix(((1, b),
+                                                       (0, 1))))) # Spacing between optic element to image.
+                self.G = Eq(G, UnevaluatedExpr(Matrix(((1, g),
+                                                       (0, 1))))) # Spacing between object to optic element.
+                self.SM = Eq(S('SM'), UnevaluatedExpr(MatMul(self.B.rhs.doit(), self.A.rhs.doit(), self.G.rhs.doit()))) # S = BAG, Kloos2007 1.47
+                self.SS = Eq(S('SS'), UnevaluatedExpr(Matrix(((s11, s12),
+                                                              (s21, s22))))) # Kloos2007 1.45
+                self.IO = Eq(Matrix(((yout),
+                                     (betaout))),
+                             MatMul(self.SS.rhs,
+                             Matrix(((yin),
+                                     (betain))))
+                             ) # Kloos2007 1.39
+                
+                self.imaging_condition = Eq(s12, 0)
                 
                 self.T = lambda t=t: Eq(S('T'), 
                             UnevaluatedExpr(Matrix(((1, t),
@@ -109,6 +137,11 @@ class optics(branch):
                 self.R = lambda n1=n1, n2=n2, R=R: Eq(S('R'), 
                             UnevaluatedExpr(Matrix(((1,               0),
                                                     ((n1-n2)/(n2*R),  n1/n2)))))     # (1.17)
+                self.h1 = Eq(h1, (1 - a11)/a21) # Kloos2007 1.38
+                self.h2 = Eq(h2, (1 - a22)/a21) # Kloos2007 1.39
+                
+                
+                
                 # self.SM = Eq(S('SM'), 
                 #             UnevaluatedExpr(Matrix((( b, -a),
                 #                                     (-d,  c))))) # cop
@@ -128,20 +161,23 @@ class optics(branch):
                         super().__init__()
                         self.name = "Thick Lens"
                         self.inair = inair
+                        self.t = t # Thickness
                         if not self.inair:
-                            self.system_matrix = Eq(S('SM'),
+                            self.SM = Eq(S('SM'),
                                 UnevaluatedExpr(MatMul(parent.R(n2,n3,R2).rhs.doit(), parent.T(t).rhs.doit(), parent.R(n1,n2,R1).rhs.doit())
                                 )) # Kloos2007 1.22
                         else:
-                            self.system_matrix = Eq(S('SM'),
+                            self.SM = Eq(S('SM'),
                                 UnevaluatedExpr(MatMul(parent.R(n2,n3,R2).rhs.doit(), parent.T(t).rhs.doit(), parent.R(n1,n2,R1).rhs.doit())
                                 ).xreplace({n1:1, n2:n, n3:1}))
                             
                             self.abcd = Eq(S('F'), UnevaluatedExpr(Matrix(((1, 0),
-                                                                           (-1/f, 1))))) # Kloos2007 1.34
-                            self.f = Eq(1/f, (n-1)/R1 + (1-n)/R2 - ((n-1)*(1-n)*t)/(n*R1*R2)) # Kloos2007 1.40
+                                                                           (-1/f, 1)))))        # Kloos2007 1.34 #todo modify like thin lens
+                            self.f = Eq(1/f, (n-1)/R1 + (1-n)/R2 - ((n-1)*(1-n)*t)/(n*R1*R2))   # Kloos2007 1.40
                             self.h1 = Eq(h1, -f * (n-1)/R1 * t/n)
                             self.h2 = Eq(h2, -f * (1-n)/R2 * t/n)
+                        
+                        self.system_matrix = self.SM
                         
                     @staticmethod
                     def __doc__():
@@ -165,27 +201,87 @@ class optics(branch):
                         self.name = "Thick Lens"
                         self.inair = inair
                         if not self.inair:
-                            self.system_matrix = Eq(S('SM'),
-                                UnevaluatedExpr(MatMul(parent.R(n2,n3,R2).rhs.doit(), parent.T(0).rhs.doit(), parent.R(n1,n2,R1).rhs.doit())
+                            self.SM = Eq(S('SM'),
+                                UnevaluatedExpr(MatMul(parent.R(n2,n3,R2).rhs.doit(), 
+                                                       parent.T(0).rhs.doit(), 
+                                                       parent.R(n1,n2,R1).rhs.doit())
                                 )) # Kloos2007 1.27
                         else:
-                            self.system_matrix = Eq(S('SM'),
-                                UnevaluatedExpr(MatMul(parent.R(n2,n3,R2).rhs.doit(), parent.T(0).rhs.doit(), parent.R(n1,n2,R1).rhs.doit())
+                            self.SM = Eq(S('SM'),
+                                UnevaluatedExpr(MatMul(parent.R(n2,n3,R2).rhs.doit(),
+                                                       parent.T(0).rhs.doit(), 
+                                                       parent.R(n1,n2,R1).rhs.doit())
                                 ).xreplace({n1:1, n2:n, n3:1}))
-                            self.abcd = Eq(S('F'), UnevaluatedExpr(Matrix(((1, 0),
-                                                                           (-1/f, 1))))) # Kloos2007 1.34
-                            self.f = Eq(1/f, (n-1)/R1 + (1-n)/R2) # Kloos2007 1.40
+                            self.f  = Eq(1/f, (n-1)/R1 + (1-n)/R2) # Kloos2007 1.40
                             self.h1 = Eq(h1, -f * (n-1)/R1 * t/n)
                             self.h2 = Eq(h2, -f * (1-n)/R2 * t/n)
+                            
+                            # Matrices
+                            self.abcd = lambda f=f: Eq(S('F'), UnevaluatedExpr(Matrix(((1, 0),
+                                                                                       (-1/f, 1)))))        # Kloos2007 1.34
+                            # kaldik en son abcd() teleskobu degisir.
+                            self.TM = Eq(S('TM'), UnevaluatedExpr(MatMul(parent.B.rhs.doit(), 
+                                                                         self.abcd().rhs.doit(), 
+                                                                         parent.G.rhs.doit()))) # Kloos2007 1.49
+                            self.imaging_condition = Eq(1/f, expand(solve(self.TM.rhs.doit()[0,1], 1/f)[0]))
+                            
+                        self.system_matrix = self.SM
                         
                     @staticmethod
                     def __doc__():
-                        return "Sub class for Thick Lens."
+                        return "Sub class for Thin Lens."
                 self.thin_lens = thin_lens(self)
                 
-                self.refraction_matrix  = self.R
-                self.translation_matrix = self.T
-                # self.system_matrix      = self.SM
+                
+                #### ----> Telescope
+                class telescope(branch):
+                    """
+                    Telescope formulas.
+                    Transverse Matrix = Refraction2 * Translation * Refraction1
+                    """
+                    def __init__(self, parent, inair=True):
+                        """
+                        oopti.ABCD.telescope.__init__(oopti.ABCD, inair=False)
+                        oopti.ABCD.telescope.system_matrix.rhs
+                        """
+                        super().__init__()
+                        self.name = "Telescope"
+                        self.inair = inair
+                        if not self.inair:
+                            self.SM = Eq(S('SM'),
+                                UnevaluatedExpr(MatMul(parent.R(n2,n3,R2).rhs.doit(), 
+                                                       parent.T(0).rhs.doit(), 
+                                                       parent.R(n1,n2,R1).rhs.doit())
+                                )) # Kloos2007 1.27
+                        else:
+                            self.SM = Eq(S('SM'),
+                                UnevaluatedExpr(MatMul(parent.R(n2,n3,R2).rhs.doit(),
+                                                       parent.T(0).rhs.doit(), 
+                                                       parent.R(n1,n2,R1).rhs.doit())
+                                ).xreplace({n1:1, n2:n, n3:1}))
+                            self.f = "" # todo
+                            self.h1 = Eq(h1, -f * (n-1)/R1 * t/n)
+                            self.h2 = Eq(h2, -f * (1-n)/R2 * t/n)
+                            
+                            # Matrices
+                            self.abcd = Eq(S('F'), UnevaluatedExpr(Matrix(((-f2/f1, f1+f2),
+                                                                           (     0, f1/f2)))))  # Kloos2007 1.54
+                            self.TM = Eq(S('TM'), UnevaluatedExpr(MatMul(parent.B.rhs.doit(), 
+                                                                         self.abcd.rhs.doit(), 
+                                                                         parent.G.rhs.doit()))) # Kloos2007 1.52
+                            self.imaging_condition = Eq(1/f, expand(solve(self.TM.rhs.doit()[0,1], 1/f)[0]))
+                            
+                        self.system_matrix = self.SM
+                        
+                    @staticmethod
+                    def __doc__():
+                        return "Sub class for Thin Lens."
+                self.thin_lens = thin_lens(self)
+                
+                self.refraction_matrix   = self.R
+                self.translation_matrix  = self.T
+                self.system_matrix       = self.SM
+                self.input_output_matrix = self.IO
 
             @staticmethod
             def __doc__():
