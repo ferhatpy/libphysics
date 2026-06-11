@@ -78,17 +78,20 @@ class optics(branch):
 #### ABCD
         class ABCD(branch):
             """
-            
+            References:
+                Kloos2007, 
             
             Usage:
             ======    
                 det(oopti.ABCD.T().rhs.doit()) = 1
             """
             # Material specific parameters.
+            global h1, h2, h3, h4, h5
             global n1, n2, n3, n4, n5
             global R1, R2, R3, R4, R5
             # Optic configuration parameters                 
             global x1, x2, beta1, beta2
+            h1, h2, h3, h4, h5 = symbols('h_1, h_2, h_3, h_4, h_5')
             n1, n2, n3, n4, n5 = symbols('n_1, n_2, n_3, n_4, n_5')
             R1, R2, R3, R4, R5 = symbols('R_1, R_2, R_3, R_4, R_5')
             x1, x2, beta1, beta2 = symbols('x_1, x_2, beta_1, beta_2')
@@ -119,7 +122,7 @@ class optics(branch):
                     """
                     def __init__(self, parent, inair=True):
                         """
-                        oopti.ABCD.thick_lens.__init__(_, inair=False) # kaldik
+                        oopti.ABCD.thick_lens.__init__(oopti.ABCD, inair=False)
                         oopti.ABCD.thick_lens.system_matrix.rhs
                         """
                         super().__init__()
@@ -128,21 +131,57 @@ class optics(branch):
                         if not self.inair:
                             self.system_matrix = Eq(S('SM'),
                                 UnevaluatedExpr(MatMul(parent.R(n2,n3,R2).rhs.doit(), parent.T(t).rhs.doit(), parent.R(n1,n2,R1).rhs.doit())
-                                ))
+                                )) # Kloos2007 1.22
                         else:
                             self.system_matrix = Eq(S('SM'),
                                 UnevaluatedExpr(MatMul(parent.R(n2,n3,R2).rhs.doit(), parent.T(t).rhs.doit(), parent.R(n1,n2,R1).rhs.doit())
                                 ).xreplace({n1:1, n2:n, n3:1}))
-                        
-                        
-                        # self.focal_lengthP1P2 = Eq(f, parent.P1.rhs + parent.P2.rhs*(1-t*parent.P1.rhs/n) )        # (73)
-                        # self.focal_length = Eq(f, ((n-1)*(1/R1-1/R2) + (n-1)**2*t/(n*R1*R2))**(-1) ) # (74)
-                        # self.f = self.focal_length
+                            
+                            self.abcd = Eq(S('F'), UnevaluatedExpr(Matrix(((1, 0),
+                                                                           (-1/f, 1))))) # Kloos2007 1.34
+                            self.f = Eq(1/f, (n-1)/R1 + (1-n)/R2 - ((n-1)*(1-n)*t)/(n*R1*R2)) # Kloos2007 1.40
+                            self.h1 = Eq(h1, -f * (n-1)/R1 * t/n)
+                            self.h2 = Eq(h2, -f * (1-n)/R2 * t/n)
                         
                     @staticmethod
                     def __doc__():
                         return "Sub class for Thick Lens."
                 self.thick_lens = thick_lens(self)
+                
+                #### ----> Thin Lens
+                class thin_lens(branch):
+                    """
+                    Thin Lens formulas.
+                    Transverse Matrix = Refraction2 * Translation * Refraction1
+                    
+                    todo inherit from thick_lens the only difference is thickness t = 0.
+                    """
+                    def __init__(self, parent, inair=True):
+                        """
+                        oopti.ABCD.thin_lens.__init__(oopti.ABCD, inair=False)
+                        oopti.ABCD.thin_lens.system_matrix.rhs
+                        """
+                        super().__init__()
+                        self.name = "Thick Lens"
+                        self.inair = inair
+                        if not self.inair:
+                            self.system_matrix = Eq(S('SM'),
+                                UnevaluatedExpr(MatMul(parent.R(n2,n3,R2).rhs.doit(), parent.T(0).rhs.doit(), parent.R(n1,n2,R1).rhs.doit())
+                                )) # Kloos2007 1.27
+                        else:
+                            self.system_matrix = Eq(S('SM'),
+                                UnevaluatedExpr(MatMul(parent.R(n2,n3,R2).rhs.doit(), parent.T(0).rhs.doit(), parent.R(n1,n2,R1).rhs.doit())
+                                ).xreplace({n1:1, n2:n, n3:1}))
+                            self.abcd = Eq(S('F'), UnevaluatedExpr(Matrix(((1, 0),
+                                                                           (-1/f, 1))))) # Kloos2007 1.34
+                            self.f = Eq(1/f, (n-1)/R1 + (1-n)/R2) # Kloos2007 1.40
+                            self.h1 = Eq(h1, -f * (n-1)/R1 * t/n)
+                            self.h2 = Eq(h2, -f * (1-n)/R2 * t/n)
+                        
+                    @staticmethod
+                    def __doc__():
+                        return "Sub class for Thick Lens."
+                self.thin_lens = thin_lens(self)
                 
                 self.refraction_matrix  = self.R
                 self.translation_matrix = self.T

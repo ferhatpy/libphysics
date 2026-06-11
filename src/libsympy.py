@@ -84,7 +84,7 @@ lst_functions = ['f','g','h']
 # V=symbols('V', cls=Function)
 
 
-#----Algebra
+#### ALGEBRA
 def eliminate(system, symbols):
     """
     todo: Find reference from https://stackoverflow.com/
@@ -154,7 +154,7 @@ def substitute(pexpressions, psubstitutions):
     return res
 
 
-#----Differential Equations
+#### DIFFERENTIAL EQUATIONS
 def solve_odes(equations, func=y, output_style="display"):
     """
     x,t,k,a = symbols("x, t, k, a")
@@ -173,9 +173,9 @@ def solve_odes(equations, func=y, output_style="display"):
                 output_style = output_style)
 
 
-#----Converters
+#### CONVERTERS
 """
-expr = parse_latex(r"\frac{1}{2}")
+expr = parse_latex(r'\frac{1}{2}')
 print(expr)
 """
 def read_latex_file(file_path):
@@ -210,7 +210,8 @@ def read_latex_file(file_path):
         print(f"Error: File {file_path} not found.")
         return None
 
-#----Functions
+
+#### FUNCTIONS 
 from itertools import product
 def table_function(expr, eval_=False, verbose=False, **kwargs):
     """
@@ -340,7 +341,7 @@ def rect(x):
     return(res)
 
 
-#----Linear Algebra
+#### LINEAR ALGEBRA
 def eq_convert_to_matrix(eqs, x):
     # 
     [A,b] = linear_eq_to_matrix(eqs, x)
@@ -412,7 +413,91 @@ def tensor_to_product(expr):
     )
 
 
-#----Plotting
+#### PRINTING
+def pprints(func, *funcs, **kwargs):
+    """
+    Reference: https://butterflyofdream.wordpress.com/
+    
+    Parameters
+    ==========
+    **kwargs
+    output_style : display, pprint, print, latex
+    
+    Examples
+    ========
+    pprints("f(x)", f,
+            "collect(f,x)=", collect(f,x),
+            output_style = {1:"display", 2:"pprint", 3:"print", 4:"latex"}[1],
+            newline=True)
+    """
+    # Get **kwargs optional parameters.
+    output_style = kwargs.get("output_style", "display")
+    newline = kwargs.get("newline", False)
+    
+    if output_style == "display":
+        display(func)
+        if funcs is None: return
+        for i, f in enumerate(funcs):
+            display(f)
+            if newline==True and (i % 2)==True: print()
+    
+    elif output_style == "pprint":
+        pprint(func)
+        if funcs is None: return
+        for i, f in enumerate(funcs):
+            pprint(f)
+            if newline==True and (i % 2)==True: print()
+    
+    elif output_style == "print":
+        print(func)
+        if funcs is None: return
+        for i, f in enumerate(funcs):
+            print(f)
+            if newline==True and (i % 2)==True: print()
+    
+    elif output_style == "latex":
+        print(func)
+        if funcs is None: return
+        for i, f in enumerate(funcs):
+            # If type is a string 
+            if type(f) == type(""):
+                print(r"$\rm {0}$".format(f))
+            # elif type(f) == type([]):
+            #     print(*f, sep = "\n")
+            else:
+                print(r"\[{0}\]".format(print_latex(f)))
+                # print(r"$\displaystyle {0}$".format(print_latex(f)))
+            if newline==True and (i % 2)==True: print(r"\\")
+            # if newline==True : print(r"\\")
+
+def print_matrix_elements(mat, **kwargs):
+    """
+    Usage
+    =====
+    M = Matrix([[1,2],[3,4]])
+    print_matrix_elements(M)
+    print_matrix_elements(M, output_style="display")
+    
+    todo apply latex template.
+    """
+    output_style = kwargs.get("output_style", "latex")
+
+    for i in range(mat.rows):
+        for j in range(mat.cols):
+            if output_style == "display":
+                display(f"m{i+1}{j+1} = ", mat[i,j])
+            elif output_style == "pprint":
+                pprint(f"m{i+1}{j+1} = {mat[i,j]}")
+            elif output_style == "print":
+                print(f"m{i+1}{j+1} = {mat[i,j]}")
+            elif output_style == "latex":
+                print("\\begin{multline}")
+                print_latex(f"m{i+1}{j+1} = ")
+                print_latex(mat[i,j])
+                print("\\end{multline}")
+
+
+#### PLOTTING
 def plot_energy_levels(data, constYs=None, title="", line_width=0.025):
     """
     Plots horizontal lines at y-points grouped by x-coordinates.
@@ -583,91 +668,7 @@ def plot_save(pfilepath="output", ppad_inches=0.05, pformats=("png","pdf","svg")
         plt.savefig(pfilepath+".svg", format="svg")
 
 
-#----Printing
-def pprints(func, *funcs, **kwargs):
-    """
-    Reference: https://butterflyofdream.wordpress.com/
-    
-    Parameters
-    ==========
-    **kwargs
-    output_style : display, pprint, print, latex
-    
-    Examples
-    ========
-    pprints("f(x)", f,
-            "collect(f,x)=", collect(f,x),
-            output_style = {1:"display", 2:"pprint", 3:"print", 4:"latex"}[1],
-            newline=True)
-    """
-    # Get **kwargs optional parameters.
-    output_style = kwargs.get("output_style", "display")
-    newline = kwargs.get("newline", False)
-    
-    if output_style == "display":
-        display(func)
-        if funcs is None: return
-        for i, f in enumerate(funcs):
-            display(f)
-            if newline==True and (i % 2)==True: print()
-    
-    elif output_style == "pprint":
-        pprint(func)
-        if funcs is None: return
-        for i, f in enumerate(funcs):
-            pprint(f)
-            if newline==True and (i % 2)==True: print()
-    
-    elif output_style == "print":
-        print(func)
-        if funcs is None: return
-        for i, f in enumerate(funcs):
-            print(f)
-            if newline==True and (i % 2)==True: print()
-    
-    elif output_style == "latex":
-        print(func)
-        if funcs is None: return
-        for i, f in enumerate(funcs):
-            # If type is a string 
-            if type(f) == type(""):
-                print(r"$\rm {0}$".format(f))
-            # elif type(f) == type([]):
-            #     print(*f, sep = "\n")
-            else:
-                print(r"\[{0}\]".format(print_latex(f)))
-                # print(r"$\displaystyle {0}$".format(print_latex(f)))
-            if newline==True and (i % 2)==True: print(r"\\")
-            # if newline==True : print(r"\\")
-
-def print_matrix_elements(mat, **kwargs):
-    """
-    Usage
-    =====
-    M = Matrix([[1,2],[3,4]])
-    print_matrix_elements(M)
-    print_matrix_elements(M, output_style="display")
-    
-    todo apply latex template.
-    """
-    output_style = kwargs.get("output_style", "latex")
-
-    for i in range(mat.rows):
-        for j in range(mat.cols):
-            if output_style == "display":
-                display(f"m{i+1}{j+1} = ", mat[i,j])
-            elif output_style == "pprint":
-                pprint(f"m{i+1}{j+1} = {mat[i,j]}")
-            elif output_style == "print":
-                print(f"m{i+1}{j+1} = {mat[i,j]}")
-            elif output_style == "latex":
-                print("\\begin{multline}")
-                print_latex(f"m{i+1}{j+1} = ")
-                print_latex(mat[i,j])
-                print("\\end{multline}")
-    
-
-#----Statistics
+#### STATISTICS
 def meanT(pfunc, pvar=t, pint=[t,t+T]):
     res = 1/T*integrate(pfunc, (pvar, pint[0], pint[1]))
     return res            

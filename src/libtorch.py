@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""libtorch.py — SymPy-to-Torch conversion and numerical integration helpers.
+"""
+libtorch.py — SymPy-to-Torch conversion and numerical integration helpers.
 
 Part of libphysics.
 
@@ -8,6 +9,18 @@ Two-stage design for performance:
                                          (change-of-vars + ``lambdify``)
     2. TorchExpr.torchquad_integrate()  — cheap torch-only integration,
                                          called MANY times
+
+DEPENDICIES
+===========
+pip3 install pytorch, torchquad, loguru
+
+torch==2.5.1+cu121
+sympy==1.13.1
+torchquad==0.5.0
+
+numpy==2.4.2
+scipy==1.17.0
+loguru==0.7.3
 
 USAGE
 =====
