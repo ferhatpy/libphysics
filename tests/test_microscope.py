@@ -72,7 +72,7 @@ class sets:
     300  imaging_condition       – derive s12=0, solve for image distance
     400  magnification           – total lateral magnification
     500  numerical_example       – plug in real microscope numbers
-    600  ray_trace               – trace two characteristic rays
+    600  ray_trace               – interactive ray tracing with sliders (replaces static plot)
     """
     global dictflow, test_all
 
@@ -374,40 +374,24 @@ if "numerical_example" in sets.flow:
     print(f"    δr = 0.61·λ/NA = {delta_r*1e3:.4f} µm  = {delta_r*1e6:.1f} nm")
 
 # =============================================================================
-# 600 – Paraxial ray tracing through the microscope
+# 600 – Interactive Ray Tracing with Sliders (replaces static plot)
 # =============================================================================
 
 if "ray_trace" in sets.flow:
     print("\n" + "="*60)
-    print("600 · Paraxial Ray Tracing (Central Theorem, Kloos2007 Sec. 1.9)")
+    print("600 · Interactive Ray Tracing with Sliders")
     print("="*60)
-    """
-    Trace two characteristic rays (Kloos2007 Sec. 1.9):
-      Ray a (marginal):  enters on-axis at small angle β
-      Ray b (chief):     enters at maximum height, parallel to axis
+    print("A window will open with sliders for f1, f2, E, and object height.")
+    print("Adjust the sliders to see the rays and image height update in real time.")
+    print("Close the figure window to continue.\n")
 
-    Optical path:  Object → T(g) → L1(f1) → T(d) → L2(f2) → T(b) → Image
-    """
     import numpy as np
-    import matplotlib
-    # matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    import matplotlib.patches as mpatches
+    from matplotlib.widgets import Slider
 
-    # Parameters [mm]
-    nf1 = 4.0
-    nf2 = 25.0
-    nE  = 160.0
-    nd  = nf1 + nE + nf2
-    ndn = 250.0
-
-    # Object distance (thin-lens formula for objective)
-    ng = 1.0 / (1.0/nf1 - 1.0/(nf1 + nE))
-    nv = nf1 + nE       # intermediate image from objective
-
-    # Image distance for eyepiece: object at front focal → virtual image at ∞
-    # Use finite image at near-point for plotting
-    nb_eye = 1.0 / (1.0/nf2 + 1.0/ndn)   # real image through eyepiece
+    # ------------------------------------------------------------------
+    # Helper functions (numerical)
+    # ------------------------------------------------------------------
 
     def T_mat(t):
         return np.array([[1.0, t], [0.0, 1.0]])
@@ -415,95 +399,164 @@ if "ray_trace" in sets.flow:
     def L_mat(f):
         return np.array([[1.0, 0.0], [-1.0/f, 1.0]])
 
-    def trace(ray0, steps):
-        """Trace ray through ordered (label, matrix, dz) steps.
-        Returns (z_list, y_list) of ray height at each plane."""
+    def compute_system(f1, f2, E, d_n=250.0):
+        d = f1 + E + f2
+        g = 1.0 / (1.0/f1 - 1.0/(f1 + E))
+        M_obj = -(f1 + E) / g
+        M_eye = d_n / f2
+        M_total = M_obj * M_eye
+        L1 = L_mat(f1)
+        L2 = L_mat(f2)
+        Td = T_mat(d)
+        S_dbl = L2 @ Td @ L1
+        return g, d, M_obj, M_eye, M_total, S_dbl
+
+    def trace_ray(ray0, steps):
         z_pts = [0.0]
         y_pts = [ray0[0]]
-        z = 0.0
         r = ray0.copy()
-        for label, M, dz in steps:
-            r  = M @ r
+        z = 0.0
+        for M, dz in steps:
+            r = M @ r
             z += dz
             z_pts.append(z)
             y_pts.append(r[0])
         return np.array(z_pts), np.array(y_pts)
 
-    # Steps: (name, matrix, z-advance)
-    steps = [
-        ("T_g",  T_mat(ng),   ng),
-        ("L1",   L_mat(nf1),  0.0),
-        ("T_d",  T_mat(nd),   nd),
-        ("L2",   L_mat(nf2),  0.0),
-        ("T_b",  T_mat(nb_eye), nb_eye),
+    def trace_microscope(f1, f2, E, h_obj, d_n=250.0):
+        g, d, M_obj, M_eye, M_total, S_dbl = compute_system(f1, f2, E, d_n)
+        steps = [
+            (T_mat(g),      g),
+            (L_mat(f1),     0.0),
+            (T_mat(d),      d),
+            (L_mat(f2),     0.0),
+            (T_mat(d_n),    d_n),   # screen at near‑point after eyepiece
+        ]
+        ray_marg = np.array([0.0, 0.04])
+        z_marg, y_marg = trace_ray(ray_marg, steps)
+        ray_chief = np.array([h_obj, 0.0])
+        z_chief, y_chief = trace_ray(ray_chief, steps)
+        return z_marg, y_marg, z_chief, y_chief, M_total, g, d
+
+    # ------------------------------------------------------------------
+    # Initial parameters
+    # ------------------------------------------------------------------
+    INIT_f1 = 4.0
+    INIT_f2 = 25.0
+    INIT_E  = 160.0
+    INIT_h  = 0.1
+    d_n = 250.0
+
+    # ------------------------------------------------------------------
+    # Create figure and axes
+    # ------------------------------------------------------------------
+    fig, ax = plt.subplots(figsize=(14, 6))
+    plt.subplots_adjust(bottom=0.35)          # space for sliders
+
+    # Light theme for readability
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('white')
+
+    # Slider positions: [left, bottom, width, height]
+    # Stack from bottom up: h_obj, E, f2, f1
+    slider_config = [
+        ('f1', 'f₁ (mm)', 0.28, 1.0, 100.0, 0.5, INIT_f1),
+        ('f2', 'f₂ (mm)', 0.22, 10.0, 100.0, 1.0, INIT_f2),
+        ('E',  'E (mm)',  0.16, 100.0, 300.0, 5.0, INIT_E),
+        ('h',  'h_obj (mm)', 0.10, 0.01, 1.0, 0.01, INIT_h),
     ]
 
-    # Initial ray vectors [y, beta]
-    ray_a = np.array([0.0,  0.04])   # marginal ray: on-axis, angle
-    ray_b = np.array([0.08, 0.0 ])   # chief   ray: off-axis, parallel
+    sliders = {}
+    for key, label, bottom, vmin, vmax, step, init in slider_config:
+        ax_slider = plt.axes([0.15, bottom, 0.65, 0.03])
+        slider = Slider(
+            ax_slider,
+            label,
+            vmin, vmax,
+            valinit=init,
+            valstep=step,
+            valfmt='%1.2f'
+        )
+        # Make labels and ticks clearly visible
+        ax_slider.xaxis.label.set_fontsize(11)
+        ax_slider.xaxis.label.set_color('black')
+        ax_slider.tick_params(colors='black', labelsize=9)
+        sliders[key] = slider
 
-    z_a, h_a = trace(ray_a, steps)
-    z_b, h_b = trace(ray_b, steps)
+    # ------------------------------------------------------------------
+    # Update function
+    # ------------------------------------------------------------------
+    def update_plot(val):
+        f1 = sliders['f1'].val
+        f2 = sliders['f2'].val
+        E  = sliders['E'].val
+        h  = sliders['h'].val
 
-    print(f"\n  Marginal ray (a): y0={ray_a[0]}, β0={ray_a[1]}")
-    for zi, hi in zip(z_a, h_a):
-        print(f"    z={zi:8.3f} mm  →  y={hi:+.5f} mm")
+        ax.clear()
+        ax.set_facecolor('white')
 
-    print(f"\n  Chief ray (b): y0={ray_b[0]}, β0={ray_b[1]}")
-    for zi, hi in zip(z_b, h_b):
-        print(f"    z={zi:8.3f} mm  →  y={hi:+.5f} mm")
+        z_marg, y_marg, z_chief, y_chief, M_total, g, d = trace_microscope(f1, f2, E, h)
 
-    # -------- Plot --------
-    os.makedirs(sets.output_dir, exist_ok=True)
+        image_height = M_total * h
 
-    fig, ax = plt.subplots(figsize=(14, 5))
-    fig.patch.set_facecolor('#0d1117')
-    ax.set_facecolor('#0d1117')
+        # Plot rays
+        ax.plot(z_marg, y_marg, color='blue', linewidth=2.0,
+                marker='o', markersize=4, label='Marginal ray')
+        ax.plot(z_chief, y_chief, color='red', linewidth=2.0,
+                marker='s', markersize=4, label='Chief ray')
 
-    ax.plot(z_a, h_a, color='#58a6ff', linewidth=2.0,
-            marker='o', markersize=5, label='Marginal ray (a)')
-    ax.plot(z_b, h_b, color='#f97583', linewidth=2.0,
-            marker='s', markersize=5, label='Chief ray (b)')
+        # Optical axis
+        ax.axhline(0, color='gray', linewidth=0.8, linestyle='--', alpha=0.7)
 
-    # Optical axis
-    ax.axhline(0, color='#8b949e', linewidth=0.8, linestyle='--', alpha=0.7)
+        # Lens planes
+        lens_z = [g, g + d]
+        lens_labels = [f"Objective L₁\n(f₁={f1:.1f} mm)", f"Eyepiece L₂\n(f₂={f2:.1f} mm)"]
+        ymax = max(abs(y_marg.max()), abs(y_marg.min()), abs(y_chief.max()), abs(y_chief.min()))
+        ymax = max(ymax, 0.5) * 1.2
+        for lz, ll in zip(lens_z, lens_labels):
+            ax.axvline(lz, color='green', linewidth=1.5, linestyle=':', alpha=0.8)
+            ax.text(lz, ymax*0.95, ll, ha='center', va='bottom', fontsize=8.5, color='green')
 
-    # Lens planes
-    lens_z = [ng, ng + nd]
-    lens_labels = [f"Objective L₁\n(f₁={nf1} mm)", f"Eyepiece L₂\n(f₂={nf2} mm)"]
-    ymin, ymax = ax.get_ylim()
-    for lz, ll in zip(lens_z, lens_labels):
-        ax.axvline(lz, color='#3fb950', linewidth=1.5, linestyle=':', alpha=0.8)
-        ax.text(lz, max(h_a.max(), h_b.max())*1.05,
-                ll, ha='center', va='bottom', fontsize=8.5, color='#3fb950')
+        # Intermediate image plane
+        z_inter = g + f1 + E
+        ax.axvline(z_inter, color='orange', linewidth=1.0, linestyle='--', alpha=0.5)
 
-    # Intermediate image marker
-    z_inter = ng
-    ax.axvline(z_inter, color='#e3b341', linewidth=1.0, linestyle='--', alpha=0.5)
+        # Info box
+        M_classical = -(E * d_n) / (f1 * f2)
+        info_text = (f"f₁ = {f1:.2f} mm  |  f₂ = {f2:.2f} mm  |  E = {E:.1f} mm\n"
+                     f"g = {g:.2f} mm  |  d = {d:.2f} mm  |  M_total = {M_total:.2f}×\n"
+                     f"Object height = {h:.3f} mm  |  Image height = {image_height:.3f} mm")
+        ax.text(0.02, 0.98, info_text, transform=ax.transAxes,
+                fontsize=10, color='black', verticalalignment='top',
+                bbox=dict(boxstyle='round', facecolor='lightyellow', edgecolor='gray'))
 
-    # Labels and style
-    ax.set_xlabel("z  [mm]", fontsize=12, color='#c9d1d9')
-    ax.set_ylabel("Ray height y  [mm]", fontsize=12, color='#c9d1d9')
-    M_tot = -(nE * ndn) / (nf1 * nf2)
-    ax.set_title(
-        f"Compound Microscope – Paraxial Ray Tracing\n"
-        f"f₁={nf1} mm  ·  f₂={nf2} mm  ·  E={nE} mm  ·  "
-        f"M ≈ {M_tot:.0f}×  (Kloos2007)",
-        fontsize=12, color='#c9d1d9', pad=10
-    )
-    ax.tick_params(colors='#8b949e')
-    for spine in ax.spines.values():
-        spine.set_edgecolor('#30363d')
+        # Labels and style
+        ax.set_xlabel("z  [mm]", fontsize=12, color='black')
+        ax.set_ylabel("Ray height y  [mm]", fontsize=12, color='black')
+        ax.set_title(f"Compound Microscope – Interactive Ray Tracing\n"
+                     f"M ≈ {M_classical:.0f}×  (classical formula)",
+                     fontsize=12, color='black', pad=10)
+        ax.tick_params(colors='black')
+        for spine in ax.spines.values():
+            spine.set_edgecolor('black')
+        ax.grid(True, alpha=0.3, color='gray')
+        ax.set_ylim(-ymax, ymax)
 
-    legend = ax.legend(fontsize=11, facecolor='#161b22',
-                       edgecolor='#30363d', labelcolor='#c9d1d9')
-    ax.grid(True, alpha=0.2, color='#30363d')
-    plt.tight_layout()
+        ax.legend(fontsize=11, facecolor='white', edgecolor='gray')
 
-    fig_path = os.path.join(sets.output_dir, "microscope_ray_trace.png")
-    plt.savefig(fig_path, dpi=150, bbox_inches='tight', facecolor=fig.get_facecolor())
+        fig.canvas.draw_idle()
+
+    # Connect sliders
+    for slider in sliders.values():
+        slider.on_changed(update_plot)
+
+    # Initial draw
+    update_plot(None)
+
+    # Show the interactive window
     plt.show()
-    print(f"\n  Ray-trace plot saved → {fig_path}")
+
+    print("Interactive session ended.")
 
 print("\n" + "="*60)
 print("test_microscope.py  DONE")

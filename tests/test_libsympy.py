@@ -17,31 +17,56 @@ from quantum_mechanics import *
 func_names = [{100:"plot_sympfunc", 200:"plot_list", 350:"read_latex_file",
               300:"pprints", 500:"substitute", 600:"table_function",
               700:"plot_energy_levels"}[i] 
-                for i in [700,]]
+                for i in [350,]]
 input_path = "input/libsympy/"
 print(func_names, "\n")
 
 
-#----Algebra
+#### ALGEBRA
 if "substitute" in func_names:
     print("substitute([x,y**2,z], {x: 1, y: 2, z: 3})-> [x,y,z]=", 
           substitute([x,y**2,z], {x: 1, y: 2, z: 3}))
 
-#----Converters
+
+#### CONVERTERS
+#### ----> read_latex_file
 if "read_latex_file" in func_names:
     file_path = input_path + 'read_latex_file.tex'
     formulas, tex = read_latex_file(file_path)
     
     for iformula in formulas:
-        print(iformula)    
-
-#----Differential Equations
+        print(iformula)
 
 
-#----Linear Algebra
+#### DIFFERENTIAL EQUATIONS
 
 
-#----Plotting
+
+#### LINEAR ALGEBRA
+
+
+
+#### PRINTING
+if "pprints" in func_names:
+    output_styles=["display","pprint","print","latex"]
+    alist = [1,2,3,]
+    astring = "A string"
+    asympy = cosh(sqrt(x))
+    for i in output_styles:
+        pprints(f"Output Style: {i}",
+                "alist=", alist, 
+                "astring=", astring,
+                "asympy=", asympy,
+                output_style = i)
+        print("\n")
+        
+if "table_function" in func_names:
+    print("table_function")
+    print(table_function(oqmec.qho.En(n), n=[0,1,2]))
+    display(*table_function(oqmec.qho.En(n), n=[0,1,2]))
+    print_latex(table_function(oqmec.qho.En(n), n=[0,1,2]))
+
+#### PLOTTING
 #----> plot_energy_levels
 if "plot_energy_levels" in func_names:
     # --- Example Usage ---
@@ -108,24 +133,3 @@ if "plot_sympfunc" in func_names:
     f = x**2
     plot_sympfunc([f,],(-4,4,101))
     plt.show()
-
-
-#----Printing
-if "pprints" in func_names:
-    output_styles=["display","pprint","print","latex"]
-    alist = [1,2,3,]
-    astring = "A string"
-    asympy = cosh(sqrt(x))
-    for i in output_styles:
-        pprints(f"Output Style: {i}",
-                "alist=", alist, 
-                "astring=", astring,
-                "asympy=", asympy,
-                output_style = i)
-        print("\n")
-        
-if "table_function" in func_names:
-    print("table_function")
-    print(table_function(oqmec.qho.En(n), n=[0,1,2]))
-    display(*table_function(oqmec.qho.En(n), n=[0,1,2]))
-    print_latex(table_function(oqmec.qho.En(n), n=[0,1,2]))

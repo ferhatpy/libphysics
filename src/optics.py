@@ -262,14 +262,14 @@ class optics(branch):
                             # Matrices
                             self.abcd = lambda f=f: Eq(S('F'), UnevaluatedExpr(Matrix(((-f2/f1, f1+f2),
                                                                                        (     0, f1/f2))))) # Kloos2007 1.54
-                            self.TM = Eq(S('TM'), UnevaluatedExpr(MatMul(parent.thin_lens.abcd(f2).rhs.doit(), 
+                            self.SM = Eq(S('SM'), UnevaluatedExpr(MatMul(parent.thin_lens.abcd(f2).rhs.doit(), 
                                                                          parent.T(d).rhs.doit(), 
                                                                          parent.thin_lens.abcd(f1).rhs.doit())))     # Kloos2007 1.52
                             
-                            self.imaging_condition = Eq(d, expand(solve(self.TM.rhs.doit()[1,0], d)[0])) # s21 = 0 1.53
-                            self.imaging_condition2 = Eq(d, expand(solve(self.TM.rhs.doit()[0,1], d)[0])) # s21 = 0 1.53 ?? microscope
-                        # self.system_matrix = self.SM
-                        self.transfer_matrix = self.TM
+                            self.imaging_condition = Eq(d, expand(solve(self.SM.rhs.doit()[1,0], d)[0])) # s21 = 0 1.53
+                            self.imaging_condition2 = Eq(d, expand(solve(self.SM.rhs.doit()[0,1], d)[0])) # s21 = 0 1.53 ?? microscope
+                        self.system_matrix = self.SM
+                        # self.transfer_matrix = self.TM
                         
                     @staticmethod
                     def __doc__():
@@ -387,6 +387,8 @@ class optics(branch):
                         self.h1 = Eq(h1, simplify((1 - _s11) / _s21))        # 1.38
                         self.h2 = Eq(h2, simplify((1 - _s22) / _s21))        # 1.39
 
+                        self.principal_plane1 = self.h1
+                        self.principal_plane2 = self.h2
                         self.system_matrix   = self.SM                        
                         self.transfer_matrix = self.TM
 

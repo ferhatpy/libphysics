@@ -1,4 +1,4 @@
-# coding: utf-8
+```python
 """
 Solutions of Selected Problems Related to Quantum Mechanics
 
@@ -29,9 +29,11 @@ from quantum_mechanics import *
 import libquantum
 # import scienceplots
 # plt.style.use(['science', 'notebook'])
+```
 
-####--->  Settings
+### Settings
 
+```python
 class sets:
     """
     Setttings class.
@@ -71,29 +73,42 @@ class sets:
         ch7 = {701:"e7.1",702:"e7.2"})
     flow = [dictflow["ch4"][i] for i in [430]]
     if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
+```
 
+```python
 print("Test of the {0}.".format(sets.flow))
+```
 
-####--->  get_formulary
+### get_formulary
 
+```python
 if "get_formulary" in sets.flow:
     omec.__init__()
     omec.get_formulary()
     omec.get_formulary(style="eq")
+```
 
-####--->  get_subformulary
+### get_subformulary
 
+```python
 if "get_subformulary" in sets.flow:
     omech.__init__()
     omech.get_subformulary()
+```
 
 #### Chapter 1 The Wave Function
 
-####--->  1.1 The Schrodinger Equation deneme
 
-####--->  1.2 The Statistical Interpretation
+### 1.1 The Schrodinger Equation deneme
 
-####--->  1.3 Probability
+
+### 1.2 The Statistical Interpretation
+
+
+### 1.3 Probability
+
+```python
+#### ----> p1.3
 if "p1.3" in sets.flow:
     oqmec.__init__("position_space")
     oqmec.verbose = True
@@ -128,10 +143,12 @@ if "p1.3" in sets.flow:
             "sigmaX=", sqrt(deltaX2.rhs),
             
             output_style="display")
+```
 
-####--->  1.4 Normalization
+### 1.4 Normalization
 
-#######---> p1.5
+```python
+#### ----> p1.5
 if "p1.5" in sets.flow:
     if sets.use_libphysics:
         oqmec.__init__("position_space")
@@ -186,12 +203,15 @@ if "p1.5" in sets.flow:
                 "sigma=",sigmaX,
                 "|psi(sigma)|^2=",(npsi.prob().subs({x:sigmaX})).expr,
                 output_style="display")
+```
 
-####--->  1.5 Momentum
+### 1.5 Momentum
 
-####--->  1.6 The Uncertainty Principle
 
-#######---> p1.9
+### 1.6 The Uncertainty Principle
+
+```python
+#### ----> p1.9
 if "p1.9" in sets.flow:
     if sets.use_libphysics:
         oqmec.__init__("position_space")
@@ -276,8 +296,10 @@ if "p1.9" in sets.flow:
             "sigmaP=", sigmaP,
             "sigmaX*sigmaP=", sigmaX*sigmaP,
             output_style="display")
+```
 
-#######---> p1.17
+```python
+#### ----> p1.17
 if "p1.17" in sets.flow:
 
     if sets.use_libphysics:
@@ -375,22 +397,28 @@ if "p1.17" in sets.flow:
                 "\sigma_X \sigma_P=", sigmaX*sigmaP,
                 "\sigmaX \sigma_P=", libquantum.sigmaXsigmaP(npsi,(-a, a)),
                 output_style="display")
+```
 
 
-#### Chapter 2 Time-Independent Schrodinger Equation
+### Chapter 2 Time-Independent Schrodinger Equation
 
-####--->  2.1 Stationary States
-####--->  2.2 The Infinite Square Well
-####--->  2.3 The Harmonic Oscillator
-####--->  2.3.1 Algebraic Method
-####--->  2.3.2 Analytic Method
-####--->  2.4 The Free Particle
-####--->  2.5 The Delta-Function Potential
-####--->  2.5.1 Bound States and Scattering States
-####--->  2.5.2 The Delta-Function Well
-####--->  2.6 The Finite Square Well
 
-#######---> p2.4
+### 2.1 Stationary States
+### 2.2 The Infinite Square Well
+### 2.3 The Harmonic Oscillator
+### 2.3.1 Algebraic Method
+### 2.3.2 Analytic Method
+### 2.4 The Free Particle
+### 2.5 The Delta-Function Potential
+### 2.5.1 Bound States and Scattering States
+### 2.5.2 The Delta-Function Well
+### 2.6 The Finite Square Well
+
+
+### 2.2 The Infinite Square Well
+
+```python
+#### ----> p2.4
 if "p2.4" in sets.flow:
 
     if sets.use_libphysics:
@@ -468,8 +496,10 @@ if "p2.4" in sets.flow:
         (sigmaX, sigmaP)=(libquantum.sigmaX(psi, bounds),libquantum.sigmaP(psi, bounds))
         uncert = libquantum.sigmaXsigmaP(psi, bounds)
         minUncert = simplify(uncert).subs({n:1})
+```
 
-#######---> p2.7
+```python
+#### ----> p2.7
 if "p2.7" in sets.flow:
     [A,a,m] = symbols('A a m', real=True, positive=True)
     n = symbols('n', positive = True, integer = True)
@@ -515,8 +545,10 @@ if "p2.7" in sets.flow:
             "2. way <H> todo WRONG!",
             "<H>=<psi|H|psi>=", "<npsi|p^2>/(2m)|npsi>=", expH2,
             output_style="display")
+```
 
-#######---> p2.9
+```python
+#### ----> p2.9
 if "p2.9" in sets.flow:
     if sets.use_libphysics:
         oqmec.__init__("position_space")
@@ -556,12 +588,15 @@ if "p2.9" in sets.flow:
                 "H=", H,
                 "cnpi*H*npsi=", cnpsi_H_npsi,
                 "<npsi|H|npsi>=<npsi|p^2>/(2m)|npsi>=", expH)
+```
 
-####--->  2.3 The Harmonic Oscillator
+### 2.3 The Harmonic Oscillator
 
-####--->  2.3.1 Algebraic Method
 
-#######---> e2.5
+### 2.3.1 Algebraic Method
+
+```python
+#### ----> e2.5
 if "e2.5" in sets.flow:
     ad = RaisingOp('a')
     a = LoweringOp('a')
@@ -601,17 +636,23 @@ if "e2.5" in sets.flow:
             "<V>=<n|V|n>=", qapply(oqmec.qho.nb()*oqmec.qho.V.rhs*oqmec.qho.nk()),
             "<H>=<n|H|n>=", qapply(oqmec.qho.nb()*oqmec.qho.H.rhs*oqmec.qho.nk()),
             output_style="display")                        
+```
 
 
-#######---> p2.10
+```python
+####----> p2.10
 if "p2.10" in sets.flow:
     oqmec.__init__("position_space")
     oqmec.verbose = True
     n = 0
     psi_0 = oqmec.qho.psix(0).rhs
     # kaldik1 find psi2
+```
 
-####---> p2.11
+### ----> p2.11
+
+```python
+#----> p2.11
 if "p2.11" in sets.flow:
     oqmec.__init__("position_space")
     oqmec.verbose = True
@@ -720,10 +761,12 @@ if "p2.11" in sets.flow:
             "<H>=<T>+<V>=", simplify(libquantum.expT(psi(1))+(1/2*m*w**2)*libquantum.expX2(psi(1))),
             output_style="display")
     """
+```
 
-####---> p2.12
+### ----> p2.12
 
-####---> p2.12
+```python
+#----> p2.12
 if "p2.12" in sets.flow:
     ad = RaisingOp('a')
     a = LoweringOp('a')
@@ -756,12 +799,15 @@ if "p2.12" in sets.flow:
             Math("\sigma_p="), sigmaP,
             Math("\sigma_x \sigma_p="), simplify(sigmaX*sigmaP),
             output_style="display")
+```
 
-####--->  2.4 The Free Particle
+### 2.4 The Free Particle
 
-####---> e2.6
 
-####---> e2.6 execute below in jupyter
+### ----> e2.6
+
+```python
+#----> e2.6 execute below in jupyter
 if "e2.6" in sets.flow:
     print("""
           ex2.6: Free Particle, Wavefunction as a piecewise step function
@@ -797,9 +843,11 @@ if "e2.6" in sets.flow:
     
     # Eq. 2.100 There is no exact symbolic solution!
     # psi_t = inverse_fourier_transform(1/sqrt(2*pi)*psi_k*exp(-I*hbar*(k**2)*t/(2*m)), k, x).subs({x:x/(2*pi)})
+```
 
 
-####---> p2.14
+```python
+#----> p2.14
 if "p2.14" in sets.flow:
     # Salih Yeşil
     [m,w,x] = symbols('m omega x', real=True, positive=True)
@@ -838,9 +886,11 @@ if "p2.14" in sets.flow:
             "P_0 = |C_0|^2 = ", p0, 
             "P_0 = {}".format(p0.evalf()),
             output_style="display")
+```
 
 
-####---> p2.19
+```python
+#----> p2.19
 if "p2.19" in sets.flow:
     # Salih Yeşil
     [A,m,w,x,k,t] = symbols('A m omega x k t', real=True, positive=True)
@@ -856,11 +906,13 @@ if "p2.19" in sets.flow:
             "AND J = ", J,
             "it flows in the +x direction",
             output_style="display")
+```
 
 
-####---> p2.22
+### ----> p2.22
 
-####---> p2.22 The Gausssian Wave Packet todo
+```python
+#----> p2.22 The Gausssian Wave Packet todo
 if "p2.22" in sets.flow:
     [A,a,k,m,t] = symbols('A a k m t', real=True, positive=True)
     # a)
@@ -924,17 +976,21 @@ if "p2.22" in sets.flow:
             
             "e)","todo",
             output_style="display")
+```
 
-####--->  2.5 The Delta-Function Potential
-####--->  2.5.1 Bound States and Scattering States
-####--->  2.5.2 The Delta-Function Well
-####--->  2.6 The Finite Square Well
+### 2.5 The Delta-Function Potential
+### 2.5.1 Bound States and Scattering States
+### 2.5.2 The Delta-Function Well
+### 2.6 The Finite Square Well
 
-####--->  2.6 The Finite Square Well
 
-####---> ch2.6 todo
+### 2.6 The Finite Square Well
 
-####---> ch2.6 todo
+
+### ----> ch2.6 todo
+
+```python
+#----> ch2.6 todo
 if "ch2.6" in sets.flow:
     # --- ch2.6 todo not working 2.6 The Finite Square Well ---
     way_no = 1
@@ -1107,10 +1163,12 @@ if "ch2.6" in sets.flow:
     
     print("Fig. 2.19, Transmissin, reflection coefficients as a function of energy.")
     plot_sympfunc([NT_vs_En, NR_vs_En], (0,5,301), plabels=["T","R"], xlabel="$E$", ylabel="$T,R$")
+```
 
-####---> p2.33
+### ----> p2.33
 
-####---> p2.23 todo
+```python
+#----> p2.23 todo
 if "p2.33" in sets.flow:
     # --- p2.33 todo not working The Finite Barrier ---
     way_no = 1
@@ -1287,9 +1345,11 @@ if "p2.33" in sets.flow:
     print("Fig. 2.19, Transmission, reflection coefficients as a function of energy.")
     plot_sympfunc([NT_vs_En, NR_vs_En], (0.01,0.99,301), plabels=["T","R"], 
                   xlabel="$E$", ylabel="$T,R$")
+```
 
 
-####---> p2.38
+```python
+#----> p2.38
 if "p2.38" in sets.flow:
     # Salih Yeşil
     [n,m,w,x,a] = symbols('n m omega x a', real=True, positive=True)
@@ -1320,11 +1380,13 @@ if "p2.38" in sets.flow:
             "<H> = ", H,
             "Same as before",
             output_style="display")
+```
 
 
-####---> p2.41
+### ----> p2.41
 
-####---> p2.41 todo
+```python
+#----> p2.41 todo
 if "p2.41" in sets.flow:
     # --- 2.41 todo check 
     # a)
@@ -1403,10 +1465,12 @@ if "p2.41" in sets.flow:
 
             output_style="display"           
             )
+```
 
-####---> ch2.3.2
+### ----> ch2.3.2
 
-####---> ch2.3.2
+```python
+#----> ch2.3.2
 if "ch2.3.2" in sets.flow:
     # --- ch2.3.2 todo solve diff eq.
     [En,m,w] = symbols('En m w', real=True, positive=True)
@@ -1420,27 +1484,31 @@ if "ch2.3.2" in sets.flow:
         "Schrödinger Equation=", schEq,
         "Solution=", solschEq,
         output_style="display")
+```
 
 
-#### Chapter 3 Formalism
+### Chapter 3 Formalism
 
-####--->  3.1 Hilbert Space
-####--->  3.2 Observables
-####--->  3.2.1 Hermitian Operators
-####--->  3.2.2 Determinate States
-####--->  3.3 Eigenfunctions of A Hermitian Operator
-####--->  3.3.1 Discrete Spectra
-####--->  3.3.2 Continuous Spectra
-####--->  3.4 Generalized Statistical Interpretation
-####--->  3.5 The Uncertainty Principle
-####--->  3.5.1 Proof of the Generalized Uncertainty Principle
-####--->  3.5.2 The Minimum-Uncertainty Wave Packet
-####--->  3.5.3 The Energy-Time Uncertainty Principle
-####--->  3.6 Dirac Notation
 
-####---> p3.22
+### 3.1 Hilbert Space
+### 3.2 Observables
+### 3.2.1 Hermitian Operators
+### 3.2.2 Determinate States
+### 3.3 Eigenfunctions of A Hermitian Operator
+### 3.3.1 Discrete Spectra
+### 3.3.2 Continuous Spectra
+### 3.4 Generalized Statistical Interpretation
+### 3.5 The Uncertainty Principle
+### 3.5.1 Proof of the Generalized Uncertainty Principle
+### 3.5.2 The Minimum-Uncertainty Wave Packet
+### 3.5.3 The Energy-Time Uncertainty Principle
+### 3.6 Dirac Notation
 
-####---> p3.22
+
+### ----> p3.22
+
+```python
+#----> p3.22
 if "p3.22" in sets.flow:
     (one, two, three) = (Ket(1), Ket(2), Ket(3))
     a = I*one - 2*two - I*three    
@@ -1488,8 +1556,10 @@ if "p3.22" in sets.flow:
             
             output_style="display"        
             )    
+```
 
-#######---> p3.30
+```python
+#### ----> p3.30
 if "p3.30" in sets.flow:
     [A,a] = symbols('A a', real=True, positive=True)
     p = symbols('p', real=True)
@@ -1542,11 +1612,13 @@ if "p3.30" in sets.flow:
             
             output_style="display"        
             ) 
+```
 
 
-#### Chapter 4 Quantum Mechanics in Three Dimensions
+### Chapter 4 Quantum Mechanics in Three Dimensions
 
-#######---> 4.1 Schrodinger Equation in Spherical Coordinates
+```python
+#### ----> 4.1 Schrodinger Equation in Spherical Coordinates
 if "p4.1" in sets.flow:
     [xop, yop, zop] = [XOp(), YOp(), ZOp()]
     pxop = PxOp()
@@ -1579,16 +1651,21 @@ if "p4.1" in sets.flow:
             
             "c) todo",
             output_style="display")
+```
 
-####--->  4.1.1 Sepatation of Variables
+### 4.1.1 Sepatation of Variables
 
-####--->  4.1.2 The Angular Equation
 
-####--->  4.1.3 The Radial Equation
+### 4.1.2 The Angular Equation
 
-####---> e4.1
 
-####---> e4.1 Infinite Spherical Well
+### 4.1.3 The Radial Equation
+
+
+### ----> e4.1
+
+```python
+#----> e4.1 Infinite Spherical Well
 if "e4.1" in sets.flow:
     [l,k,r,m,C1] = symbols('l k r m C1', real=True, positive=True)
     En = Symbol('E_n', real = True, positive = True)
@@ -1637,12 +1714,15 @@ if "e4.1" in sets.flow:
             output_style="display")
     
     plot(jn(0,x), jn(1,x), jn(2,x), (x,0,14))
+```
 
-####--->  4.2 The Hydrogen Atom
+### 4.2 The Hydrogen Atom
 
-####---> ch4.2
 
-####---> p4.2
+### ----> ch4.2
+
+```python
+#----> p4.2
 if "ch4.2" in sets.flow:
     oqmec.Psi = oqmec.hydrogen.psi_sy(3,0,0).rhs
     exp_invr = oqmec.exp_fxSph(1/r)
@@ -1664,12 +1744,15 @@ if "ch4.2" in sets.flow:
     session = WolframLanguageSession()
     math_expr = wlexpr(mathematica_code(expinvr))
     pprints("<1/r>", math_expr)
+```
 
-####--->  4.2.1 The Radial Wave Function
+### 4.2.1 The Radial Wave Function
 
-####---> ch4.2.1
 
-####---> chp4.2.1
+### ----> ch4.2.1
+
+```python
+#----> chp4.2.1
 if "ch4.2.1" in sets.flow:
     [a0, c0, epsilon_0, m_e, e] = symbols("a0 c0 epsilon_0 m_e e")
     n, l, m, r, phi, theta, Z = S(n), S(l), S(m), S(r), S(phi), S(theta), S(Z)
@@ -1693,10 +1776,12 @@ if "ch4.2.1" in sets.flow:
             "psi_200=", Psi_nlm(2, 0, 0, r, phi, theta, Z=1/a),
             "psi_200=", simplify(Psi_nlm(2, 0, 0, r, phi, theta, Z=1/a)),
             output_style="display")   
+```
 
-####---> fig4.4
+### ----> fig4.4
 
-####---> fig4.4 todo
+```python
+#----> fig4.4 todo
 if "fig4.4" in sets.flow:
     # --- fig4.4 Graphs of the first few hydrogen radial wave functions
     plot_sympfunc([[R_nl(i, j, b*a, Z=1/a).subs({a**(3/2):1}).evalf().subs({b:x}) for j in range(i)] for i in range(1,4)], (0, 18, 100), xlabel="$r/a$", ylabel="$R_{nl}(r)$")
@@ -1716,10 +1801,12 @@ if "fig4.4" in sets.flow:
                  ['21', (0.10, 0.05)],
                  ['31', (2.3, 0.25)]]
     [plt.annotate(annotate[i][0], xy=annotate[i][1]) for i in range(len(annotate))]
+```
 
-####---> p4.11
+### ----> p4.11
 
-####---> p4.11
+```python
+#----> p4.11
 if "p4.11" in sets.flow:
     # --- 4.11 todo plot psi_nlm
     pprints("p4.11",
@@ -1733,10 +1820,12 @@ if "p4.11" in sets.flow:
         "psi_210=", Psi_nlm(2, 1, 0, r, phi, theta, Z=1/a),
         "psi_21-1=", Psi_nlm(2, 1, -1, r, phi, theta, Z=1/a),
         output_style="display")   
+```
 
-####---> p4.12
+### ----> p4.12
 
-####---> p4.12
+```python
+#----> p4.12
 if "p4.12" in sets.flow:
     # --- 4.12 Laguerre polynomials
     pprints(
@@ -1744,10 +1833,12 @@ if "p4.12" in sets.flow:
         "todo b)",
         "todo c)",
         output_style="display")
+```
 
-####---> p4.13
+### ----> p4.13
 
-####---> p4.13
+```python
+#----> p4.13
 if "p4.13" in sets.flow:
     # --- 4.13 <psi|r|psi> etc.
     a = symbols('a', real=True, positive=True)
@@ -1796,10 +1887,12 @@ if "p4.13" in sets.flow:
             "<x>=", libquantum.expFspherical(psi211, x),
             "<x^2>=", libquantum.expFspherical(psi211, x**2),
             output_style="display")
+```
 
-####---> p4.14
+### ----> p4.14
 
-####---> p4.14
+```python
+#----> p4.14
 if "p4.14" in sets.flow:
     # --- 4.14 todo
     psi100 = Psi_nlm(1, 0, 0, r, phi, theta, Z=1/a)
@@ -1811,10 +1904,12 @@ if "p4.14" in sets.flow:
         "dp(r)/dr=", simplify(diff(p, r)),
         "r=", solve(diff(p, r), r),
         output_style="display")
+```
 
-####---> p4.15
+### ----> p4.15
 
-####---> p4.15 todo
+```python
+#----> p4.15 todo
 if "p4.15" in sets.flow:
     [a, ee, E_2] = symbols('a ee E_2', real=True, positive=True)
     eps0 = symbols("epsilon_0", real=True)
@@ -1839,16 +1934,21 @@ if "p4.15" in sets.flow:
         "<V>=", libquantum.expFspherical(psi, V),
         "<V>=", libquantum.expFspherical(psi, V).subs(sub_a),
         output_style="display")
+```
 
-####--->  4.2.2 The Spectrum of Hydrogen
+### 4.2.2 The Spectrum of Hydrogen
 
-####--->  4.3 Angular Momentum
 
-####--->  4.3.1 Eigenvalues
+### 4.3 Angular Momentum
 
-####---> ch4.3.1
 
-####---> p4.3.1
+### 4.3.1 Eigenvalues
+
+
+### ----> ch4.3.1
+
+```python
+#----> p4.3.1
 if "ch4.3.1" in sets.flow:
     """
     Angular momentum Lx, Ly, Lz etc.
@@ -1865,7 +1965,7 @@ if "ch4.3.1" in sets.flow:
 
     P_x = DifferentialOperator(-I*hbar*Derivative(f(x), x, 1, evaluate=True), f(x))
     P_y = DifferentialOperator(-I*hbar*Derivative(f(y), y, 1, evaluate=True), f(y))
-    P_z = DifferentialOperator(-I*hbar*Derivative(f(z), z, 1, evaluate=True), f(z))
+    P_z= DifferentialOperator(-I*hbar*Derivative(f(z), z, 1, evaluate=True), f(z))
     
     r = C.x*C.i + C.y*C.j + C.z*C.k
     p = p_x*C.i + p_y*C.j + p_z*C.k
@@ -1898,20 +1998,25 @@ if "ch4.3.1" in sets.flow:
             "qapply(P_y*psiX).doit().expr gives -i*hbar must be 0",
             
             output_style="display")    
+```
 
-####--->  4.3.2 Eigenfunctions
+### 4.3.2 Eigenfunctions
 
-####--->  4.4 Spin
 
-# $S=S_x\hat{i}+S_y\hat{j}+S_z\hat{k}$
-#
-# $n=n_x\hat{i}+n_y\hat{j}+n_z\hat{k}$
-#
-# $S_n = S.n$
+### 4.4 Spin
 
-####---> ch4.4
 
-####---> ch4.4
+$S=S_x\hat{i}+S_y\hat{j}+S_z\hat{k}$
+
+$n=n_x\hat{i}+n_y\hat{j}+n_z\hat{k}$
+
+$S_n = S.n$
+
+
+### ----> ch4.4
+
+```python
+#----> ch4.4
 if "ch4.4" in sets.flow:
     n = sin(theta)*cos(phi)*C.i + sin(theta)*sin(phi)*C.j + cos(theta)*C.k
     nx, ny, nz = [n.components[C.i], n.components[C.j], n.components[C.k]] 
@@ -1957,12 +2062,15 @@ if "ch4.4" in sets.flow:
             Eq(var('S_n^2'), UnevaluatedExpr(Sn2)), 
             "Eigenvalues of Sn^2=", Sn2.eigenvals(),
             "Root of Eigenvalues of Sn^2=", sqrt(Sn2.eigenvals().popitem()[0]))
+```
 
-####--->  4.4.1 Spin 1/2
+### 4.4.1 Spin 1/2
 
-####---> ch4.4.1
 
-####---> ch4.4.1 Spin 1/2
+### ----> ch4.4.1
+
+```python
+#----> ch4.4.1 Spin 1/2
 if "ch4.4.1" in sets.flow:
     class SzUpKet(Ket):
         def _represent_SzOp(self, basis, **options):
@@ -2024,10 +2132,12 @@ if "ch4.4.1" in sets.flow:
             "represent(up, basis=Sz)=",   represent(up, basis=Sz),
             "represent(down, basis=Sz)=", represent(down, basis=Sz),
             output_style = "display")
+```
 
-####---> e4.2
+### ----> e4.2
 
-####---> e4.2 Spin 1/2 particle
+```python
+#----> e4.2 Spin 1/2 particle
 if "e4.2" in sets.flow:
     """
     Spin 1/2 particle
@@ -2078,10 +2188,12 @@ if "e4.2" in sets.flow:
             "Sz Probabilities [|a|^2 |b|^2]", probSz, 
             
             output_style = "display")
+```
 
-####---> p4.27
+### ----> p4.27
 
-####---> p4.27 Electron spin todo
+```python
+#----> p4.27 Electron spin todo
 if "p4.27" in sets.flow:
     """
     Electron spin
@@ -2140,12 +2252,15 @@ if "p4.27" in sets.flow:
     if (sigma_Sx*sigma_Sy >= hbar/2*abs(expSz)):print("True")
     if (sigma_Sy*sigma_Sz >= hbar/2*abs(expSx)):print("True")
     if (sigma_Sz*sigma_Sx >= hbar/2*abs(expSy)):print("True")
+```
 
-####--->  4.4.2 Electron in a Magnetic Field
+### 4.4.2 Electron in a Magnetic Field
 
-####---> e4.3
 
-####---> e4.3
+### ----> e4.3
+
+```python
+#----> e4.3
 if "e4.3" in sets.flow:
     B0 = symbols('B_0', real=True)
     alpha = symbols('alpha', real=True)
@@ -2180,12 +2295,15 @@ if "e4.3" in sets.flow:
             "<Sx>", expSx,
             "<Sy>", expSy,
             "<Sz>", expSz)
+```
 
-####--->  4.4.3 Addition of Angular Momenta
+### 4.4.3 Addition of Angular Momenta
 
-####---> p4.49
 
-####---> p4.49 Electron spin
+### ----> p4.49
+
+```python
+#----> p4.49 Electron spin
 if "p4.49" in sets.flow:
     A = Symbol('A', real=True)
     X = A*Matrix([1-2*I,2])
@@ -2241,37 +2359,45 @@ if "p4.49" in sets.flow:
             "Sy Probabilities [|a|^2 |b|^2]", probSy, 
             "<Sy>=<Xdagger Sy X>=", simplify(Dagger(X)*represent(Jy)*X),
             output_style = "display")
+```
 
-#### Chapter 5 Identical Particles
+### Chapter 5 Identical Particles
 
 
-####--->  5.1 Two-Particle Systems
-####--->  5.1.1 Bosons and Fermions
-####--->  5.1.2 Exchange Forces
-####--->  5.2 Atoms
-####--->  5.2.1 Helium
-####--->  5.2.2 The Periodic Table
-####--->  5.3 Solids
-####--->  5.3.1 The Free Electron Gas
-####--->  5.3.2 Band Structure
-####--->  5.4 Quantum Statistical Mechanics
-####--->  5.4.1 An Example
-####--->  5.4.2 The General Case
-####--->  5.4.3 The Most Probable Configuration
-####--->  5.4.4 Physical Significance of α and β
-####--->  5.4.5 The Blackbody Spectrum
 
-#### Chapter 6 Time-Independent Perturbation Theory
+### 5.1 Two-Particle Systems
+### 5.1.1 Bosons and Fermions
+### 5.1.2 Exchange Forces
+### 5.2 Atoms
+### 5.2.1 Helium
+### 5.2.2 The Periodic Table
+### 5.3 Solids
+### 5.3.1 The Free Electron Gas
+### 5.3.2 Band Structure
+### 5.4 Quantum Statistical Mechanics
+### 5.4.1 An Example
+### 5.4.2 The General Case
+### 5.4.3 The Most Probable Configuration
+### 5.4.4 Physical Significance of α and β
+### 5.4.5 The Blackbody Spectrum
 
-####--->  6.1 Nondegenerate Perturbation Theory
 
-####--->  6.1.1 General Formulation
+### Chapter 6 Time-Independent Perturbation Theory
 
-####--->  6.1.2 First-Order Theory
 
-####---> p6.2
+### 6.1 Nondegenerate Perturbation Theory
 
-####---> 6.2
+
+### 6.1.1 General Formulation
+
+
+### 6.1.2 First-Order Theory
+
+
+### ----> p6.2
+
+```python
+#----> 6.2
 if "p6.2" in sets.flow:
     
     if sets.use_libphysics:
@@ -2322,22 +2448,30 @@ if "p6.2" in sets.flow:
                 "E1n=", E1n,
                 "En=", En,
                 output_style = "display")
+```
 
-####--->  6.1.3 Second-Order Energies
+### 6.1.3 Second-Order Energies
 
-####--->  6.2 Degenerate Pertubation Theory
 
-####--->  6.2.1 Two-Fold Degeneracy
+### 6.2 Degenerate Pertubation Theory
 
-####--->  6.2.2 Higher-Order Degeneracy
 
-####--->  6.3 The Fine Structure of Hydrogen
+### 6.2.1 Two-Fold Degeneracy
 
-####--->  6.3.1 The Relativistic Correction
 
-####---> ch6.3.1
+### 6.2.2 Higher-Order Degeneracy
 
-####---> ch6.3.1
+
+### 6.3 The Fine Structure of Hydrogen
+
+
+### 6.3.1 The Relativistic Correction
+
+
+### ----> ch6.3.1
+
+```python
+#----> ch6.3.1
 if "ch6.3.1" in sets.flow:
     print("exp_fxSph")
     psi100 = Psi_nlm(1, 0, 0, r, phi, theta, Z=1/a)
@@ -2348,27 +2482,37 @@ if "ch6.3.1" in sets.flow:
         "<r>=",   oqmec.exp_fxSph(r), oqmec.exp_fxSph(r).doit(),
         "<1/r>=", oqmec.exp_fxSph(1/r), oqmec.exp_fxSph(1/r).doit(),
         output_style="display")
+```
 
-####--->  6.3.2 Spin-Orbit Coupling
-
-####--->  6.4 The Zeeman Effect
-
-####--->  6.4.1 Weak-Field Zeeman Effect
-
-####--->  6.4.2 Strong-Field Zeeman Effect
-
-####--->  6.4.3 Intermediate-Field Zeeman Effect
-
-####--->  6.5 Hyperfine Splitting
-
-#### Chapter 7 The Variational Principle
+### 6.3.2 Spin-Orbit Coupling
 
 
-####--->  7.1 Theory
+### 6.4 The Zeeman Effect
 
-####---> e7.1
 
-####---> 7.1
+### 6.4.1 Weak-Field Zeeman Effect
+
+
+### 6.4.2 Strong-Field Zeeman Effect
+
+
+### 6.4.3 Intermediate-Field Zeeman Effect
+
+
+### 6.5 Hyperfine Splitting
+
+
+### Chapter 7 The Variational Principle
+
+
+
+### 7.1 Theory
+
+
+### ----> e7.1
+
+```python
+#----> 7.1
 if "e7.1" in sets.flow:
     # todo write a variationH function
     print("Griffiths2005 e7.1")
@@ -2391,10 +2535,12 @@ if "e7.1" in sets.flow:
         "b=", solb,
         "<H>min=", expHmin,
         output_style="display")
+```
 
-####---> e7.2
+### ----> e7.2
 
-####---> 7.2 todo write a variation function
+```python
+#----> 7.2 todo write a variation function
 if "e7.2" in sets.flow:
     print("Griffiths2005 e7.2")
     oqmec.__init__("position_space")
@@ -2411,99 +2557,146 @@ if "e7.2" in sets.flow:
         "<H>=", expH,
         "<H>=", expH.doit(),
         output_style="display")    
+```
 
-####--->  7.2 The Ground State of Helium
-
-####--->  7.3 The Hydrogen Molecule Ion
-
-#### Chapter 8 The WKB Approximation
+### 7.2 The Ground State of Helium
 
 
-####--->  8.1 The "Classical" Region
-
-####--->  8.2 Tunneling
-
-####--->  8.3 The Connection Formulas
-
-#### Chapter 9 Time-Dependent Perturbation Theory
+### 7.3 The Hydrogen Molecule Ion
 
 
-####--->  9.1 Two-Level Systems
-
-####--->  9.1.1 The Perturbed System
-
-####--->  9.1.2 Time-Dependent Perturbation Theory
-
-####--->  9.1.3 Sinusoidal Perturbations
-
-####--->  9.2 Emission and Absorption of Radiation
-
-####--->  9.2.1 Electromagnetic Waves
-
-####--->  9.2.2 Absorption, Stimulated Emission, and Spontaneous Emission
-
-####--->  9.2.3 Incoherent Perturbations
-
-####--->  9.3 Spontaneous Emission
-
-####--->  9.3.1 Einstein's A and B Coefficients
-
-####--->  9.3.2 The Lifetime of an Excited State
-
-####--->  9.3.3 Selection Rules
-
-#### Chapter 10 The Adiabatic Approximation
+### Chapter 8 The WKB Approximation
 
 
-####--->  10.1 The Adiabatic Theorem
 
-####--->  10.1.1 Adiabatic Processes
-
-####--->  10.1.2 Proof of the Adiabatic Theorem
-
-####--->  10.2 Berry's Phase
-
-####--->  10.2.1 Nonholonomic Processes
-
-####--->  10.2.2 Geometric Phase
-
-####--->  10.2.3 The Aharonov-Bohm Effect
-
-#### Chapter 11 Scattering
+### 8.1 The "Classical" Region
 
 
-####--->  11.1 Introduction
-
-####--->  11.1.1 Classical Scattering Theory
-
-####--->  11.1.2 Quantum Scattering Theory
-
-####--->  11.2 Partial Wave Analysis
-
-####--->  11.2.1 Formalism
-
-####--->  11.2.2 Strategy
-
-####--->  11.3 Phase Shifts
-
-####--->  11.4 The Born Approximation
-
-####--->  11.4.1 Integral Form of the Schrodinger Equation
-
-####--->  11.4.2 The First Born Approximation
-
-####--->  11.4.3 The Born Series
-
-#### Chapter 12 Aferword
-
-####--->  12.1 The EPR Paradox
-
-####--->  12.2 Bell's Theorem
-
-####--->  12.3 The No-Clone Theorem
-
-####--->  12.4 Schrodinger's Cat
-
-####--->  12.5 The Quantum Zeno Paradox
+### 8.2 Tunneling
 
 
+### 8.3 The Connection Formulas
+
+
+### Chapter 9 Time-Dependent Perturbation Theory
+
+
+
+### 9.1 Two-Level Systems
+
+
+### 9.1.1 The Perturbed System
+
+
+### 9.1.2 Time-Dependent Perturbation Theory
+
+
+### 9.1.3 Sinusoidal Perturbations
+
+
+### 9.2 Emission and Absorption of Radiation
+
+
+### 9.2.1 Electromagnetic Waves
+
+
+### 9.2.2 Absorption, Stimulated Emission, and Spontaneous Emission
+
+
+### 9.2.3 Incoherent Perturbations
+
+
+### 9.3 Spontaneous Emission
+
+
+### 9.3.1 Einstein's A and B Coefficients
+
+
+### 9.3.2 The Lifetime of an Excited State
+
+
+### 9.3.3 Selection Rules
+
+
+### Chapter 10 The Adiabatic Approximation
+
+
+
+### 10.1 The Adiabatic Theorem
+
+
+### 10.1.1 Adiabatic Processes
+
+
+### 10.1.2 Proof of the Adiabatic Theorem
+
+
+### 10.2 Berry's Phase
+
+
+### 10.2.1 Nonholonomic Processes
+
+
+### 10.2.2 Geometric Phase
+
+
+### 10.2.3 The Aharonov-Bohm Effect
+
+
+### Chapter 11 Scattering
+
+
+
+### 11.1 Introduction
+
+
+### 11.1.1 Classical Scattering Theory
+
+
+### 11.1.2 Quantum Scattering Theory
+
+
+### 11.2 Partial Wave Analysis
+
+
+### 11.2.1 Formalism
+
+
+### 11.2.2 Strategy
+
+
+### 11.3 Phase Shifts
+
+
+### 11.4 The Born Approximation
+
+
+### 11.4.1 Integral Form of the Schrodinger Equation
+
+
+### 11.4.2 The First Born Approximation
+
+
+### 11.4.3 The Born Series
+
+
+### Chapter 12 Aferword
+
+
+### 12.1 The EPR Paradox
+
+
+### 12.2 Bell's Theorem
+
+
+### 12.3 The No-Clone Theorem
+
+
+### 12.4 Schrodinger's Cat
+
+
+### 12.5 The Quantum Zeno Paradox
+
+```python
+
+```

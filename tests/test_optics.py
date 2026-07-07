@@ -85,6 +85,7 @@ if "get_subformulary" in sets.flow:
     
     
 #### ABCD
+#----> ABCD_2_thin_lens
 if "ABCD_2_thin_lens" in sets.flow:
     print("ABCD_2_thin_lens")
     print("")
@@ -94,7 +95,6 @@ if "ABCD_2_thin_lens" in sets.flow:
     oopti1 = optics()
     oopti2 = optics()
     
-    oopti.system_matrix = oopti1.ABCD.thin_lens.system_matrix.xreplace({f:S('f_2')}).rhs * oopti.ABCD.T(t,1).rhs * oopti2.ABCD.thin_lens.system_matrix.xreplace({f:S('f_1')}).rhs
     # kaldik
 
 # ### diffration_rectangular
