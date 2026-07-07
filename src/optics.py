@@ -276,6 +276,126 @@ class optics(branch):
                         return "Sub class for Telescope."
                 self.telescope = telescope(self)
                 
+                
+                #### ----> Microscope
+                class microscope(branch):
+                    """
+                    Compound Microscope formulas (Kloos2007 Sec. 1.7, Lens Doublet).
+
+                    A compound microscope is modelled as a *divergent* lens doublet:
+                        f1 > 0  (objective  focal length)
+                        f2 > 0  (eyepiece   focal length)
+                        E  > 0  (optical interval / tube length)
+
+                    Physical lens separation (Kloos2007 Eq. 1.57):
+                        d = f1 + E + f2
+
+                    Doublet system matrix (Kloos2007 Eq. 1.55):
+                        S = L2 · T(d) · L1
+
+                    Effective focal length (Kloos2007 Eq. 1.58):
+                        1/f_eff = 1/f1 + 1/f2 - d/(f1*f2)
+                              => f_eff = -f1*f2/E   (divergent, f < 0)
+
+                    Full imaging chain (Kloos2007 Eq. 1.47 / 1.49):
+                        S_total = T(b) · L2 · T(d) · L1 · T(g)
+                        Imaging condition: s12 = 0  =>  1/g + 1/b = 1/f_eff
+
+                    Total magnification (near-point d_n ≈ 250 mm):
+                        M_total = -(E * d_n) / (f1 * f2)
+
+                    Principal planes (Kloos2007 Eq. 1.38 / 1.39):
+                        h1 = (1 - s11) / s21
+                        h2 = (1 - s22) / s21
+
+                    Usage
+                    -----
+                        oopti.ABCD.microscope.SM.rhs.doit()         # doublet matrix
+                        oopti.ABCD.microscope.SM.rhs.doit()         # doublet matrix
+                        oopti.ABCD.microscope.f.rhs                 # effective focal length
+                        oopti.ABCD.microscope.imaging_condition     # s12 = 0 solved for b
+                        oopti.ABCD.microscope.magnification         # M_total symbolic
+                        oopti.ABCD.microscope.h1                    # first  principal plane
+                        oopti.ABCD.microscope.h2                    # second principal plane
+                    """
+                    def __init__(self, parent):
+                        """
+                        Initialise the microscope sub-class.
+
+                        Parameters
+                        ----------
+                        parent : ABCD instance
+                            Provides T(), thin_lens.abcd(), B, G symbols.
+                        """
+                        super().__init__()
+                        self.name = "Compound Microscope"
+
+                        # ── symbols ────────────────────────────────────────────
+                        # E : optical interval (tube length), positive for microscope
+                        # d_n : near-point viewing distance (~250 mm)
+                        E, d_n = symbols('E d_n', positive=True)
+
+                        # ── d = f1 + E + f2   (Kloos2007 Eq. 1.57) ────────────
+                        self.d = Eq(d, f1 + E + f2)                      # 1.57
+
+                        # ── doublet system matrix  S = L2·T(d)·L1  (1.55) ───
+                        self.SM = Eq(S('SM'),
+                            UnevaluatedExpr(
+                                MatMul(parent.thin_lens.abcd(f2).rhs.doit(),
+                                       parent.T(d).rhs.doit(),
+                                       parent.thin_lens.abcd(f1).rhs.doit())
+                            ))                                           # 1.55
+
+                        # Evaluated system matrix (general d)
+                        _SM = self.SM.rhs.doit()
+
+                        # ── effective focal length  1/f_eff = -s21  (Kloos2007 1.56 / 1.58) ──
+                        # With d = f1+E+f2: s21 = E/(f1*f2) => f_eff = -f1*f2/E
+                        _s21_micro = _SM[1, 0].subs(d, f1 + E + f2)
+                        self.f = Eq(1/f, simplify(-_s21_micro))          # 1.56
+                        # Shorthand explicit form:  f_eff = -f1*f2/E
+                        self.f_eff = Eq(S('f_eff'), -f1*f2/E)            # 1.58
+
+                        # ── imaging condition  s12 = 0  (full chain) ──────────
+                        # Full chain: TM = T(b) · L2 · T(d) · L1 · T(g)
+                        self.TM = Eq(S('TM'),
+                            UnevaluatedExpr(
+                                MatMul(parent.B.rhs.doit(),
+                                       parent.thin_lens.abcd(f2).rhs.doit(),
+                                       parent.T(d).rhs.doit(),
+                                       parent.thin_lens.abcd(f1).rhs.doit(),
+                                       parent.G.rhs.doit())
+                            ))                                      # 1.47/1.49
+                        # Evaluated transfer matrix (general d)
+                        _TM = self.TM.rhs.doit()
+                        self.imaging_condition = Eq(b,
+                            expand(solve(
+                                _TM[0, 1].subs(d, f1 + E + f2),
+                                b)[0])
+                        )                                                     # 1.50
+
+                        # ── lateral magnification  M = s11 (with s12=0) ───────
+                        # Classical formula: M_total = -(E * d_n) / (f1 * f2)
+                        self.magnification = Eq(S('M_total'),
+                            -(E * d_n) / (f1 * f2))                          # Kloos2007 Sec.1.7
+
+                        # ── principal planes  (1.38 / 1.39) ──────────────────
+                        _SM = _SM.subs(d, f1 + E + f2)   # doublet matrix at d=f1+E+f2
+                        _s11 = _SM[0, 0]
+                        _s21 = _SM[1, 0]
+                        _s22 = _SM[1, 1]
+                        self.h1 = Eq(h1, simplify((1 - _s11) / _s21))        # 1.38
+                        self.h2 = Eq(h2, simplify((1 - _s22) / _s21))        # 1.39
+
+                        self.system_matrix   = self.SM                        
+                        self.transfer_matrix = self.TM
+
+                    @staticmethod
+                    def __doc__():
+                        return "Sub class for Compound Microscope (Kloos2007 Sec. 1.7)."
+                self.microscope = microscope(self)
+
+
                 self.refraction_matrix   = self.R
                 self.translation_matrix  = self.T
                 self.system_matrix       = self.SM
