@@ -300,6 +300,7 @@ class optics(branch):
                     Full imaging chain (Kloos2007 Eq. 1.47 / 1.49):
                         S_total = T(b) · L2 · T(d) · L1 · T(g)
                         Imaging condition: s12 = 0  =>  1/g + 1/b = 1/f_eff
+                        where b represents the image plane distance (b < 0 for a virtual image).
 
                     Total magnification (near-point d_n ≈ 250 mm):
                         M_total = -(E * d_n) / (f1 * f2)
@@ -310,7 +311,6 @@ class optics(branch):
 
                     Usage
                     -----
-                        oopti.ABCD.microscope.SM.rhs.doit()         # doublet matrix
                         oopti.ABCD.microscope.SM.rhs.doit()         # doublet matrix
                         oopti.ABCD.microscope.f.rhs                 # effective focal length
                         oopti.ABCD.microscope.imaging_condition     # s12 = 0 solved for b
@@ -350,9 +350,8 @@ class optics(branch):
                         _SM = self.SM.rhs.doit()
 
                         # ── effective focal length  1/f_eff = -s21  (Kloos2007 1.56 / 1.58) ──
-                        # With d = f1+E+f2: s21 = E/(f1*f2) => f_eff = -f1*f2/E
-                        _s21_micro = _SM[1, 0].subs(d, f1 + E + f2)
-                        self.f = Eq(1/f, simplify(-_s21_micro))          # 1.56
+                        _s21 = expand(_SM[1, 0])
+                        self.f = Eq(1/f, -_s21)          # 1.56
                         # Shorthand explicit form:  f_eff = -f1*f2/E
                         self.f_eff = Eq(S('f_eff'), -f1*f2/E)            # 1.58
 
