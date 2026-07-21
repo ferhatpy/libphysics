@@ -61,7 +61,8 @@ class sets:
     usecupy = {0:False, 1:True}[0]
     dictflow = dict(
         ch1 = {100:"get_formulary", 150:"get_subformulary",
-               200:"ABCD_2_thin_lens", 250:"diffraction_rectangular", 300:"Fraunhofer_Diff_Int",
+               200:"ABCD_2_thin_lens", 202:"ABCD_microscope",
+               250:"diffraction_rectangular", 300:"Fraunhofer_Diff_Int",
                350:"FBG_Reflection"})
     flow = [dictflow["ch1"][i] for i in [200]]
     if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
@@ -85,17 +86,46 @@ if "get_subformulary" in sets.flow:
     
     
 #### ABCD
-#----> ABCD_2_thin_lens
+#----> ABCD_2_lens
 if "ABCD_2_thin_lens" in sets.flow:
     print("ABCD_2_thin_lens")
     print("")
     oopti.__init__()
     oopti.verbose = False
     
-    oopti1 = optics()
-    oopti2 = optics()
+    abcd = oopti.ABCD
+
+    L1 = abcd.thin_lens.abcd(f1).rhs.doit()
+    L2 = abcd.thin_lens.abcd(f2).rhs.doit()
+    D = abcd.T(d).rhs.doit()
+    G = abcd.T(g).rhs.doit()
+    B = abcd.T(b).rhs.doit()
     
-    # kaldik
+    TM_ = MatMul(B, L2, D, L1, G)
+    TM_ = Eq(M, UnevaluatedExpr(TM_))
+    TM = TM_.rhs.doit()
+    solb = solve(TM[0,1], b)[0]
+    d_expr = f1 + E + f2
+    solb_E = simplify(solb.subs(d, d_expr))
+    M = 1/TM[1,1]
+    
+    num_values = {f1:0.08, f2:-0.12, d:0.06, g:0.24}
+    b_num = solb.evalf(subs=num_values)
+    TM_num = TM.evalf(subs=num_values)
+    M_num = 1/TM_num[1,1]
+
+#----> ABCD_microscope    
+if "ABCD_microscope" in sets.flow:
+    print("ABCD_microscope")
+    print("")
+    oopti.__init__()
+    oopti.verbose = False
+    
+    pprints(
+        "System matrix=", oopti.ABCD.microscope.system_matrix,
+        "Trasnfer matrix=", oopti.ABCD.microscope.transfer_matrix,
+        "The distance between image and the ocular, b=", oopti.ABCD.microscope.imaging_condition,
+        "Magnification", oopti.ABCD.microscope.magnification)
 
 # ### diffration_rectangular
 

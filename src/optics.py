@@ -317,6 +317,9 @@ class optics(branch):
                         oopti.ABCD.microscope.magnification         # M_total symbolic
                         oopti.ABCD.microscope.h1                    # first  principal plane
                         oopti.ABCD.microscope.h2                    # second principal plane
+                        
+                        oopti.ABCD.microscope.magnification.rhs.xreplace({d:f1+var('E')+f2})
+                        oopti.ABCD.microscope.magnification.rhs.xreplace({d:oopti.ABCD.microscope.d.rhs})
                     """
                     def __init__(self, parent):
                         """
@@ -329,14 +332,17 @@ class optics(branch):
                         """
                         super().__init__()
                         self.name = "Compound Microscope"
-
+                        
+                        
                         # ── symbols ────────────────────────────────────────────
-                        # E : optical interval (tube length), positive for microscope
+                        # E_ : optical interval between two focal points of lens 1 and lens 2,
+                        #      positive for microscope
                         # d_n : near-point viewing distance (~250 mm)
-                        E, d_n = symbols('E d_n', positive=True)
+                        global E_
+                        E_, d_n = symbols('E d_n', positive=True)
 
-                        # ── d = f1 + E + f2   (Kloos2007 Eq. 1.57) ────────────
-                        self.d = Eq(d, f1 + E + f2)                      # 1.57
+                        # ── d = f1 + E_ + f2   (Kloos2007 Eq. 1.57) ────────────
+                        self.d = Eq(d, f1 + E_ + f2)                      # 1.57
 
                         # ── doublet system matrix  S = L2·T(d)·L1  (1.55) ───
                         self.SM = Eq(S('SM'),
@@ -349,11 +355,11 @@ class optics(branch):
                         # Evaluated system matrix (general d)
                         _SM = self.SM.rhs.doit()
 
-                        # ── effective focal length  1/f_eff = -s21  (Kloos2007 1.56 / 1.58) ──
+                        # ── effective focal length  1/f_eff = -s21 = -C  (Kloos2007 1.56 / 1.58) ──
                         _s21 = expand(_SM[1, 0])
                         self.f = Eq(1/f, -_s21)          # 1.56
-                        # Shorthand explicit form:  f_eff = -f1*f2/E
-                        self.f_eff = Eq(S('f_eff'), -f1*f2/E)            # 1.58
+                        # Shorthand explicit form:  f_eff = -f1*f2/E_
+                        self.f_eff = Eq(S('f_eff'), -f1*f2/E_)            # 1.58
 
                         # ── imaging condition  s12 = 0  (full chain) ──────────
                         # Full chain: TM = T(b) · L2 · T(d) · L1 · T(g)
@@ -368,18 +374,17 @@ class optics(branch):
                         # Evaluated transfer matrix (general d)
                         _TM = self.TM.rhs.doit()
                         self.imaging_condition = Eq(b,
-                            expand(solve(
-                                _TM[0, 1].subs(d, f1 + E + f2),
-                                b)[0])
+                            simplify(solve(_TM[0, 1].subs(d, f1 + E_ + f2), b)[0])
                         )                                                     # 1.50
 
                         # ── lateral magnification  M = s11 (with s12=0) ───────
-                        # Classical formula: M_total = -(E * d_n) / (f1 * f2)
-                        self.magnification = Eq(S('M_total'),
-                            -(E * d_n) / (f1 * f2))                          # Kloos2007 Sec.1.7
+                        # Classical formula: M_total = -(E_ * d_n) / (f1 * f2)
+                        self.magnification_classical = Eq(S('M_total'),
+                            -(E_ * d_n) / (f1 * f2))                          # Kloos2007 Sec.1.7
+                        self.magnification = Eq(S('M'), simplify(1/_TM[1,1])) # M = 1/D of ABCD matrix.
 
                         # ── principal planes  (1.38 / 1.39) ──────────────────
-                        _SM = _SM.subs(d, f1 + E + f2)   # doublet matrix at d=f1+E+f2
+                        _SM = _SM.subs(d, f1 + E_ + f2)   # doublet matrix at d=f1+E_+f2
                         _s11 = _SM[0, 0]
                         _s21 = _SM[1, 0]
                         _s22 = _SM[1, 1]
