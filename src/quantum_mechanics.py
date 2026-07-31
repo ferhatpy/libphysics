@@ -7,8 +7,8 @@ Created on Fri Mar 11 12:53:36 2022
 """
 import mpmath as mp
 # from abc import ABC, abstractmethod
-from sympy.abc import*
-from sympy import*
+from sympy.abc import *
+from sympy import *
 from sympy import Derivative as D
 from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions import assuming, Q, ask
@@ -221,6 +221,7 @@ class quantum_mechanics(branch):
             # todo ERROR in DifferantialOperator application
 ####----> Translation operator.
             """
+            todo
             >>> f = Function('f')
             >>> x = Symbol('x')
             >>> d = DifferentialOperator(1/x*Derivative(f(x), x), f(x))
@@ -236,7 +237,6 @@ class quantum_mechanics(branch):
             self.TOp    = lambda f=psix: DifferentialOperator(exp(Derivative(f, x)), f) # oqmec.TOp(x**2).doit().expr
             self.TOp22  = exp(diff(self.psix, x))
             self.TOp3   = DifferentialOperator(exp(DifferentialOperator(Derivative(self.psix, x), self.psix).expr))
-            w = Wavefunction(exp(k*x), x)
             
 
 #### Operator Definitions via SymPy sympy.physics.quantum.operator
@@ -249,13 +249,13 @@ class quantum_mechanics(branch):
             self.PxnOp = lambda n=n: Eq(var(rf'\hat{p}^{n}_x'), PxOp()**n)
 
 
-#### Expectation Values.
+#### Expectation Values
 ####----> Generic expectation value calculation routine for a given operator fx.
-            self.exp_fx    = lambda fx:Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx*self.Psi, (x,xmin,xmax)))
-            self.exp_fx2   = lambda fx:Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx**2*self.Psi, (x,xmin,xmax)))
-            self.exp_fxSph = lambda fx:Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx*self.Psi*r**2*sin(theta), (r,0,oo), (phi,0,2*pi), (theta,0,pi)))
-            self.exp_fxSphR= lambda fx:Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx*self.Psi*r**2*4*pi, (r,0,oo))) # 4*pi comes from solid angle.
-            self.delta_fx  = lambda fx:Eq(var(r'\Delta{'+str(fx)+'}='+str(fx)+r'-\langle{'+str(fx)+'}\rangle'), sqrt(self.exp_fx2.rhs - self.exp_fx.rhs**2))
+            self.exp_fx    = lambda fx: Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx*self.Psi, (x,xmin,xmax)))
+            self.exp_fx2   = lambda fx: Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx**2*self.Psi, (x,xmin,xmax)))
+            self.exp_fxSph = lambda fx: Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx*self.Psi*r**2*sin(theta), (r,0,oo), (phi,0,2*pi), (theta,0,pi)))
+            self.exp_fxSphR= lambda fx: Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx*self.Psi*r**2*4*pi, (r,0,oo))) # 4*pi comes from solid angle.
+            self.delta_fx  = lambda fx: Eq(var(r'\Delta{'+str(fx)+'}='+str(fx)+r'-\langle{'+str(fx)+'}\rangle'), sqrt(self.exp_fx2.rhs - self.exp_fx.rhs**2))
 ####----> Expectation value of position.            
             self.exp_x    = Eq(var(r'\langle{x}\rangle'),   integrate(conjugate(self.Psi)*x*self.Psi, (x,xmin,xmax)))
             self.exp_x2   = Eq(var(r'\langle{x^2}\rangle'), Integral(conjugate(self.Psi)*x**2*self.Psi, (x,xmin,xmax)))
@@ -281,8 +281,7 @@ class quantum_mechanics(branch):
             self.delta_xop_pxop = self.uncertainity_xop_pxop  = Eq(var(r'\Delta{x}\Delta{p_x}'), self.delta_xop.rhs*self.delta_px2op.rhs)
 
             
-#### Commutator
-            self.commutator = lambda opA=Operator('A'), opB=Operator('B'): Eq(var(rf'[{opA}, {opB}]'), Commutator(opA, opB), evaluate=False)
+
 
 
 #### ANGULAR MOMENTUM
@@ -294,19 +293,8 @@ class quantum_mechanics(branch):
 #            self.Ly      = Eq(var('L_y'), var('L_y'))
             self.Lx,self.Ly,self.Lz = [Operator(r'\hat{L}_x'), Operator(r'\hat{L}_y'), Operator(r'\hat{L}_z')]
             self.L2      = Eq(Operator(r'\hat{L}^2'), self.Lx**2 + self.Ly**2 + self.Lz**2)
-            self.comLxLy = Eq(Commutator(self.Lx, self.Ly), i*hbar*self.Lz)
-            self.comLzLx = Eq(Commutator(self.Lz, self.Lx), i*hbar*self.Ly)
-            self.comLyLz = Eq(Commutator(self.Ly, self.Lz), i*hbar*self.Lx)
             self.Lplus   = Eq(Operator(r'\hat{L}_+'), self.Lx + I*self.Ly)
             self.Lminus  = Eq(Operator(r'\hat{L}_-'), self.Ly - I*self.Ly)
-            
-            self.comJxJy = Eq(Commutator(Jx, Jy), i*hbar*Jz)
-            self.comJzJx = Eq(Commutator(Jz, Jx), i*hbar*Jy)
-            self.comJyJz = Eq(Commutator(Jy, Jz), i*hbar*Jx)
-            self.comJ2Ji = lambda i=x:Eq(Commutator(J2, {x:Jx, y:Jy, z:Jz}[i]), 0)
-            self.comJzJp = Eq(Commutator(Jz, Jplus),   hbar*Jplus)
-            self.comJzJm = Eq(Commutator(Jz, Jminus), -hbar*Jminus)
-            self.comJpJm = Eq(Commutator(Jplus, Jminus), 2*hbar*Jz)
             self.J2ket   = Eq(J2*JzKet(j,m), simplify(qapply(J2*JzKet(j,m))))
             self.Jzket   = Eq(Jz*JzKet(j,m), simplify(qapply(Jz*JzKet(j,m))))
             self.Jpket   = Eq(Jplus*JzKet(j,m), simplify(qapply(Jplus*JzKet(j,m))))
@@ -365,7 +353,7 @@ class quantum_mechanics(branch):
             self.sz_down  = Eq(var(r'|-z\rangle'), UnevaluatedExpr(Matrix([[0],[1]])))
 
             
-#### ----> Schrödinger Equation
+#### SCHRÖDINGER EQUATION
             # self.V = self.potential_energy = Function('V')(x) todo erase after tests
             self.H = Eq(S('H'), -(hbar**2)/(2*m)*diff(self.Psi, x, 2) + self.V*self.Psi)
             self.exp_V = Eq(var(r'\langle{V}\rangle'), Integral(conjugate(self.Psi)*qapply(self.V*self.Psi), (x,xmin,xmax)))
@@ -376,7 +364,7 @@ class quantum_mechanics(branch):
             self.SchrodingerEq_TI = self.SchrodingerEq_Time_Independent = Eq(-(hbar**2)/(2*m)*diff(self.Psi,x,2) + self.V*self.Psi , En()*self.Psi)
 
             
-####----> Fourier Transforms
+#### FOURIER TRANSFORMS
             # todo look Schwabl not Griffiths
             """
             #===========================================================================
@@ -395,7 +383,22 @@ class quantum_mechanics(branch):
             self.inverse_fourier_transform_phik = Eq( psix, inverse_fourier_transform(1/sqrt(2*pi)*phik*exp(-I*hbar*(k**2)*t/(2*m)), k, x).subs({x:x/(2*pi)}))
 
 
-####----> Time Evoluation
+#### COMMUTATORS
+            self.commutator = lambda opA=Operator('A'), opB=Operator('B'): Eq(var(rf'[{opA}, {opB}]'), Commutator(opA, opB), evaluate=False)
+            self.comxpx  = Eq(Commutator(self.XOp.rhs, self.PxOp.rhs), i*hbar)
+            self.comLxLy = Eq(Commutator(self.Lx, self.Ly), i*hbar*self.Lz)
+            self.comLzLx = Eq(Commutator(self.Lz, self.Lx), i*hbar*self.Ly)
+            self.comLyLz = Eq(Commutator(self.Ly, self.Lz), i*hbar*self.Lx)
+            self.comJxJy = Eq(Commutator(Jx, Jy), i*hbar*Jz)
+            self.comJzJx = Eq(Commutator(Jz, Jx), i*hbar*Jy)
+            self.comJyJz = Eq(Commutator(Jy, Jz), i*hbar*Jx)
+            self.comJ2Ji = lambda i=x:Eq(Commutator(J2, {x:Jx, y:Jy, z:Jz}[i]), 0)
+            self.comJzJp = Eq(Commutator(Jz, Jplus),   hbar*Jplus)
+            self.comJzJm = Eq(Commutator(Jz, Jminus), -hbar*Jminus)
+            self.comJpJm = Eq(Commutator(Jplus, Jminus), 2*hbar*Jz)
+            
+            
+#### TIME EVOLUTION
             self.time_evolution_psixt_from_phik = Eq(psixt, 1/(sqrt(2*pi))*Integral(phik*exp(I*(k*x-hbar*k**2/(2*m))) , (k,-oo,oo)))
             self.time_evolution_psixt_from_psix = Eq(psixt, 1/(sqrt(2*pi))*Integral( fourier_transform(1/sqrt(2*pi)*psix, x, k).subs({k:k/(2*pi)})*exp(I*(k*x-hbar*k**2/(2*m))) , (k,-oo,oo) ))
 
@@ -430,8 +433,13 @@ class quantum_mechanics(branch):
             self.Wigner2D = lambda psi = psi(xA,xB): \
                 Eq( S(r'W(x_A,p_A,x_B,p_B)'),
                    1/(2*pi*hbar)**2*Integral( conjugate(psi.subs({xA:xA+yA/2, xB:xB+yB/2}))*psi.subs({xA:xA-yA/2, xB:xB-yB/2})*exp(I*(pA*yA+pB*yB)/hbar), (yA,-oo,oo), (yB,-oo,oo) ) ) # Bhatt2008, Eq.7
+#### ----> Squeezing Coefficients
+            self.SqX = self.squeezing_coefficient_X = Eq( S('S_X'), 
+                    (self.delta_x2.rhs -  S(1)/2*abs( Integral(conjugate(self.Psi)*self.comxpx.lhs*self.Psi, (x, xmin, xmax)) )) / (S(1)/2*abs( Integral(conjugate(self.Psi)*self.comxpx.lhs*self.Psi, (x, xmin, xmax)) )) ) 
+            self.SqP = self.squeezing_coefficient_P = Eq( S('S_P'), 
+                    (self.delta_px2.rhs - S(1)/2*abs( Integral(conjugate(self.Psi)*self.comxpx.lhs*self.Psi, (x, xmin, xmax)) )) / (S(1)/2*abs( Integral(conjugate(self.Psi)*self.comxpx.lhs*self.Psi, (x, xmin, xmax)) )) ) 
 
-            
+
 #### --- CLASSES ---
 
 #### Hamiltonians
@@ -533,7 +541,7 @@ class quantum_mechanics(branch):
                 References:
                     Jafarov2010
                 """
-                def __init__(self, numeric=False):
+                def __init__(self, parent, numeric=False):
                     super().__init__()
                     self.numeric = numeric
                     self.name = "q-Deformed Quantum Harmonic Oscillator"
@@ -547,12 +555,13 @@ class quantum_mechanics(branch):
                             Eq( var(f'psi_{n}'), self.cn(n,q,l).rhs*exp(-l*x**2)*
                                Sum( ( self.qPochhammer(q**(-n),q,k).rhs/self.qPochhammer(q,q,k).rhs )*q**(n*k-(k**2)/2)*exp(-2*I*l*(sqrt(-ln(q)/l))*x*k), (k,0,n)) ) )
                         self.En = lambda n=n, q=q: Eq( S(f'En(n, q)'), hbar*omega/2*sinh(log(q)*(n + S(1)/2)) / sinh(log(q)/2) )
-                                                
+                        self.SqX = self.squeezing_coefficient_X = Eq( S('S_X'), (2*q**(-n)/hbar)*parent.delta_x2.rhs - 1 )                        
                     else:
                         self.cn = lambda n=1, q=0.001, l=1/2: ( (2*l/mp.pi)**(1/4)*(mp.j)**n*q**(n/2)*mp.qp(q,q,n)**(-1/2) )
                         self.psix = lambda x, n=1, q=0.001, l=1/2: (self.cn(n,q,l) * mp.exp(-l*x**2) * 
                             mp.nsum( lambda k: ( mp.qp(q**(-n),q,k) / mp.qp(q,q,k) )*mp.power(q, n*k-(k**2)/2)*mp.expj(-2*l*(mp.sqrt(-mp.ln(q)/l))*x*k), [0,n]) )
-            self.qdefho = qdefho()            
+                        
+            self.qdefho = qdefho(self)
 
             
 #### Delta Function Quantum Well
@@ -716,7 +725,7 @@ class quantum_mechanics(branch):
             psi(xA_val - yA/2, xB_val - yB/2) *
             mp.exp(1j * (pA * yA + pB * yB) / hbar)
         )
-        integral = mp.quad(integrand, [-mp.inf, mp.inf], [-mp.inf, mp.inf]) # kaldik double quadrature gerekiyor.
+        integral = mp.quad(integrand, [-mp.inf, mp.inf], [-mp.inf, mp.inf]) # todo double quadrature gerekiyor.
         return prefactor * integral
     """
 

@@ -12,7 +12,7 @@ Two-stage design for performance:
 
 DEPENDICIES
 ===========
-pip3 install pytorch, torchquad, loguru
+pip3 install torch torchquad loguru
 
 torch==2.5.1+cu121
 sympy==1.13.1
@@ -68,6 +68,7 @@ from sympy import (
     sinh,
     tan,
     tanh,
+    gamma,
 )
 
 from loguru import logger
@@ -134,9 +135,10 @@ class TorchExpr:
     domain: List[List[float]]     # finite box for torchquad
     dim: int                      # number of integration variables
     n_params: int                 # number of extra parameters
-    sympy_expr: Any               # sympy expression reduced if
+    sympy_integrand: Any          # sympy integrand expression reduced
+    sympy_integral: Any           # sympy integral expression reduced 
     variables: List[Symbol] = None       # sympy variables after change of variables
-
+    
     @staticmethod
     def _rule_simpson(a: float, b: float, N: int, *, device=None, dtype=None):
         if N < 3 or (N % 2) == 0:
@@ -638,28 +640,90 @@ class TorchExpr:
         im_out = im_out.reshape(batch_shape)
         return re_out, im_out
 
-    def torch_integrate_batched_simpson(
-        self,
-        *,
-        params_values = None,
-        N: int = 121,
-        chunk_size_params: int = 256,
-        chunk_size_points: int | None = None,
-        device=None,
-        dtype=None,
-    ):
-        """Backward-compatible wrapper for ``torch_integrate_batched(method='simpson')``."""
-        return self.torch_integrate_batched(
-            params_values=params_values,
-            method="simpson",
-            N=N,
-            chunk_size_params=chunk_size_params,
-            chunk_size_points=chunk_size_points,
-            device=device,
-            dtype=dtype,
-        )
-    
+    def torchquad_integrate_vectorized(self, params_values=None, method=None, N: int = 21):
+        """Vectorized integrator that passes raw parameter tensors directly to the integrand.
+        
+        This method skips nested python loops and delegates all broadcasting to 
+        your integrand function. This means the integrand will receive a 1D tensor 
+        of grid points `x` of shape `(N,)`, along with whatever raw, potentially 
+        multi-dimensional parameter tensors you pass in `params_values`. 
+        
+        It is your integrand's responsibility to combine these mismatched shapes 
+        mathematically without throwing a size mismatch error, either by manually 
+        reshaping dimensions (e.g., `x.view(-1, 1, 1)`) or by using `torch.einsum`.
 
+        Parameters
+        ----------
+        params_values : iterable of torch.Tensor or None
+            Raw parameter tensors to be passed directly to the integrand.
+        method : torchquad integrator instance or None
+            The integration method to use (e.g. `Simpson()`, `MonteCarlo()`, `Boole()` etc.). 
+            If None, defaults to `Simpson()`.
+        N : int
+            The number of integration points to use.
+
+        Returns
+        -------
+        torch.Tensor
+            A tensor containing the result of the integration, inheriting the 
+            batch shape of the broadcasted integrand output.
+        
+        USAGE
+        =====
+        1. Broadcasting with manual reshaping (`.view()`/`.unsqueeze()`)::
+
+            ````python
+            def integrand(x, A_grid, B_grid):
+                # x is (101,) from torchquad
+                # A_grid and B_grid are (10, 4000)
+                
+                # We want (x * A * B). We must unsqueeze to align trailing dims:
+                x = x.view(-1, 1, 1)        # (101, 1, 1)
+                A = A_grid.unsqueeze(0)     # (1, 10, 4000)
+                B = B_grid.unsqueeze(0)     # (1, 10, 4000)
+                
+                return torch.sqrt(x * A * B) # Output shape: (101, 10, 4000)
+            
+            texpr.torchquad_integrate_vectorized(params_values=[A_grid, B_grid])
+            ````
+
+        2. Broadcasting natively with `torch.einsum`::
+
+            ````python
+            def integrand(x, grid_param):
+                # x is (101,)
+                # grid_param is (10, 4000)
+                
+                # einsum handles the cross-multiplication cleanly:
+                # i = 101, jk = (10, 4000). Output ijk = (101, 10, 4000)
+                return torch.sin(torch.einsum("i,jk->ijk", x, grid_param))
+                
+            texpr.torchquad_integrate_vectorized(params_values=[grid_param])
+            ````
+        """
+        if method is None:
+            from torchquad import Simpson
+            method = Simpson()
+            
+        params = list(params_values) if params_values is not None else []
+        
+        def integrand(domain_points):
+            # 1. Find how many dimensions your parameter grid has (e.g., 1D, 2D, 3D)
+            max_p_dim = max([p.dim() for p in params if hasattr(p, 'dim')], default=0)
+            
+            # 2. Add that many trailing 1s to the integration points
+            # If params are (169, 1) [2D], target_shape becomes [-1, 1, 1]
+            target_shape = [-1] + [1] * max_p_dim
+            
+            # 3. Reshape the points so they sit safely on the first dimension
+            var_args = [domain_points[:, i].view(*target_shape) for i in range(self.dim)]
+            
+            # 4. Pass raw params. PyTorch's automatic broadcasting handles the rest!
+            return self.func(*var_args, *params)
+            
+        return method.integrate(integrand, dim=self.dim, N=N, integration_domain=self.domain)
+
+    
 
 class libtorch:
     def __init__(self):
@@ -918,6 +982,7 @@ class libtorch:
             # Constants
             "pi": getattr(torch, "pi", float(np.pi)),
             "E": float(np.e),
+            "gamma": lambda x: torch.exp(torch.lgamma(x)),
         }]
 
     def torchify(
@@ -1158,219 +1223,67 @@ class libtorch:
             domain=domain,
             dim=len(new_vars),
             n_params=len(params),
-            sympy_expr=expr_work,
+            sympy_integrand=expr_work,
+            sympy_integral=integral,
             variables=new_vars,
         )
 
+    def torchify_callable(self, integrand: Callable, domain: List[List[float]], n_params: int = 0) -> TorchExpr:
+        """Create a TorchExpr directly from a Python callable without SymPy compilation.
 
-# ---------------------------------------------------------------------------
-# Functional compatibility helpers
-# ---------------------------------------------------------------------------
-def torchify(
-    expr,
-    variables=None,
-    limits=None,
-    params=None,
-    modules=None,
-    change_of_variables_method: str = "tangent",
-    cov_eps: float = 1e-7,
-):
-    """Convert a SymPy object into a torch-compatible callable or ``TorchExpr``.
+        This allows you to bypass the symbolic SymPy processing step entirely and 
+        directly hook a custom PyTorch function into the `TorchExpr` high-performance 
+        integration backends (like `torchquad_integrate_vectorized`).
 
-    This functional wrapper is kept for backward compatibility with the
-    original ``libtorch`` API.  It delegates to ``libtorch().torchify(...)``
-    so the functional and object-oriented styles share the same core logic.
+        The callable must accept the integration variables first (matching the 
+        length of `domain`), followed by any parameters (matching `n_params`).
 
-    Parameters
-    ----------
-    expr : sympy.Expr | sympy.Integral | sympy.Eq
-        Symbolic expression or integral-like SymPy object.
-    variables : list[sympy.Symbol] or None, optional
-        Variables passed through to ``libtorch.torchify``.
-    limits : list[tuple] or None, optional
-        Integration limits passed through to ``libtorch.torchify``.
-    params : list[sympy.Symbol] or None, optional
-        Additional symbolic parameters.
-    modules : list[dict] or None, optional
-        Custom ``lambdify`` modules mapping.
+        Parameters
+        ----------
+        integrand : Callable
+            A python function or lambda representing your integrand.
+            Signature must be: `f(var_0, ..., var_{dim-1}, param_0, ..., param_{n_params-1})`
+        domain : List[List[float]]
+            The finite integration domain box. E.g. `[[0.0, 1.0], [-5.0, 5.0]]` 
+            for a 2D integral. The length of this list sets the integration dimensionality `dim`.
+        n_params : int, optional
+            The number of extra parameters your integrand accepts after the variables. 
+            Defaults to 0.
 
-    Returns
-    -------
-    TorchExpr | callable
-        Same return contract as ``libtorch().torchify(...)``.
+        Returns
+        -------
+        TorchExpr
+            A compiled TorchExpr object ready for fast numerical integration.
 
-    USAGE
-    =====
-    1. Functional style kept in parallel with the OOP API::
+        USAGE
+        =====
+        1. Simple 2D integration with parameters::
 
-        ````python
-        from libphysics.libtorch import torchify
-        from sympy import symbols, Integral, exp, oo
-
-        x = symbols("x", real=True)
-        integral_expr = Integral(exp(-x**2), (x, -oo, oo))
-
-        texpr = torchify(integral_expr)
-        ````
-    """
-    return libtorch().torchify(
-        expr,
-        variables=variables,
-        limits=limits,
-        params=params,
-        modules=modules,
-        change_of_variables_method=change_of_variables_method,
-        cov_eps=cov_eps,
-    )
-
-
-def torchquad_integrate(texpr: TorchExpr, params_values=None, method=None, N: int = 21, dtype=None):
-    """Numerically integrate a ``TorchExpr`` using torchquad.
-
-    This functional wrapper is kept for backward compatibility with the
-    original ``libtorch`` API.  New code can call
-    :meth:`TorchExpr.torchquad_integrate` directly.
-
-    Parameters
-    ----------
-    texpr : TorchExpr
-        Object returned by ``libtorch().torchify(..., limits=...)``.
-    params_values : list | tuple | torch.Tensor | None, optional
-        Numerical parameter values in the same order expected by
-        ``texpr.func``.
-    method : torchquad integrator instance or None, optional
-        If ``None``, a default ``Simpson`` integrator is created.
-    N : int, optional
-        Resolution parameter passed to torchquad.
-    dtype : torch.dtype or None, optional
-        Floating dtype used for internal computations. Passed through to
-        :meth:`TorchExpr.torchquad_integrate`.
-
-    Returns
-    -------
-    re, im : torch.Tensor
-        Real and imaginary parts of the integral.
-
-    USAGE
-    =====
-    1. Functional style kept in parallel with the OOP API::
-
-        ````python
-        from libphysics.libtorch import libtorch, torchquad_integrate
-        from sympy import symbols, Integral, exp, oo
-
-        x = symbols("x", real=True)
-        integral_expr = Integral(exp(-x**2), (x, -oo, oo))
-
-        lt = libtorch()
-        texpr = lt.torchify(integral_expr)
-        re, im = torchquad_integrate(texpr, N=121)
-        ````
-    """
-    return texpr.torchquad_integrate(params_values=params_values, method=method, N=N, dtype=dtype)
-
-
-def _simpson_weights_1d(a: float, b: float, N: int, *, device=None, dtype=None) -> torch.Tensor:
-    """Backward-compatible Simpson weights wrapper."""
-    _coords, weights = TorchExpr._rule_simpson(a, b, N, device=device, dtype=dtype)
-    return weights
-
-
-def _is_scalar_like(x) -> bool:
-    """Functional wrapper around ``TorchExpr._is_scalar_like``."""
-    return TorchExpr._is_scalar_like(x)
-
-
-def _normalize_params_values(params_values, n_params: int, *, device, dtype):
-    """Functional wrapper around ``TorchExpr._normalize_params_values``."""
-    return TorchExpr._normalize_params_values(params_values, n_params, device=device, dtype=dtype)
-
-
-def torch_integrate_batched(
-    texpr: TorchExpr,
-    params_values=None,
-    *,
-    method: str | Callable = "simpson",
-    N: int = 121,
-    chunk_size_params: int = 256,
-    chunk_size_points: int | None = None,
-    device=None,
-    dtype=None,
-):
-    """Batched tensor-product quadrature integration for any dimension.
-
-    This functional wrapper is kept so existing code that used the
-    original function-based API continues to work.  New code can call
-    :meth:`TorchExpr.torch_integrate_batched` directly.
-
-    Parameters
-    ----------
-    texpr : TorchExpr
-        Object returned by ``libtorch().torchify(..., limits=...)``.
-    params_values : tensor | list | tuple | None
-        Numerical parameter values.
-    N : int, optional
-        Odd number of Simpson points per dimension.
-    chunk_size_params : int, optional
-        Number of parameter points processed per chunk.
-    chunk_size_points : int or None, optional
-        Number of sample points processed per chunk.
-    device : torch.device or None, optional
-        Device used for internal tensors.
-    dtype : torch.dtype or None, optional
-        Floating dtype used for internal tensors.
-
-    Returns
-    -------
-    re, im : torch.Tensor
-        Real and imaginary parts of the integral.
-
-    USAGE
-    =====
-    1. Functional style kept in parallel with the OOP API::
-
-        ````python
-        from libphysics.libtorch import libtorch, torch_integrate_batched_simpson
-        from sympy import symbols, Integral, exp, oo
-
-        x = symbols("x", real=True)
-        integral_expr = Integral(exp(-x**2), (x, -oo, oo))
-
-        lt = libtorch()
-        texpr = lt.torchify(integral_expr)
-        re, im = torch_integrate_batched_simpson(texpr, params_values=None, N=121)
-        ````
-    """
-    return texpr.torch_integrate_batched(
-        params_values=params_values,
-        method=method,
-        N=N,
-        chunk_size_params=chunk_size_params,
-        chunk_size_points=chunk_size_points,
-        device=device,
-        dtype=dtype,
-    )
-
-
-def torch_integrate_batched_simpson(
-    texpr: TorchExpr,
-    params_values=None,
-    *,
-    N: int = 121,
-    chunk_size_params: int = 256,
-    chunk_size_points: int | None = None,
-    device=None,
-    dtype=None,
-):
-    """Backward-compatible wrapper for ``torch_integrate_batched(method='simpson')``."""
-    return texpr.torch_integrate_batched(
-        params_values=params_values,
-        method="simpson",
-        N=N,
-        chunk_size_params=chunk_size_params,
-        chunk_size_points=chunk_size_points,
-        device=device,
-        dtype=dtype,
-    )
+            ````python
+            import torch
+            
+            # Integrand: exp(-alpha * x^2 - beta * y^2)
+            def my_integrand(x, y, alpha, beta):
+                return torch.exp(-alpha * x**2 - beta * y**2)
+            
+            texpr = lt.torchify_callable(
+                integrand=my_integrand,
+                domain=[[-5.0, 5.0], [-5.0, 5.0]], # 2 variables: x, y
+                n_params=2                         # 2 parameters: alpha, beta
+            )
+            
+            # Integrate with alpha=1.0, beta=0.5
+            re, im = texpr.torchquad_integrate(params_values=[1.0, 0.5])
+            ````
+        """
+        return TorchExpr(
+            func=integrand,
+            domain=domain,
+            dim=len(domain),
+            n_params=n_params,
+            sympy_integrand=None,
+            sympy_integral=None,
+            variables=None,
+        )
 
 lt = libtorch()
