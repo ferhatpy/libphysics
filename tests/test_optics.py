@@ -14,7 +14,7 @@ print(omec.process(commands))
 References:
 ===========    
 Abedin, Islam, Haider, 2007, Computer simulation of Fresnel diffraction from rectangular apertures and obstacles using the Fresnel integral
-
+Gerrard, A., Burch, J.M., 1975, Introduction to matrix methods in optics
 """
 
 import copy
@@ -88,6 +88,7 @@ if "get_subformulary" in sets.flow:
 #### ABCD
 #----> ABCD_2_lens
 if "ABCD_2_thin_lens" in sets.flow:
+    # Gerrard1975
     print("ABCD_2_thin_lens")
     print("")
     oopti.__init__()
@@ -108,6 +109,8 @@ if "ABCD_2_thin_lens" in sets.flow:
     d_expr = f1 + E + f2
     solb_E = simplify(solb.subs(d, d_expr))
     M = 1/TM[1,1]
+    
+    list(map(display, [L1, L2]))
     
     num_values = {f1:0.08, f2:-0.12, d:0.06, g:0.24}
     b_num = solb.evalf(subs=num_values)

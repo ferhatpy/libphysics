@@ -299,8 +299,6 @@ class quantum_mechanics(branch):
             self.Jzket   = Eq(Jz*JzKet(j,m), simplify(qapply(Jz*JzKet(j,m))))
             self.Jpket   = Eq(Jplus*JzKet(j,m), simplify(qapply(Jplus*JzKet(j,m))))
             self.Jmket   = Eq(Jminus*JzKet(j,m), simplify(qapply(Jminus*JzKet(j,m))))
-
-
 #### ----> Total Angular Momentum in Spherical Coordinates.
             self.JxSph    = Eq(Operator(r'\hat{J}_x'),  hbar/I*(-sin(phi)*D(psiSph, theta) - cos(phi)*cot(theta)*D(psiSph, phi)) )
             self.JySph    = Eq(Operator(r'\hat{J}_y'),  hbar/I*( cos(phi)*D(psiSph, theta) - sin(phi)*cot(theta)*D(psiSph, phi)) )
@@ -309,8 +307,6 @@ class quantum_mechanics(branch):
             self.JmSph    = Eq(Operator(r'\hat{J}_-'),  hbar*exp(-I*phi)*(-D(psiSph, theta) + I*cot(theta)*D(psiSph, phi)) )
             self.J2Sph    = Eq(Operator(r'\hat{J}^2'), -hbar**2*(1/sin(theta)*D(sin(theta)*D(psiSph, theta), theta) + 1/(sin(theta))**2*D(psiSph, phi, 2)) ) # Schwabl2007 (5.18e)
             self.L2Sph    = self.J2Sph
-
-
 #### ----> Orbital Angular Momentum in Spherical Coordinates
             # Define the Laplacian in spherical coordinates todo copy to omethod
             self.laplacian_spherical = Eq(Operator(r'\nabla^2'), \
@@ -323,8 +319,6 @@ class quantum_mechanics(branch):
             self.pr2Sph   = Eq(Operator(r'\hat{p}_r^2'), qapply(self.prSph.rhs * qapply(self.prSph.rhs*psiSph)) )
             self.p2Sph    = Eq(Operator(r'\hat{p^2}'), self.pr2Sph.rhs + (1/r**2)*self.L2Sph.rhs ) # Schwabl2007 (6.4')
             self.p2Sph2   = Eq(Operator(r'\hat{p^2}'), -hbar**2*self.nabla2Sph.rhs)       
-            
-            
 #### ----> Spin Angular Momentum
             """
             oqmec.Sr.rhs.doit().eigenvals()
@@ -438,8 +432,31 @@ class quantum_mechanics(branch):
                     (self.delta_x2.rhs -  S(1)/2*abs( Integral(conjugate(self.Psi)*self.comxpx.lhs*self.Psi, (x, xmin, xmax)) )) / (S(1)/2*abs( Integral(conjugate(self.Psi)*self.comxpx.lhs*self.Psi, (x, xmin, xmax)) )) ) 
             self.SqP = self.squeezing_coefficient_P = Eq( S('S_P'), 
                     (self.delta_px2.rhs - S(1)/2*abs( Integral(conjugate(self.Psi)*self.comxpx.lhs*self.Psi, (x, xmin, xmax)) )) / (S(1)/2*abs( Integral(conjugate(self.Psi)*self.comxpx.lhs*self.Psi, (x, xmin, xmax)) )) ) 
-
-
+            
+            ####  kaldik mixed code !!! to be corrected
+            # >>> EPR-type operators 2-mode quadriture squeezing coefficent
+            x_A , x_B = symbols('x_A x_B', real=True)
+            self.q = symbols('q', real=True)
+            self.n_A, self.n_B = symbols('n_A n_B', integer=True, positive=True)
+            self.PsiEPR = PsiEPR = Function('Psi')(x_A, x_B)
+            self.exp_xA_EPR   = Eq(var(r'\langle{x_A}\rangle'), Integral(conjugate(PsiEPR)*x_A*PsiEPR, (x_A, -oo, oo), (x_B, -oo, oo)), evaluate=False)
+            self.exp_xB_EPR   = Eq(var(r'\langle{x_B}\rangle'), Integral(conjugate(PsiEPR)*x_B*PsiEPR, (x_A, -oo, oo), (x_B, -oo, oo)), evaluate=False)
+            self.exp_xA2_EPR  = Eq(var(r'\langle{x_A^2}\rangle'), Integral(conjugate(PsiEPR)*x_A**2*PsiEPR, (x_A, -oo, oo), (x_B, -oo, oo)), evaluate=False)
+            self.exp_xB2_EPR  = Eq(var(r'\langle{x_B^2}\rangle'), Integral(conjugate(PsiEPR)*x_B**2*PsiEPR, (x_A, -oo, oo), (x_B, -oo, oo)), evaluate=False)
+            self.exp_xAxB_EPR = Eq(var(r'\langle{x_A x_B}\rangle'), Integral(conjugate(PsiEPR)*x_A*x_B*PsiEPR, (x_A, -oo, oo), (x_B, -oo, oo)), evaluate=False)
+            self.exp_xBxA_EPR = Eq(var(r'\langle{x_B x_A}\rangle'), Integral(conjugate(PsiEPR)*x_B*x_A*PsiEPR, (x_A, -oo, oo), (x_B, -oo, oo)), evaluate=False)
+            self.delta_xAB2_EPR = Eq(
+                var(r'\Delta{x_{AB}}^2'),
+                self.exp_xA2_EPR.rhs + self.exp_xB2_EPR.rhs - self.exp_xAxB_EPR.rhs - self.exp_xBxA_EPR.rhs + 2*self.exp_xA_EPR.rhs*self.exp_xB_EPR.rhs,
+                evaluate=False
+            )
+            self.SqX_EPR = self.squeezing_coefficient_X_EPR = Eq(
+                Symbol(r'S_X^{EPR}'),
+                -1 + 2*self.delta_xAB2_EPR.rhs / Abs(hbar*(q**self.n_A - q**self.n_B)), #corrected
+                evaluate=False
+            )
+            #### kaldik mixed code !!! to be corrected       
+             
 #### --- CLASSES ---
 
 #### Hamiltonians

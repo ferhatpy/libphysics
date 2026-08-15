@@ -1,5 +1,6 @@
-# -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# !/usr/bin/env python3
 # ## test_mechanics.py
 
 """
@@ -26,7 +27,7 @@ lstPaths = ["../src"]
 for ipath in lstPaths:
     if ipath not in sys.path:
         sys.path.append(ipath)
-        
+
 from libsympy import *
 from mechanics import *
 from sympy.physics import mechanics as mech

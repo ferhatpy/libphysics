@@ -156,5 +156,4 @@ if "topic1" in sets.flow:
             output_style = otemp.output_style )
     
     list(map(display, [Zsp1, U]))
-    
     print(multiline_latex(Zsp1.lhs, Zsp1.rhs))
