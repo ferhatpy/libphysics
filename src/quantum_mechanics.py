@@ -5,24 +5,20 @@ quantum_mechanics.py
 Created on Fri Mar 11 12:53:36 2022
 
 """
-import mpmath as mp
 # from abc import ABC, abstractmethod
+import mpmath as mp
+
 from sympy.abc import *
 from sympy import *
 from sympy import Derivative as D
-from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions import assuming, Q, ask
-from sympy.integrals.manualintegrate import manualintegrate
-from sympy.integrals.manualintegrate import integral_steps
-#from sympy.integrals.rubi.utility_function import Simplify
-from sympy.integrals.transforms import inverse_fourier_transform
+from sympy.assumptions.assume import global_assumptions
 from sympy.diffgeom import *
 from sympy.diffgeom.rn import *
-from sympy.vector import CoordSys3D
-
-# Hydrogen Atom
-from sympy.physics.hydrogen import *
-
+from sympy.integrals.manualintegrate import manualintegrate, integral_steps
+#from sympy.integrals.rubi.utility_function import Simplify
+from sympy.integrals.transforms import inverse_fourier_transform
+from sympy.physics.hydrogen import * # Hydrogen Atom
 from sympy.physics.quantum import *
 from sympy.physics.quantum.cartesian import *
 from sympy.physics.quantum.constants import * # hbar etc.
@@ -36,7 +32,7 @@ from sympy.physics.quantum.spin import *
 from sympy.physics.quantum.state import *
 from sympy.physics.paulialgebra import *
 from sympy.physics.paulialgebra import Pauli, evaluate_pauli_product
-
+from sympy.vector import CoordSys3D
 
 from libsympy import *
 from libreflection import *
@@ -50,12 +46,14 @@ class quantum_mechanics(branch):
     _name = "quantum_mechanics"
 
     # Integer symbols
-    global k,k1,k2,k3,n
-    k, k1,k2,k3 = symbols('k k1 k2 k3', integer=True)
+    global k,k1,k2,k3,n,m
+    k,k1,k2,k3 = symbols('k k1 k2 k3', integer=True)
     n = symbols('n', positive=True, integer=True)
+    m = symbols('n', positive=True, integer=True)
     
     # Real symbols
-    global xA,xB,yA,yB,pA,pB
+    global qA,qB,xA,xB,yA,yB,pA,pB
+    qA, qB = symbols('q_A q_B', real=True)
     xA, xB = symbols('x_A x_B', real=True)
     yA, yB = symbols('y_A y_B', real=True)
     pA, pB = symbols('p_A p_B', real=True)
@@ -79,15 +77,17 @@ class quantum_mechanics(branch):
         # Mass of electron, proton, neutron, nucleus.
         global m_e,m_p,m_n,m_N
         m_e,m_p,m_n,m_N = symbols('m_e m_p m_n m_N', real=True, positive=True)
-        global x,y,z, xmin, xmax
+        global x,y,z, xmin, xmax, xAmin, xBmin, xAmax, xBmax
         x,y,z = symbols('x y z', real=True)
-        xmin,xmax = symbols('x_{min} x_{max}', real=True)
+        xmin, xmax = symbols('x_{min} x_{max}', real=True)
+        xAmin, xAmax = symbols('x_{Amin} x_{Amax}', real=True)
+        xBmin, xBmax = symbols('x_{Bmin} x_{Bmax}', real=True)
         global pmin, pmax
-        pmin,pmax = symbols('p_{min} p_{max}', real=True)
+        pmin, pmax = symbols('p_{min} p_{max}', real=True)
         global B0,V0
         B0,V0 = symbols('B_0 V_0', real=True)
-        global vA,vB,vC,vD
-        vA,vB,vC,vD = symbols('A B C D', vector=True)
+        global vA,vB,vC,vDD
+        vA,vB,vC,vDD = symbols('A B C D', vector=True)
         global Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Dx,Dy,Dz
         Ax,Bx,Cx,Dx = symbols('A_x B_x C_x D_x', real=True)
         Ay,By,Cy,Dy = symbols('A_y B_y C_y D_y', real=True)
@@ -115,8 +115,10 @@ class quantum_mechanics(branch):
         class_type specific global symbols, functions, objects.
         """ 
         if self.class_type in ["position_space"]:
-            global Hp
+            # Operators
+            global Hp, XA, XB
             Hp = Operator('Hprime') # Perturbation onto Hamiltonian
+            XA, XB = (XOp('X_A'), XOp('X_B'))
             
             global psib, psik, nb, nk, phi
             global Psi, psi, psix, psixt, PsiSph, psiSph
@@ -127,12 +129,9 @@ class quantum_mechanics(branch):
             psi    = Function('psi')
             psix   = Function('psi')(x)
             psixt  = Function('psi')(x,t)
-            
             phik   = Function('phi')(k)
-            
             PsiSph = Function('Psi')(r,theta,phi,t)
             psiSph = Function('psi')(r,theta,phi)
-            
             V      = Function('V')(x,y,z)
             
         if self.class_type in ["momentum_space"]:
@@ -250,38 +249,62 @@ class quantum_mechanics(branch):
 
 
 #### Expectation Values
-####----> Generic expectation value calculation routine for a given operator fx.
+####----> 1D Generic expectation value calculation routine for a given operator fx.
             self.exp_fx    = lambda fx: Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx*self.Psi, (x,xmin,xmax)))
             self.exp_fx2   = lambda fx: Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx**2*self.Psi, (x,xmin,xmax)))
             self.exp_fxSph = lambda fx: Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx*self.Psi*r**2*sin(theta), (r,0,oo), (phi,0,2*pi), (theta,0,pi)))
             self.exp_fxSphR= lambda fx: Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx*self.Psi*r**2*4*pi, (r,0,oo))) # 4*pi comes from solid angle.
-            self.delta_fx  = lambda fx: Eq(var(r'\Delta{'+str(fx)+'}='+str(fx)+r'-\langle{'+str(fx)+'}\rangle'), sqrt(self.exp_fx2.rhs - self.exp_fx.rhs**2))
-####----> Expectation value of position.            
+            self.delta_fx  = lambda fx: Eq(var(r'\Delta{'+str(fx)+'}='+str(fx)+r'-\langle{'+str(fx)+r'}\rangle'), \
+                                           sqrt(self.exp_fx2(fx).rhs - self.exp_fx(fx).rhs**2), evaluate=False)
+            self.delta_fx2 = lambda fx: Eq(var(r'(\Delta{'+str(fx)+'})^2=('+str(fx)+r'-\langle{'+str(fx)+r'}\rangle)^2'), \
+                                           (self.exp_fx2(fx).rhs - self.exp_fx(fx).rhs**2), evaluate=False)
+####----> 2D Generic expectation value calculation routine for a given operator fx.
+            self.exp_fx_2D = lambda fx, xA, xB: Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx*self.Psi, (xA,xAmin,xAmax), (xB,xBmin,xBmax)), evaluate=False)
+            self.exp_fx2_2D= lambda fx, xA, xB: Eq(var(r'\langle{'+str(fx)+r'}\rangle'), Integral(conjugate(self.Psi)*fx**2*self.Psi, (xA,xAmin,xAmax), (xB,xBmin,xBmax)), evaluate=False)
+            self.delta_fx2_2D_commuting= lambda fxA, fxB:\
+                Eq( var(r'\langle(\Delta{X_{AB}})^2\rangle'),\
+                   S(1)/2*( self.exp_fx2_2D(fxA, xA, xB).rhs - self.exp_fx_2D(fxA, xA, xB).rhs**2 + self.exp_fx2_2D(fxB, xA, xB).rhs - self.exp_fx_2D(fxB, xA, xB).rhs**2 ) + self.exp_fx_2D(fxA*fxB, xA, xB).rhs - (self.exp_fx_2D(fxA, xA, xB).rhs*self.exp_fx_2D(fxB, xA, xB).rhs) )
+            self.ibrahim_delta_fx2_2D_commuting= lambda fxA, fxB:\
+                Eq( var(r'\langle(\Delta{X_{AB}})^2\rangle'),\
+                   S(1)/2*( self.exp_fx2_2D(fxA, xA, xB).rhs + self.exp_fx2_2D(fxB, xA, xB).rhs) - self.exp_fx_2D(fxA*fxB, xA, xB).rhs + (self.exp_fx_2D(fxA, xA, xB).rhs*self.exp_fx_2D(fxB, xA, xB).rhs) )
+####----> 1D Expectation value of position.   
             self.exp_x    = Eq(var(r'\langle{x}\rangle'),   integrate(conjugate(self.Psi)*x*self.Psi, (x,xmin,xmax)))
             self.exp_x2   = Eq(var(r'\langle{x^2}\rangle'), Integral(conjugate(self.Psi)*x**2*self.Psi, (x,xmin,xmax)))
             self.delta_x  = Eq(var(r'\Delta{x}=x-\langle{x}\rangle'), sqrt(self.exp_x2.rhs - self.exp_x.rhs**2))
             self.delta_x2 = Eq(var(r'(\Delta{x})^2=\langle{x^2}\rangle-\langle{x}\rangle^2'), self.exp_x2.rhs - self.exp_x.rhs**2)
-####----> Expectation value of position in operator notation.
+####----> 1D Expectation value of position in operator notation.
             self.exp_xop   = Eq(var(r'\langle{x}\rangle'),   Integral(conjugate(self.Psi)*qapply(x*self.Psi), (x,xmin,xmax)))
             self.exp_x2op  = Eq(var(r'\langle{x^2}\rangle'), Integral(conjugate(self.Psi)*qapply(x**2*self.Psi), (x,xmin,xmax)))
             self.delta_xop = Eq(var(r'\Delta{x}'), sqrt(self.exp_x2op.rhs - self.exp_xop.rhs**2))
             self.delta_x2op= Eq(var(r'(\Delta{x})^2'), self.exp_x2op.rhs - self.exp_xop.rhs**2)
-####----> Expectation value of momentum.        
+####----> 1D Expectation value of momentum.        
             self.exp_px  = Eq(var(r'\langle{p_x}\rangle'),   Integral(conjugate(self.Psi)*self.px.rhs,  (x,xmin,xmax)))
             self.exp_px2 = Eq(var(r'\langle{p_x^2}\rangle'), Integral(conjugate(self.Psi)*self.px2.rhs, (x,xmin,xmax)))
             self.delta_px  = Eq(var(r'\Delta{p_x}'), sqrt(self.exp_px2.rhs - self.exp_px.rhs**2))
             self.delta_px2 = Eq(var(r'(\Delta{p_x})^2'), self.exp_px2.rhs - self.exp_px.rhs**2)
             self.delta_xp  = self.uncertainity_xp = Eq(var(r'\Delta{x}\Delta{p_x}'), self.delta_x.rhs*self.delta_px.rhs)
-####----> Expectation value of momentum in operator notation.
+####----> 1D Expectation value of momentum in operator notation.
             self.exp_pxop  = Eq(var(r'\langle{\hat{p}_x}\rangle'),   Integral(conjugate(self.Psi)*self.pxop.rhs,  (x,xmin,xmax)))
             self.exp_px2op = Eq(var(r'\langle{\hat{p}_x^2}\rangle'), Integral(conjugate(self.Psi)*self.px2op.rhs, (x,xmin,xmax)))
             self.delta_pxop  = Eq(var(r'\Delta{p_x}'), sqrt(self.exp_px2op.rhs - self.exp_pxop.rhs**2))
             self.delta_px2op = Eq(var(r'(\Delta{p_x})^2'), self.exp_px2op.rhs - self.exp_pxop.rhs**2)
+####----> Covariance of operators.
+            # todo write general definition from wikipedia
+            self.cov_Op_general_re_bk = lambda OpA=Operator('X_{A}'), OpB=Operator('X_{B}'): \
+                Eq( var(rf'cov({str(OpA)}\,{str(OpB)})'), S(1)/2*qapply(psib*(OpA*OpB + OpB*OpA)*psik) - qapply(psib*OpA*psik)*qapply(psib*OpB*psik) )
+            self.cov_Op_commuting_re_bk = lambda OpA=Operator('X_{A}'), OpB=Operator('X_{B}'): \
+                Eq( var(rf'cov({str(OpA)}\,{str(OpB)})'), qapply(psib*(OpA*OpB)*psik) - qapply(psib*OpA*psik)*qapply(psib*OpB*psik) )
+####----> Generic expectation value calculation routine for a given operator Op in <bra|ket> notation.
+            self.exp_Op_bk = lambda Op=Operator('X'): Eq(var(r'\langle{'+str(Op)+r'}\rangle'), \
+                                                         qapply(psib*Op*psik))
+            self.delta_Op2_bk = lambda Op=Operator('X'): Eq(var(r'\langle(\Delta{'+str(Op)+r'})^2\rangle'), \
+                                                            self.exp_Op_bk(qapply(Op*Op)).rhs - self.exp_Op_bk(Op).rhs**2)
+            self.delta_XAB2_bk = lambda OpA=XA, OpB=XB: \
+                Eq( var(r'\langle(\Delta{X_{AB}})^2\rangle'), \
+                   S(1)/2*(self.delta_Op2_bk(OpA).rhs + self.delta_Op2_bk(OpB).rhs) + self.cov_Op_commuting_re_bk(OpA, OpB).rhs )
+            # represent(oqmec.delta_XAB2_bk().rhs, basis=XKet())
 ####----> Uncertainities.
             self.delta_xop_pxop = self.uncertainity_xop_pxop  = Eq(var(r'\Delta{x}\Delta{p_x}'), self.delta_xop.rhs*self.delta_px2op.rhs)
-
-            
-
 
 
 #### ANGULAR MOMENTUM
@@ -422,41 +445,37 @@ class quantum_mechanics(branch):
             oqmec.Wigner2D(xA**2+xB**3)
             """
             self.Wigner1D = lambda psi = psi(x): \
-                Eq( S(r'W(x,p)'),
+                EA( S(r'W(x,p)'),
                    1/(2*pi*hbar)*Integral( conjugate(psi.subs({x:x+y/2}))*psi.subs({x:x-y/2})*exp(I*p*y/hbar), (y,-oo,oo) ) ) # Agarwal2004, Eq.3
             self.Wigner2D = lambda psi = psi(xA,xB): \
                 Eq( S(r'W(x_A,p_A,x_B,p_B)'),
                    1/(2*pi*hbar)**2*Integral( conjugate(psi.subs({xA:xA+yA/2, xB:xB+yB/2}))*psi.subs({xA:xA-yA/2, xB:xB-yB/2})*exp(I*(pA*yA+pB*yB)/hbar), (yA,-oo,oo), (yB,-oo,oo) ) ) # Bhatt2008, Eq.7
-#### ----> Squeezing Coefficients
-            self.SqX = self.squeezing_coefficient_X = Eq( S('S_X'), 
+#### ----> 1D Squeezing Coefficients
+            self.SqX = self.squeezing_coefficient_X = Eq( var(r'S_X'),\
                     (self.delta_x2.rhs -  S(1)/2*abs( Integral(conjugate(self.Psi)*self.comxpx.lhs*self.Psi, (x, xmin, xmax)) )) / (S(1)/2*abs( Integral(conjugate(self.Psi)*self.comxpx.lhs*self.Psi, (x, xmin, xmax)) )) ) 
-            self.SqP = self.squeezing_coefficient_P = Eq( S('S_P'), 
+            self.SqP = self.squeezing_coefficient_P = Eq( var(r'S_P'),\
                     (self.delta_px2.rhs - S(1)/2*abs( Integral(conjugate(self.Psi)*self.comxpx.lhs*self.Psi, (x, xmin, xmax)) )) / (S(1)/2*abs( Integral(conjugate(self.Psi)*self.comxpx.lhs*self.Psi, (x, xmin, xmax)) )) ) 
+#### ----> 2D Squeezing Coefficients
+            self.SqXAB = self.squeezing_coefficient_X = Eq( var(r'S_X^{AB}'),\
+                    (self.delta_fx2_2D_commuting(xA, -xB).rhs / ((S(1)/4)*hbar*Abs(I*qA**n - I*qB**m)) - 1))
             
-            ####  kaldik mixed code !!! to be corrected
-            # >>> EPR-type operators 2-mode quadriture squeezing coefficent
-            x_A , x_B = symbols('x_A x_B', real=True)
-            self.q = symbols('q', real=True)
-            self.n_A, self.n_B = symbols('n_A n_B', integer=True, positive=True)
-            self.PsiEPR = PsiEPR = Function('Psi')(x_A, x_B)
-            self.exp_xA_EPR   = Eq(var(r'\langle{x_A}\rangle'), Integral(conjugate(PsiEPR)*x_A*PsiEPR, (x_A, -oo, oo), (x_B, -oo, oo)), evaluate=False)
-            self.exp_xB_EPR   = Eq(var(r'\langle{x_B}\rangle'), Integral(conjugate(PsiEPR)*x_B*PsiEPR, (x_A, -oo, oo), (x_B, -oo, oo)), evaluate=False)
-            self.exp_xA2_EPR  = Eq(var(r'\langle{x_A^2}\rangle'), Integral(conjugate(PsiEPR)*x_A**2*PsiEPR, (x_A, -oo, oo), (x_B, -oo, oo)), evaluate=False)
-            self.exp_xB2_EPR  = Eq(var(r'\langle{x_B^2}\rangle'), Integral(conjugate(PsiEPR)*x_B**2*PsiEPR, (x_A, -oo, oo), (x_B, -oo, oo)), evaluate=False)
-            self.exp_xAxB_EPR = Eq(var(r'\langle{x_A x_B}\rangle'), Integral(conjugate(PsiEPR)*x_A*x_B*PsiEPR, (x_A, -oo, oo), (x_B, -oo, oo)), evaluate=False)
-            self.exp_xBxA_EPR = Eq(var(r'\langle{x_B x_A}\rangle'), Integral(conjugate(PsiEPR)*x_B*x_A*PsiEPR, (x_A, -oo, oo), (x_B, -oo, oo)), evaluate=False)
-            self.delta_xAB2_EPR = Eq(
-                var(r'\Delta{x_{AB}}^2'),
-                self.exp_xA2_EPR.rhs + self.exp_xB2_EPR.rhs - self.exp_xAxB_EPR.rhs - self.exp_xBxA_EPR.rhs + 2*self.exp_xA_EPR.rhs*self.exp_xB_EPR.rhs,
-                evaluate=False
-            )
-            self.SqX_EPR = self.squeezing_coefficient_X_EPR = Eq(
-                Symbol(r'S_X^{EPR}'),
-                -1 + 2*self.delta_xAB2_EPR.rhs / Abs(hbar*(q**self.n_A - q**self.n_B)), #corrected
-                evaluate=False
-            )
-            #### kaldik mixed code !!! to be corrected       
-             
+            # self.SqXAB = self.squeezing_coefficient_X = Eq( var(r'S_X^{AB}'),\
+            #         (self.delta_fx2_2D_commuting(xA, -xB).rhs / ((S(1)/4)*1) - 1))
+                
+            # self.SqXAB = self.squeezing_coefficient_X = Eq( var(r'S_X^{AB}'),\
+            #         ( (S(1)/2*\
+            #            (self.exp_fx2_2D(xA,xA,xB).rhs - self.exp_fx_2D(xA,xA,xB).rhs**2 +\
+            #             self.exp_fx2_2D(xB,xA,xB).rhs - self.exp_fx_2D(xB,xA,xB).rhs**2) -\
+            #                self.exp_fx_2D(xA*xB,xA,xB).rhs + self.exp_fx_2D(xA,xA,xB).rhs*self.exp_fx_2D(xB,xA,xB).rhs
+            #         ) \
+            #          / ((S(1)/4)*hbar*Abs(I*qA**n - I*qB**m) ) - 1))
+
+            # self.SqXAB = Eq( var(r'S_X^{AB}'),\
+            #                 4*self.delta_fx2_2D_commuting(xA, xB).rhs - 1)
+                
+            self.ibrahim_SqXAB = self.squeezing_coefficient_X = Eq( var(r'S_X^{AB}'),\
+                    (self.ibrahim_delta_fx2_2D_commuting(xA,xB).rhs/((S(1)/4)*hbar*abs(qA**n - qB**m)) - 1))
+
 #### --- CLASSES ---
 
 #### Hamiltonians
@@ -558,26 +577,46 @@ class quantum_mechanics(branch):
                 References:
                     Jafarov2010
                 """
-                def __init__(self, parent, numeric=False):
+                def __init__(self, parent, numeric=False, ref={1:"Jafarov", 2:"Eremin"}[2]):
                     super().__init__()
+                    self.reference = ref
                     self.numeric = numeric
                     self.name = "q-Deformed Quantum Harmonic Oscillator"
-                    self.ad = RaisingOp('a') # Raising ladder operator.  Creation operator.
-                    self.a  = LoweringOp('a')# Lowering ladder operator. Annihilation operator.
+                    self.qPochhammer = lambda a=a, q=q, n=n: Eq( var(f'({a};{q})_{n}'), Product(1-a*q**k, (k, 0, n-1)) )
+                    self.qfactorial  = lambda q=q, n=n: Eq( var(f'[{n}]!'), Product((1-q**k)/(1-q), (k, 1, n)), evaluate=False)
+                    self.SqX = self.squeezing_coefficient_X = Eq( S('S_X'), (2*q**(-n)/hbar)*parent.delta_x2.rhs - 1 )
                     
-                    if not self.numeric:
-                        self.qPochhammer = lambda a=a, q=q, n=n: Eq( var(f'({a};{q})_{n}'), Product(1-a*q**k, (k, 0, n-1)) )
-                        self.cn = lambda n=n, q=q, l=l: Eq( var(f'c_{n}'), (2*l/pi)**(S(1)/4)*(I)**n*q**(n/2)*self.qPochhammer(q,q,n).rhs**(-S(1)/2) )
-                        self.psix = lambda x=x, n=n, q=q, l=l: (
-                            Eq( var(f'psi_{n}'), self.cn(n,q,l).rhs*exp(-l*x**2)*
-                               Sum( ( self.qPochhammer(q**(-n),q,k).rhs/self.qPochhammer(q,q,k).rhs )*q**(n*k-(k**2)/2)*exp(-2*I*l*(sqrt(-ln(q)/l))*x*k), (k,0,n)) ) )
-                        self.En = lambda n=n, q=q: Eq( S(f'En(n, q)'), hbar*omega/2*sinh(log(q)*(n + S(1)/2)) / sinh(log(q)/2) )
-                        self.SqX = self.squeezing_coefficient_X = Eq( S('S_X'), (2*q**(-n)/hbar)*parent.delta_x2.rhs - 1 )                        
-                    else:
-                        self.cn = lambda n=1, q=0.001, l=1/2: ( (2*l/mp.pi)**(1/4)*(mp.j)**n*q**(n/2)*mp.qp(q,q,n)**(-1/2) )
-                        self.psix = lambda x, n=1, q=0.001, l=1/2: (self.cn(n,q,l) * mp.exp(-l*x**2) * 
-                            mp.nsum( lambda k: ( mp.qp(q**(-n),q,k) / mp.qp(q,q,k) )*mp.power(q, n*k-(k**2)/2)*mp.expj(-2*l*(mp.sqrt(-mp.ln(q)/l))*x*k), [0,n]) )
-                        
+                    match self.reference:
+                        case "Jafarov":
+                            if not self.numeric:
+                                self.cn = lambda n=n, q=q, l=l: Eq( var(f'c_{n}'), (2*l/pi)**(S(1)/4)*(I)**n*q**(n/2)*self.qPochhammer(q,q,n).rhs**(-S(1)/2) )
+                                self.psix = lambda x=x, n=n, q=q, l=l: (
+                                    Eq( var(f'psi_{n}'), self.cn(n,q,l).rhs*exp(-l*x**2)*
+                                       Sum( ( self.qPochhammer(q**(-n),q,k).rhs/self.qPochhammer(q,q,k).rhs )*q**(n*k-(k**2)/2)*exp(-2*I*l*(sqrt(-ln(q)/l))*x*k), (k,0,n)) ) )
+                                self.En = lambda n=n, q=q: Eq( S(f'En(n, q)'), hbar*omega/2*sinh(log(q)*(n + S(1)/2)) / sinh(log(q)/2) )
+                            else:
+                                self.cn = lambda n=1, q=0.001, l=1/2: ( (2*l/mp.pi)**(1/4)*(mp.j)**n*q**(n/2)*mp.qp(q,q,n)**(-1/2) )
+                                self.psix = lambda x, n=1, q=0.001, l=1/2: (self.cn(n,q,l) * mp.exp(-l*x**2) * 
+                                    mp.nsum( lambda k: ( mp.qp(q**(-n),q,k) / mp.qp(q,q,k) )*mp.power(q, n*k-(k**2)/2)*mp.expj(-2*l*(mp.sqrt(-mp.ln(q)/l))*x*k), [0,n]) )
+                        case "Eremin":
+                            if not self.numeric:
+                                self.alpha = lambda q=q: Eq( var(rf'\alpha'), sqrt(-log(q)/2) )
+                                #kaldik
+                                # exp(a*Dx)f(x) = f(x+a) is used.
+                                self.a = lambda q=q, f=lambda _:_ : Eq( a, (exp(-2*I*self.alpha(q).rhs*x) - exp(I*self.alpha(q).rhs*D(psix, x))*exp(-I*self.alpha(q).rhs*x)) / \
+                                                        (-I*sqrt(1-exp(-2*self.alpha(q).rhs**2))) ) # Lowering ladder operator. Annihilation operator.
+                                self.ad= lambda q=q, f=lambda _:_ : Eq(ad, (exp( 2*I*self.alpha(q).rhs*x) - exp(I*self.alpha(q).rhs*D(psix, x))*exp( I*self.alpha(q).rhs*x)) / \
+                                                        ( I*sqrt(1-exp(-2*self.alpha(q).rhs**2))) ) #  # Raising ladder operator.  Creation operator.
+                                self.xop  = lambda q=q, f=lambda _:_ : Eq(S('xhat'), (self.a(q).rhs + self.ad(q).rhs) /     sqrt(2))
+                                self.pxop = lambda q=q, f=lambda _:_ : Eq(S('phat'), (self.a(q).rhs - self.ad(q).rhs) / (I*sqrt(2)))
+                                self.prefactor = lambda x=x, n=n, q=q: exp(-x**2/2 + S(3)/2*I*self.alpha(q).rhs*x/2) / \
+                                    ( pi**(S(1)/4)*I**n*(1-exp(-2*self.alpha(q).rhs**2))**(n/2)*sqrt(self.qfactorial(q,n).rhs) )
+                                self.sum = lambda x=x, n=n, q=q: Sum ( ( (-1)**k*self.qfactorial(q,n).rhs*exp((n-k)*2*I*self.alpha(q).rhs*x - k*self.alpha(q).rhs**2) / \
+                                            (self.qfactorial(q,k).rhs * self.qfactorial(q,n-k).rhs) ), (k,0,n))
+                                self.psix = lambda x=x, n=n, q=q: Eq( var(f'psi_{n}'), self.prefactor(x,n,q)*self.sum(x,n,q) )
+                            else:
+                                pass # todo
+                            
             self.qdefho = qdefho(self)
 
             
@@ -1131,7 +1170,7 @@ class quantum_mechanics(branch):
 
     @staticmethod
     def __doc__():
-        return("Document of <template> class.")
+        return("Document of quantum_mechanics class.")
         
 oqmec = quantum_mechanics()
 oqmec.verbose = True

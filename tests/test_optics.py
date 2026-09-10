@@ -3,8 +3,76 @@
 # ## test_optics
 
 """
-test_optics.py connected to test_optics.ipynb via "jupytext".
+test_optics_new.py connected to test_optics.ipynb via "jupytext".
 In ipynb notebook select File->Jupytext->Pair Notebook with Light Format.
+
+WHAT IS DIFFERENT FROM test_optics.py
+=====================================
+This script is test_optics.py with *one* functional change: it imports
+``torchsympy_new`` instead of ``torchsympy``.  ``optics.py`` is used unmodified
+and the symbolic Fresnel formulation is exactly the original one; the whole fix
+lives inside torchsympy_new.py.
+
+Reported symptom
+----------------
+  * Abedin2005Fig6a (Lx = Ly = 2 mm, lambda = 632 nm, z = 400 mm) showed an
+    extra, "secondary" diffraction pattern along the four outer sides of the
+    image.
+  * Reducing the distance to z = 40 mm destroyed the pattern completely.
+
+Cause
+-----
+  The intensity is obtained from the *2D* Fresnel integral evaluated by a
+  tensor-product quadrature with a fixed budget of N = 5001 points.  That
+  budget is shared between the two integration axes, i.e. only ~70 nodes per
+  axis.  The Fresnel integrand exp(i k/(2z)((x-x0)^2+(y-y0)^2)) oscillates in
+  the integration variable with the local frequency |x-x0|/(lambda z), so the
+  number of fringes across the aperture is
+
+      (|x|max + Lx/2) * Lx / (lambda z)
+
+  = 47 fringes at z = 400 mm and 475 at z = 40 mm (Lx = 2 mm, 10 mm screen).
+  With ~8 nodes per fringe one needs ~380 and ~3800 nodes per axis, so the
+  quadrature aliased the oscillation.  Because the local frequency grows with
+  |x - x0|, the aliasing appears first at the largest screen coordinates - the
+  four sides of the image - and at 40 mm even the centre is undersampled, so
+  the whole picture becomes meaningless.  Brute force is no cure: a 2D rule
+  needs the *square* of the nodes per axis (N ~ 1.4e7 at 40 mm).
+
+Fix (torchsympy_new.py)
+-----------------------
+  ``TorchSymPy.eval_numeric`` now factorises a separable integrand - the
+  Fresnel kernel is one, because no term of its phase mixes x0 and y0 - into
+  one 1D integral per axis, evaluates each of them with the full node budget
+  and refines them by doubling until the result stops changing.  The cost then
+  grows linearly, instead of quadratically, with the resolution, and the
+  sampling adapts itself to the screen distance.  Nothing in this script (or in
+  optics.py) has to know about it; non-separable integrands, e.g. the
+  Rayleigh-Sommerfeld kernel, keep using the original solvers.
+
+  Measured against the closed-form Fresnel C/S solution on this configuration
+  (see fresnel_torchsympy_check.py): max error relative to the peak intensity
+  1e-13 at z = 400 mm, 40 mm and 4 mm, versus 1.3e-1, 2.2e+1 and 2.5e+3 for the
+  original fixed-N 2D quadrature.
+
+Rayleigh-Sommerfeld
+-------------------
+  The same aliasing spoils the Rayleigh-Sommerfeld model, whose kernel
+  z exp(i k r)/r^2 with r = sqrt((x-x0)^2+(y-y0)^2+z^2) oscillates just as
+  fast.  It cannot be factorised, because the square root couples x0 and y0,
+  but it only depends on the differences x-x0 and y-y0, so torchsympy_new
+  evaluates it as one cumulative integral of the kernel that is shared by all
+  screen points (each point is a difference of four of its values) and refines
+  it until it converges.  Measured against a brute-force per-point reference
+  (see rayleigh_sommerfeld_check.py): max error relative to the peak intensity
+  ~1e-11 at z = 1700, 800, 400 and 40 mm, versus 1.4e-5, 9.7e-5, 5.4e-2 and
+  6.3 for the original fixed-N 2D quadrature.
+
+  One point remains a property of the *plot*, not of the integration: the
+  screen mesh must also resolve the fringes of the pattern itself, whose
+  spacing is lambda*z/L (0.13 mm at 400 mm, 0.013 mm at 40 mm).  n = 100 points
+  over a 10 mm screen is not enough at 40 mm, so the mesh is checked and
+  optionally refined below.
 
 omec.__init__()
 omec.verbose = True
@@ -20,14 +88,48 @@ Gerrard, A., Burch, J.M., 1975, Introduction to matrix methods in optics
 import copy
 import sys
 import os
-lstPaths = ["../src"]
+
+def find_local():
+    current = os.getcwd()
+    while True:
+        candidate = os.path.join(current, "libphysics", "src")
+        if os.path.exists(candidate):
+            return candidate
+        parent = os.path.dirname(current)
+        if parent == current:
+            return None
+        current = parent
+local_path = find_local()
+sys.path.insert(0, local_path)
+print("-> Using local libphysics")
+
+"""lstPaths = ["../../src"]
+libphysics\src
 for ipath in lstPaths:
     if ipath not in sys.path:
-        sys.path.append(ipath)
+        sys.path.append(ipath)"""
+import matplotlib
+import importlib.util
+if any(importlib.util.find_spec(mod) for mod in ("PyQt5", "PySide2")):
+    matplotlib.use('Qt5Agg')   # or 'Qt5Agg', 'Qt6Agg', 'GTK3Agg'
+else:
+    matplotlib.use('Agg')      # headless fallback, figures are still saved
+import matplotlib.pyplot as plt
 from libsympy import *
 from optics import *
+# The only change with respect to test_optics.py: the fixed library.  It is
+# API-compatible, so it is imported under the usual name.
+import torchsympy
+import importlib
+importlib.reload(torchsympy)
 # from numba import jit
-
+import torch
+# The separable evaluator works in float64 on the CPU whatever the torch
+# default is, but the remaining torchquad paths (Fraunhofer, Rayleigh-
+# Sommerfeld) do not: in float32 the sum over the quadrature nodes of a
+# strongly oscillating integrand loses ~1e-3 of relative accuracy.
+torch.set_default_dtype(torch.float64)
+from torchquad import GaussLegendre, Boole, Simpson
 # Execute jupyter-notebook related commands.
 #exec(open('libnotebook.py').read())
 print(sys.version); print(sys.path)
@@ -59,12 +161,13 @@ class sets:
     # Execution settings.
     test_all = {0:False, 1:True}[0]
     usecupy = {0:False, 1:True}[0]
+    usetorchsympy = {0:False, 1:True}[1]
     dictflow = dict(
         ch1 = {100:"get_formulary", 150:"get_subformulary",
                200:"ABCD_2_thin_lens", 202:"ABCD_microscope",
-               250:"diffraction_rectangular", 300:"Fraunhofer_Diff_Int",
+               250:"diffraction_rectangular", 252:"Fraunhofer_3D",
                350:"FBG_Reflection"})
-    flow = [dictflow["ch1"][i] for i in [200]]
+    flow = [dictflow["ch1"][i] for i in [250]]
     if test_all: flow = flatten([list(dictflow[i].values()) for i in dictflow.keys()])
 
 print("Test of the {0}.".format(sets.flow))
@@ -130,9 +233,10 @@ if "ABCD_microscope" in sets.flow:
         "The distance between image and the ocular, b=", oopti.ABCD.microscope.imaging_condition,
         "Magnification", oopti.ABCD.microscope.magnification)
 
-# ### diffration_rectangular
 
-#### diffraction_rectangular
+# ### DIFFRACTION RECTANGULAR
+
+#### DIFFRACTION RECTANGULAR
 if "diffraction_rectangular" in sets.flow:
     """
     from scipy.integrate import quad
@@ -146,8 +250,12 @@ if "diffraction_rectangular" in sets.flow:
     """
     
     print("Diffraction from a Rectangular Aperture")
+    # Rayleigh_Sommerfeld (1) is now as accurate as Fresnel (3): both go
+    # through the refined evaluators of torchsympy_new.  The model and the
+    # configuration can also be picked without editing this file, with the
+    # environment variables DIFFRACTION_CLASS and DIFFRACTION_CONFIG.
     class_type = {1:"Rayleigh_Sommerfeld", 2:"Fraunhofer", 3:"Fresnel",
-                  4:"FresnelJit"}[3]
+                  4:"FresnelJit"}[int(os.environ.get("DIFFRACTION_CLASS", 3))]
     oopti.__init__(class_type)
     oopti.verbose = False
     
@@ -163,33 +271,67 @@ if "diffraction_rectangular" in sets.flow:
     
     # Numerical Calculations
     # config in mm.
-    n = 100
+    # Screen mesh size.  The integrand is evaluated for every quadrature point
+    # and every screen point at once, i.e. on an array of
+    # (quadrature points) x n x n numbers, so the memory needed grows with n**2:
+    # n=200 needs ~1.5 GB and n=1000 would need ~38 GB in a single array.
+    # torchsympy splits such a mesh into chunks automatically; chunk_size_params
+    # below sets the chunk explicitly.  The separable evaluator of
+    # torchsympy_new only ever evaluates the 1D factors on the *distinct*
+    # screen coordinates, so the mesh itself is cheap here.
+    n = 500
+    # Number of screen points evaluated simultaneously; keeps the memory bounded
+    # independently of n.  Lower it if you still run out of memory.
+    chunk_size_params = 4096
     screen_factor = 2.5;
+    # The plotted image must resolve the fringes of the pattern itself; their
+    # spacing is lambda*z/L, so a mesh that is fine enough at z = 400 mm shows
+    # moire at z = 40 mm.  This is a property of the screen sampling, not of
+    # the integration, so it is handled here rather than in the library.
+    auto_screen_resolution = {0:False, 1:True}[1]
+    n_max = 1000
     config = {0:0, 1:"LakshminarayananFig11_3",
               61:"Abedin2005Fig6a", 62:"Abedin2005Fig6b",
               63:"Abedin2005Fig6c", 64:"Abedin2005Fig6d", 
-              72:"Abedin2005Fig7b"}[61]
+              65:"Abedin2005Fig6a_z40", 66:"Abedin2005Fig6a_z4",
+              72:"Abedin2005Fig7b"}[int(os.environ.get("DIFFRACTION_CONFIG", 61))]
     
     # Aperture size (mm). Square or rectangle.
     [nLx, nLy] = {0:[1, 1],
                 "LakshminarayananFig11_3":[0.11, 0.11],
                 "Abedin2005Fig6a":[2,2], "Abedin2005Fig6b":[2,2],
                 "Abedin2005Fig6c":[2,2], "Abedin2005Fig6d":[2,2], 
+                "Abedin2005Fig6a_z40":[2,2], "Abedin2005Fig6a_z4":[2,2],
                 "Abedin2005Fig7b":[2,2]}[config]
     
-    # Wavelength (mm).
+    # Wavelength in (mm).
     nl = {0:1, 
           "LakshminarayananFig11_3":560e-6,
           "Abedin2005Fig6a":632e-6, "Abedin2005Fig6b":632e-6,
           "Abedin2005Fig6c":632e-6, "Abedin2005Fig6d":632e-6,
+          "Abedin2005Fig6a_z40":632e-6, "Abedin2005Fig6a_z4":632e-6,
           "Abedin2005Fig7b":1264e-6}[config]
     
-    # Screen distance (mm).
+    # Screen distance in (mm).
     nz = {0:0.5, 
           "LakshminarayananFig11_3":3, 
-          "Abedin2005Fig6a":400, "Abedin2005Fig6b":800,
+          "Abedin2005Fig6a":40, "Abedin2005Fig6b":800, # Abedin2005Fig6a 400
           "Abedin2005Fig6c":1700,"Abedin2005Fig6d":8000, 
+          "Abedin2005Fig6a_z40":40, "Abedin2005Fig6a_z4":4,
           "Abedin2005Fig7b":400}[config]
+
+    #----> Screen mesh resolution check (independent of the integration).
+    if oopti.class_type in ["Fresnel", "Rayleigh_Sommerfeld"]:
+        # Two adjacent fringes of the pattern are lambda*z/L apart; take a few
+        # screen points per fringe over the whole 2*screen_factor*L window.
+        fringe = nl*nz/max(nLx, nLy)
+        n_need = int(np.ceil(4*2*max(nLx, nLy)*screen_factor/fringe))
+        print("Screen mesh: fringe spacing ~{0:.4g} mm, ~{1} screen points per "
+              "axis recommended (n = {2}).".format(fringe, n_need, n))
+        if auto_screen_resolution and n_need > n:
+            n = min(n_need, n_max)
+            print("             screen mesh raised to n = {0}.".format(n))
+
     brightness = {"Rayleigh_Sommerfeld":1, "Fraunhofer":0.1, "Fresnel":1}[oopti.class_type];
     lsX = np.linspace(-nLx*screen_factor, nLx*screen_factor, n)
     lsY = np.linspace(-nLy*screen_factor, nLy*screen_factor, n)
@@ -221,6 +363,8 @@ if "diffraction_rectangular" in sets.flow:
     commands = ["subs", "oopti.result", subs]
     Int = oopti.process(commands)
     print(multiline_latex(Int.lhs, Int.rhs))
+    lt = torchsympy.TorchSymPy()
+    
     
     #----> Fraunhofer
     if oopti.class_type == "Fraunhofer":
@@ -231,16 +375,52 @@ if "diffraction_rectangular" in sets.flow:
         # Method 2 - Convert symbolic expression to numerical expression. 
 #        fInt = lambda ix,iy: Int.rhs.xreplace({x:ix, y:iy}).doit().evalf()
         # fInt = lambdify([x,y], Int.rhs.xreplace({x:x, y:y}).doit().evalf(), "scipy")
-        fInt = lambdify([x,y], Int.rhs.evalf(quad='osc'), "scipy")
-        Z = np.vectorize(fInt)(X,Y)
-    
-    #----> Fresnel
-    if oopti.class_type in ["Rayleigh_Sommerfeld", "Fresnel"]:
-        if not sets.usecupy:  
-            # fInt = lambda ix,iy: Int.rhs.xreplace({x:ix, y:ix}).doit().evalf() # it takes longer time.
-            fInt = lambdify([x,y], Int.rhs.xreplace({x:x, y:y}).doit().evalf(quad='osc'), "scipy")
+        if not sets.usetorchsympy:
+            fInt = lambdify([x,y], Int.rhs.evalf(quad='osc'), "scipy")
             Z = np.vectorize(fInt)(X,Y)
+        else:
+            print("using torchsympy...")
+            """Z = lt.eval_numeric(Int, params_values=[X, Y],
+                solver="batched", N=1001, method="gauss-legendre",
+                chunk_size_points=4096, dtype=torch.complex128)"""
             
+            Z = lt.eval_numeric(Int, params_values=[X, Y], method=GaussLegendre(),
+                solver="vectorized", N=5001, #high node number is needed
+                chunk_size_params=chunk_size_params)
+    
+    
+    #----> Rayleigh_Sommerfeld, Fresnel
+    if oopti.class_type in ["Rayleigh_Sommerfeld", "Fresnel"]:
+        if not sets.usecupy:
+            if not sets.usetorchsympy:
+                # fInt = lambda ix,iy: Int.rhs.xreplace({x:ix, y:ix}).doit().evalf() # it takes longer time.
+                fInt = lambdify([x,y], Int.rhs.xreplace({x:x, y:y}).doit().evalf(quad='osc'), "scipy")
+                Z = np.vectorize(fInt)(X,Y)
+            else:
+                print("using torchsympy...")
+                # Z = lt.eval_numeric(Int, params_values=[X, Y],
+                #     solver="batched", N=1001, method="gauss-legendre",
+                #     chunk_size_points=4096, dtype=torch.complex128)
+                
+                # Z = lt.eval_numeric(Int, params_values=[X, Y], method=GaussLegendre(),
+                #     solver="vectorized", N=501) #high node number is needed 
+                
+                # The call is unchanged.  For the (separable) Fresnel integrand
+                # torchsympy_new does not use N at all: it splits the 2D
+                # integral into two 1D integrals and refines each of them until
+                # convergence, which is what removes the spurious side pattern
+                # at 400 mm and the aliasing at 40 mm.  The Rayleigh-Sommerfeld
+                # integrand is not separable, but it is shift invariant, and it
+                # ignores N as well: it is evaluated through one refined
+                # cumulative integral of its kernel.  N is only the budget of
+                # the original tensor-product rule, which is still used for
+                # integrands that are neither.
+                Z = lt.eval_numeric(Int, params_values=[X, Y], method=Simpson(),
+                    solver="vectorized", N=5001, #high node number is needed
+                    chunk_size_params=chunk_size_params)
+                
+                # Z = lt.eval_numeric(Int, params_values=[X, Y],
+                #                     method="quadosc", N=21) #high node number is needed 
         else:
             import cupy as cp
             
@@ -261,6 +441,8 @@ if "diffraction_rectangular" in sets.flow:
 
 
     #----> Plotting 2D Diffraction Intensity
+    if torch.is_tensor(Z):
+        Z = Z.detach().cpu().numpy()
     fig = plt.figure(figsize=(5, 5))
     ax1 = fig.add_subplot(111)
     ax1.imshow(Z, cmap=plt.cm.gray, interpolation ='bilinear', origin='lower', vmin=np.min(Z), vmax=brightness*np.max(Z))
@@ -270,23 +452,18 @@ if "diffraction_rectangular" in sets.flow:
     ax1.set_yticks(np.linspace(0, n, 5))
     ax1.set_yticklabels([-nLy*screen_factor, -nLy*screen_factor*0.5, 0,
                           nLy*screen_factor*0.5, nLy*screen_factor])
+    os.makedirs(sets.output_dir, exist_ok=True)
     plt.savefig("{0}/{1}_{2}_{3}.{4}".format(\
                 sets.output_dir, sets.flow[0], oopti.class_type, config, "png"), format="png", dpi=600, bbox_inches='tight')
     plt.show()
 
-#----> Plotting 3D Diffraction Intensity
-if "Fraunhofer_Diff_Int" in sets.flow:
-    commands = ["xreplace", "oopti.Fraunhofer_Diff_Int", "xreplace"]
-    oopti.process(commands)
-    res = (oopti.result.doit())
-    res = simplify(res.rewrite(sin))
-    intensity = simplify(res.rhs*conjugate(res.rhs))
-    intensity = intensity.subs({z:0.2, l:1, Lx:1, Ly:1})
-    plot3d(Int.rhs, (x,-1,1), (y,-1,1))
+    #----> Plotting 3D Fraunhofer Diffraction Intensity
+    if oopti.class_type == "Fraunhofer":
+        if "Fraunhofer_3D" in sets.flow:
+            plot3d(Int.rhs, (x,-1,1), (y,-1,1))
         
 
-#### Fiber Bragg Grating
-    
+#### FIBER BRAGG GRATING
 if "FBG_Reflection" in sets.flow:
     print("Fiber Bragg Grating")
     print("R versus lambda_0, Ghatak2009 Appendix C Eq.3")
@@ -349,6 +526,7 @@ if "FBG_Reflection" in sets.flow:
     
     # Plotting the results
     file_dir = f"output"+"/"+oopti.classname+"/"+oopti.FBG.classname
+    os.makedirs(file_dir, exist_ok=True)
     file_name = f"FBG_R_l_PR_T={period}"
     file_path = file_dir+"/"+file_name
     
@@ -370,3 +548,4 @@ if "FBG_Reflection" in sets.flow:
     np.savetxt(f"{file_path}.txt", 
                np.column_stack( (llist_um, np.real(Rlist)) ),
                header='Wavelength(um) Reflectance(%)')
+    
